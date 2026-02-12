@@ -1,42 +1,5 @@
 import { NextResponse } from "next/server";
-import * as admin from "firebase-admin";
-
-// Helper to ensure Admin SDK is initialized
-function getFirebaseAdmin() {
-    if (!admin.apps.length) {
-        try {
-            let credential;
-
-            // Try environment variables first
-            if (process.env.FIREBASE_PRIVATE_KEY) {
-                credential = admin.credential.cert({
-                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-                });
-            } else {
-                // Fallback to local serviceAccountKey.json
-                try {
-                    // eslint-disable-next-line @typescript-eslint/no-require-imports
-                    const serviceAccount = require("../../../../serviceAccountKey.json");
-                    credential = admin.credential.cert(serviceAccount);
-                } catch (e) {
-                    console.warn("No serviceAccountKey.json found and env vars missing.");
-                }
-            }
-
-            if (credential) {
-                admin.initializeApp({
-                    credential,
-                });
-            }
-        } catch (error) {
-            console.error('Firebase Admin initialization error', error);
-            return null;
-        }
-    }
-    return admin;
-}
+import { dbAdmin } from "@/lib/firebaseAdmin";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -47,16 +10,7 @@ export async function GET(request: Request) {
     }
 
     try {
-        const adminInstance = getFirebaseAdmin();
-        if (!adminInstance || !adminInstance.apps.length) {
-            return NextResponse.json({
-                error: "Server Configuration Error",
-                details: "Firebase Admin SDK could not be initialized. Check credentials."
-            }, { status: 500 });
-        }
-
-        // unexpected error: default Firebase app does not exist - this happens if we call firestore() before app is ready
-        const db = adminInstance.firestore();
+        const db = dbAdmin;
 
         const userDoc = await db.collection("users").doc(uid).get();
         if (!userDoc.exists) {

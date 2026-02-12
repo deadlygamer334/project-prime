@@ -1,20 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import admin from "firebase-admin";
-
-// Initialize Firebase Admin SDK (if not already initialized)
-if (!admin.apps.length) {
-    try {
-        admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-            }),
-        });
-    } catch (error) {
-        console.error("Firebase admin initialization error:", error);
-    }
-}
+import { dbAdmin } from "@/lib/firebaseAdmin";
 
 export async function POST(request: NextRequest) {
     try {
@@ -29,7 +14,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const db = admin.firestore();
+        const db = dbAdmin;
         const userRef = db.collection("users").doc(userId);
 
         // Get user document
