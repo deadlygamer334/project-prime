@@ -1,0 +1,3454 @@
+{
+  "users": [
+    {
+      "userId": "user_sample_001",
+      "email": "demo@example.com",
+      "createdAt": "2025-09-15T10:00:00Z",
+      "stats": {
+        "totalFocusMinutes": 5810
+      }
+    }
+  ],
+  "habits": [
+    {
+      "userId": "user_sample_001",
+      "habitId": "h1",
+      "name": "Morning Jog",
+      "frequency": "daily",
+      "history": {
+        "2025-10-01": true,
+        "2025-10-02": true,
+        "2025-10-03": true,
+        "2025-10-04": true,
+        "2025-10-05": true,
+        "2025-10-06": true,
+        "2025-10-07": true,
+        "2025-10-08": true,
+        "2025-10-10": true,
+        "2025-10-12": true,
+        "2025-10-14": true,
+        "2025-10-15": true,
+        "2025-10-16": true,
+        "2025-10-18": true,
+        "2025-10-19": true,
+        "2025-10-20": true,
+        "2025-10-22": true,
+        "2025-10-24": true,
+        "2025-10-25": true,
+        "2025-10-27": true,
+        "2025-10-28": true,
+        "2025-10-29": true,
+        "2025-10-31": true,
+        "2025-11-01": true,
+        "2025-11-03": true,
+        "2025-11-04": true,
+        "2025-11-05": true,
+        "2025-11-06": true,
+        "2025-11-09": true,
+        "2025-11-10": true,
+        "2025-11-11": true,
+        "2025-11-12": true,
+        "2025-11-13": true,
+        "2025-11-14": true,
+        "2025-11-15": true,
+        "2025-11-16": true,
+        "2025-11-17": true,
+        "2025-11-18": true,
+        "2025-11-19": true,
+        "2025-11-20": true,
+        "2025-11-21": true,
+        "2025-11-22": true,
+        "2025-11-24": true,
+        "2025-11-25": true,
+        "2025-11-28": true,
+        "2025-11-30": true,
+        "2025-12-01": true,
+        "2025-12-02": true,
+        "2025-12-03": true,
+        "2025-12-04": true,
+        "2025-12-05": true,
+        "2025-12-06": true,
+        "2025-12-07": true,
+        "2025-12-08": true,
+        "2025-12-11": true,
+        "2025-12-13": true,
+        "2025-12-14": true,
+        "2025-12-15": true,
+        "2025-12-16": true,
+        "2025-12-17": true,
+        "2025-12-18": true,
+        "2025-12-19": true,
+        "2025-12-20": true,
+        "2025-12-21": true,
+        "2025-12-22": true,
+        "2025-12-24": true,
+        "2025-12-25": true,
+        "2025-12-26": true,
+        "2025-12-28": true,
+        "2025-12-29": true,
+        "2025-12-30": true,
+        "2025-12-31": true,
+        "2026-01-01": true,
+        "2026-01-02": true,
+        "2026-01-03": true,
+        "2026-01-04": true,
+        "2026-01-05": true,
+        "2026-01-08": true,
+        "2026-01-10": true,
+        "2026-01-11": true,
+        "2026-01-12": true,
+        "2026-01-13": true,
+        "2026-01-14": true,
+        "2026-01-15": true,
+        "2026-01-16": true,
+        "2026-01-17": true,
+        "2026-01-19": true,
+        "2026-01-20": true,
+        "2026-01-21": true,
+        "2026-01-23": true,
+        "2026-01-24": true,
+        "2026-01-25": true,
+        "2026-01-27": true,
+        "2026-01-28": true,
+        "2026-01-29": true,
+        "2026-01-30": true,
+        "2026-01-31": true
+      },
+      "createdAt": "2025-09-20T00:00:00Z"
+    },
+    {
+      "userId": "user_sample_001",
+      "habitId": "h2",
+      "name": "Read 30 mins",
+      "frequency": "daily",
+      "history": {
+        "2025-10-01": true,
+        "2025-10-03": true,
+        "2025-10-04": true,
+        "2025-10-06": true,
+        "2025-10-07": true,
+        "2025-10-08": true,
+        "2025-10-10": true,
+        "2025-10-11": true,
+        "2025-10-12": true,
+        "2025-10-13": true,
+        "2025-10-14": true,
+        "2025-10-15": true,
+        "2025-10-16": true,
+        "2025-10-17": true,
+        "2025-10-18": true,
+        "2025-10-19": true,
+        "2025-10-20": true,
+        "2025-10-21": true,
+        "2025-10-22": true,
+        "2025-10-24": true,
+        "2025-10-27": true,
+        "2025-10-30": true,
+        "2025-10-31": true,
+        "2025-11-01": true,
+        "2025-11-02": true,
+        "2025-11-04": true,
+        "2025-11-05": true,
+        "2025-11-06": true,
+        "2025-11-07": true,
+        "2025-11-08": true,
+        "2025-11-09": true,
+        "2025-11-11": true,
+        "2025-11-17": true,
+        "2025-11-18": true,
+        "2025-11-20": true,
+        "2025-11-21": true,
+        "2025-11-24": true,
+        "2025-11-25": true,
+        "2025-11-27": true,
+        "2025-11-28": true,
+        "2025-11-29": true,
+        "2025-11-30": true,
+        "2025-12-01": true,
+        "2025-12-03": true,
+        "2025-12-06": true,
+        "2025-12-07": true,
+        "2025-12-08": true,
+        "2025-12-09": true,
+        "2025-12-11": true,
+        "2025-12-12": true,
+        "2025-12-14": true,
+        "2025-12-16": true,
+        "2025-12-17": true,
+        "2025-12-18": true,
+        "2025-12-19": true,
+        "2025-12-21": true,
+        "2025-12-22": true,
+        "2025-12-25": true,
+        "2025-12-27": true,
+        "2025-12-28": true,
+        "2025-12-31": true,
+        "2026-01-01": true,
+        "2026-01-03": true,
+        "2026-01-04": true,
+        "2026-01-06": true,
+        "2026-01-09": true,
+        "2026-01-10": true,
+        "2026-01-12": true,
+        "2026-01-13": true,
+        "2026-01-14": true,
+        "2026-01-15": true,
+        "2026-01-16": true,
+        "2026-01-17": true,
+        "2026-01-19": true,
+        "2026-01-20": true,
+        "2026-01-21": true,
+        "2026-01-22": true,
+        "2026-01-24": true,
+        "2026-01-25": true,
+        "2026-01-26": true,
+        "2026-01-28": true,
+        "2026-01-29": true,
+        "2026-01-30": true
+      },
+      "createdAt": "2025-09-20T00:00:00Z"
+    },
+    {
+      "userId": "user_sample_001",
+      "habitId": "h3",
+      "name": "Code Side Project",
+      "frequency": "weekly",
+      "history": {
+        "2025-10-01": true,
+        "2025-10-02": true,
+        "2025-10-03": true,
+        "2025-10-04": true,
+        "2025-10-05": true,
+        "2025-10-09": true,
+        "2025-10-10": true,
+        "2025-10-12": true,
+        "2025-10-13": true,
+        "2025-10-14": true,
+        "2025-10-15": true,
+        "2025-10-18": true,
+        "2025-10-19": true,
+        "2025-10-20": true,
+        "2025-10-22": true,
+        "2025-10-24": true,
+        "2025-10-25": true,
+        "2025-10-27": true,
+        "2025-10-28": true,
+        "2025-10-30": true,
+        "2025-10-31": true,
+        "2025-11-01": true,
+        "2025-11-03": true,
+        "2025-11-04": true,
+        "2025-11-05": true,
+        "2025-11-08": true,
+        "2025-11-10": true,
+        "2025-11-11": true,
+        "2025-11-12": true,
+        "2025-11-13": true,
+        "2025-11-15": true,
+        "2025-11-17": true,
+        "2025-11-19": true,
+        "2025-11-21": true,
+        "2025-11-23": true,
+        "2025-11-26": true,
+        "2025-11-28": true,
+        "2025-11-29": true,
+        "2025-11-30": true,
+        "2025-12-01": true,
+        "2025-12-02": true,
+        "2025-12-03": true,
+        "2025-12-04": true,
+        "2025-12-06": true,
+        "2025-12-07": true,
+        "2025-12-08": true,
+        "2025-12-10": true,
+        "2025-12-13": true,
+        "2025-12-14": true,
+        "2025-12-15": true,
+        "2025-12-16": true,
+        "2025-12-17": true,
+        "2025-12-19": true,
+        "2025-12-20": true,
+        "2025-12-22": true,
+        "2025-12-23": true,
+        "2025-12-24": true,
+        "2025-12-26": true,
+        "2025-12-28": true,
+        "2025-12-29": true,
+        "2026-01-03": true,
+        "2026-01-04": true,
+        "2026-01-05": true,
+        "2026-01-06": true,
+        "2026-01-07": true,
+        "2026-01-08": true,
+        "2026-01-09": true,
+        "2026-01-10": true,
+        "2026-01-11": true,
+        "2026-01-12": true,
+        "2026-01-13": true,
+        "2026-01-14": true,
+        "2026-01-15": true,
+        "2026-01-16": true,
+        "2026-01-17": true,
+        "2026-01-18": true,
+        "2026-01-19": true,
+        "2026-01-20": true,
+        "2026-01-21": true,
+        "2026-01-22": true,
+        "2026-01-23": true,
+        "2026-01-24": true,
+        "2026-01-25": true,
+        "2026-01-28": true,
+        "2026-01-29": true,
+        "2026-01-31": true
+      },
+      "createdAt": "2025-09-20T00:00:00Z"
+    }
+  ],
+  "todoLists": [
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-01",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-01",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-01",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-10-01",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-10-01",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-02",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-02",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-02",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-03",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-03",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-03",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-03",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-10-03",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-04",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-04",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-04",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-10-04",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-10-04",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-05",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-05",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-06",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-06",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-06",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-10-06",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-07",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-07",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-07",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-07",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-08",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-08",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-09",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-09",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-09",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-09",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-10",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-10",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-10",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-11",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-11",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-11",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-11",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-12",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-12",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-12",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-12",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-10-12",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-10-12",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-13",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-13",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-13",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-14",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-14",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-15",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-15",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-15",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-16",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-16",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-16",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-10-16",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-17",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-17",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-17",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-18",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-18",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-18",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-19",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-19",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-19",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-19",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-20",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-20",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-20",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-20",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-21",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-21",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-21",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-21",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-22",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-22",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-22",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-22",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-10-22",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-23",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-23",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-24",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-24",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-24",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-24",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-10-24",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-10-24",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-25",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-25",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-26",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-26",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-27",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-27",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-27",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-27",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-10-27",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-10-27",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-28",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-28",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-28",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-28",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-10-28",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-29",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-29",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-10-29",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-10-29",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-30",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-30",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-30",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-10-30",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-10-30",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-10-30",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-10-31",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-10-31",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-10-31",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-01",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-01",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-01",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-01",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-02",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-02",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-02",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-03",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-03",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-03",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-03",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-11-03",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-04",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-04",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-04",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-05",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-05",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-05",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-05",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-05",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-06",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-06",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-06",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-06",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-07",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-07",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-08",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-08",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-08",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-08",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-08",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-11-08",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-09",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-09",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-09",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-09",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-10",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-10",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-10",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-10",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-10",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-11-10",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-11",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-11",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-11",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-12",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-12",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-12",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-13",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-13",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-13",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-14",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-14",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-14",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-15",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-15",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-15",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-15",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-16",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-16",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-16",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-17",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-17",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-17",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-17",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-17",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-11-17",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-18",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-18",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-18",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-18",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-11-18",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-19",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-19",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-19",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-19",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-11-19",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-20",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-20",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-20",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-20",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-20",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-11-20",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-21",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-21",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-21",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-21",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-22",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-22",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-22",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-22",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-22",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-23",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-23",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-23",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-23",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-23",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-24",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-24",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-24",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-11-24",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-11-24",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-11-24",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-25",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-25",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-26",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-26",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-11-26",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-26",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-11-26",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-27",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-27",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-28",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-28",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-29",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-29",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-29",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-29",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-11-30",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-11-30",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-11-30",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-11-30",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-01",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-01",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-01",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-01",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-01",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-02",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-02",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-03",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-03",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-04",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-04",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-04",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-04",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-12-04",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-12-04",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-05",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-05",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-05",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-05",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-05",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-06",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-06",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-06",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-06",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-12-06",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-12-06",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-07",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-07",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-07",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-07",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-07",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-12-07",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-08",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-08",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-09",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-09",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-09",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-09",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-12-09",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-12-09",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-10",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-10",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-10",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-10",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-11",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-11",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-11",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-11",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-11",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-12-11",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-12",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-12",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-12",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-12",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-13",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-13",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-13",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-13",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-13",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-14",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-14",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-14",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-14",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-14",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-15",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-15",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-15",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-15",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-15",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-16",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-16",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-16",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-16",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-16",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-12-16",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-17",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-17",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-18",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-18",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-18",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-18",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-18",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-12-18",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-19",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-19",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-19",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-19",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-19",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-12-19",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-20",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-20",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-20",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-20",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-12-20",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-12-20",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-21",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-21",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-22",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-22",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-22",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-23",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-23",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-24",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-24",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-24",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-24",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-24",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2025-12-24",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-25",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-25",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-25",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-25",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-12-25",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2025-12-25",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-26",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-26",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-26",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-26",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-27",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-27",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-27",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-27",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-27",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-28",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-28",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-28",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2025-12-28",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-29",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-29",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-30",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-30",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2025-12-30",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-30",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2025-12-30",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2025-12-31",
+      "tasks": [
+        {
+          "title": "Task 1 for 2025-12-31",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2025-12-31",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2025-12-31",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2025-12-31",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-01",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-01",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-01",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-02",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-02",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-02",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-03",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-03",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-03",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-04",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-04",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-04",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-04",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2026-01-04",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2026-01-04",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-05",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-05",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-06",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-06",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-07",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-07",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-07",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2026-01-07",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-07",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2026-01-07",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-08",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-08",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-08",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-08",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-09",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-09",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-10",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-10",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-10",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-10",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-10",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-11",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-11",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-11",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-11",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-12",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-12",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-12",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2026-01-12",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-12",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-13",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-13",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-13",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-14",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-14",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-14",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-14",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-14",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2026-01-14",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-15",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-15",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-15",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-16",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-16",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-16",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-16",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-16",
+          "completed": false
+        },
+        {
+          "title": "Task 5 for 2026-01-16",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-17",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-17",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-17",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-17",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-18",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-18",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-18",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-18",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-19",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-19",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-19",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-19",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-20",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-20",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-20",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-21",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-21",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-21",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-21",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2026-01-21",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-22",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-22",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-22",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-23",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-23",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-23",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-24",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-24",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-24",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-25",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-25",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-25",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-26",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-26",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-26",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2026-01-26",
+          "completed": false
+        },
+        {
+          "title": "Task 4 for 2026-01-26",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2026-01-26",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-27",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-27",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-27",
+          "completed": false
+        },
+        {
+          "title": "Task 3 for 2026-01-27",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-27",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-28",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-28",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-28",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-28",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-28",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-29",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-29",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-30",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-30",
+          "completed": false
+        },
+        {
+          "title": "Task 2 for 2026-01-30",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-30",
+          "completed": true
+        },
+        {
+          "title": "Task 4 for 2026-01-30",
+          "completed": true
+        },
+        {
+          "title": "Task 5 for 2026-01-30",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "userId": "user_sample_001",
+      "date": "2026-01-31",
+      "tasks": [
+        {
+          "title": "Task 1 for 2026-01-31",
+          "completed": true
+        },
+        {
+          "title": "Task 2 for 2026-01-31",
+          "completed": true
+        },
+        {
+          "title": "Task 3 for 2026-01-31",
+          "completed": true
+        }
+      ]
+    }
+  ],
+  "focusSessions": [
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-01T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-02T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-02T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-02T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-05T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-05T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-05T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-07T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-07T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-12T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-14T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-14T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-14T12:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-15T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-15T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-22T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-22T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-22T12:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-25T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-30T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-31T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-31T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-10-31T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-03T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-03T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-03T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-05T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-05T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-06T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-06T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-07T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-09T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-16T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-16T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-16T12:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-17T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-17T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-18T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-18T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-20T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-20T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-23T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-23T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-23T12:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-26T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-26T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-27T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-28T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-28T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-28T12:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-29T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-29T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-30T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-11-30T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-01T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-01T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-01T12:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-03T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-03T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-03T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-06T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-07T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-07T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-07T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-08T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-09T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-11T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-11T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-11T12:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-12T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-12T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-13T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-13T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-13T12:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-16T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-16T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-18T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-18T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-19T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-19T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-19T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-20T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-20T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-22T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-22T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-22T12:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-26T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-26T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-26T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-27T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-27T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-27T12:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-28T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-29T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-30T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-30T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-31T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2025-12-31T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-03T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-04T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-04T11:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-05T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-07T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-07T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-12T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-12T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-14T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-14T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-14T12:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-16T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-16T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-17T10:00:00Z",
+      "durationMinutes": 25,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-17T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-18T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-18T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-19T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-19T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-20T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-22T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-22T11:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-24T10:00:00Z",
+      "durationMinutes": 60,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-24T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-24T12:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-25T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-30T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Study",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-30T11:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Reading",
+      "notes": "Focused work session"
+    },
+    {
+      "userId": "user_sample_001",
+      "startTime": "2026-01-31T10:00:00Z",
+      "durationMinutes": 45,
+      "tag": "Work",
+      "notes": "Focused work session"
+    }
+  ]
+}

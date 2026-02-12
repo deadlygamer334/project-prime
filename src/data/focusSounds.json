@@ -1,0 +1,192 @@
+{
+    "engineered": [
+        {
+            "id": "white-noise",
+            "name": "White Noise",
+            "icon": "📻",
+            "audioSrc": "/sounds/white-noise.mp3",
+            "description": "Full spectrum static",
+            "focusType": "masking",
+            "tooltip": "Masks distractions with balanced frequencies across the spectrum"
+        },
+        {
+            "id": "pink-noise",
+            "name": "Pink Noise",
+            "icon": "🌸",
+            "audioSrc": "/sounds/pink-noise.mp3",
+            "description": "Balanced frequency",
+            "focusType": "masking",
+            "tooltip": "Softer than white noise, ideal for sustained concentration"
+        },
+        {
+            "id": "brown-noise",
+            "name": "Brown Noise",
+            "icon": "🟤",
+            "audioSrc": "/sounds/brown-noise.mp3",
+            "description": "Deep rumble",
+            "focusType": "grounding",
+            "tooltip": "Best for ADHD focus & grounding with deep, calming frequencies"
+        }
+    ],
+    "nature": [
+        {
+            "id": "heavy-rain",
+            "name": "Heavy Rain",
+            "icon": "🌧️",
+            "audioSrc": "/sounds/heavy-rain.mp3",
+            "description": "Steady downpour",
+            "focusType": "masking",
+            "tooltip": "Consistent rain patterns mask environmental noise"
+        },
+        {
+            "id": "soft-wind",
+            "name": "Soft Wind",
+            "icon": "🍃",
+            "audioSrc": "/sounds/soft-wind.mp3",
+            "description": "Gentle breeze",
+            "focusType": "grounding",
+            "tooltip": "Natural, organic movement for calm focus"
+        },
+        {
+            "id": "forest-birds",
+            "name": "Forest Birds",
+            "icon": "🐦",
+            "audioSrc": "/sounds/forest-birds.mp3",
+            "description": "Morning songbirds",
+            "focusType": "stimulating",
+            "tooltip": "Natural sounds boost mood and creativity"
+        },
+        {
+            "id": "babbling-brook",
+            "name": "Babbling Brook",
+            "icon": "🌊",
+            "audioSrc": "/sounds/babbling-brook.mp3",
+            "description": "Flowing water",
+            "focusType": "grounding",
+            "tooltip": "Gentle water flow promotes relaxed concentration"
+        },
+        {
+            "id": "campfire-crackle",
+            "name": "Campfire Crackle",
+            "icon": "🔥",
+            "audioSrc": "/sounds/campfire-crackle.mp3",
+            "description": "Wood burning",
+            "focusType": "grounding",
+            "tooltip": "Primal, comforting sound for deep work"
+        },
+        {
+            "id": "rain-tin-roof",
+            "name": "Rain on Tin Roof",
+            "icon": "🏠",
+            "audioSrc": "/sounds/rain-tin-roof.mp3",
+            "description": "Rhythmic patter",
+            "focusType": "masking",
+            "tooltip": "Cozy, rhythmic masking for indoor focus"
+        },
+        {
+            "id": "summer-crickets",
+            "name": "Summer Night Crickets",
+            "icon": "🦗",
+            "audioSrc": "/sounds/summer-crickets.mp3",
+            "description": "Evening chorus",
+            "focusType": "grounding",
+            "tooltip": "Natural rhythm promotes calm, sustained focus"
+        }
+    ],
+    "ambient": [
+        {
+            "id": "coffee-shop",
+            "name": "Coffee Shop",
+            "icon": "☕",
+            "audioSrc": "/sounds/coffee-shop.mp3",
+            "description": "Gentle chatter",
+            "focusType": "stimulating",
+            "tooltip": "Social ambience boosts productivity for some learners"
+        },
+        {
+            "id": "library",
+            "name": "Library Atmosphere",
+            "icon": "📚",
+            "audioSrc": "/sounds/library.mp3",
+            "description": "Quiet atmosphere",
+            "focusType": "grounding",
+            "tooltip": "Minimal activity creates studious environment"
+        },
+        {
+            "id": "distant-traffic",
+            "name": "Distant Traffic",
+            "icon": "🚗",
+            "audioSrc": "/sounds/distant-traffic.mp3",
+            "description": "Muffled city sounds",
+            "focusType": "masking",
+            "tooltip": "Low-level urban noise masks sudden distractions"
+        },
+        {
+            "id": "rainy-city",
+            "name": "Rainy City Street",
+            "icon": "🌆",
+            "audioSrc": "/sounds/rainy-city.mp3",
+            "description": "Rain + traffic",
+            "focusType": "masking",
+            "tooltip": "Combines natural and urban for complex masking"
+        },
+        {
+            "id": "library-whisper",
+            "name": "Library Whisper",
+            "icon": "📖",
+            "audioSrc": "/sounds/library-whisper.mp3",
+            "description": "Soft footsteps",
+            "focusType": "grounding",
+            "tooltip": "Subtle human presence without distraction"
+        }
+    ],
+    "industrial": [
+        {
+            "id": "box-fan",
+            "name": "Box Fan",
+            "icon": "🌀",
+            "audioSrc": "/sounds/box-fan.mp3",
+            "description": "Steady hum",
+            "focusType": "masking",
+            "tooltip": "Consistent mechanical noise excellent for masking"
+        },
+        {
+            "id": "airplane-cabin",
+            "name": "Airplane Cabin",
+            "icon": "✈️",
+            "audioSrc": "/sounds/airplane-cabin.mp3",
+            "description": "Neutral cocooning",
+            "focusType": "masking",
+            "tooltip": "Creates isolated focus bubble with steady drone"
+        },
+        {
+            "id": "air-conditioner",
+            "name": "Air Conditioner",
+            "icon": "❄️",
+            "audioSrc": "/sounds/air-conditioner.mp3",
+            "description": "HVAC hum",
+            "focusType": "masking",
+            "tooltip": "Familiar background noise for comfort and masking"
+        }
+    ],
+    "scientific": [
+        {
+            "id": "gamma-40hz",
+            "name": "40 Hz Gamma Waves",
+            "icon": "🧠",
+            "audioSrc": "/sounds/gamma-40hz.mp3",
+            "description": "Enhanced learning",
+            "focusType": "stimulating",
+            "tooltip": "Linked to improved memory and cognitive performance"
+        },
+        {
+            "id": "alpha-binaural",
+            "name": "Alpha Binaural Beats",
+            "icon": "🎧",
+            "audioSrc": "/sounds/alpha-binaural.mp3",
+            "description": "10 Hz relaxed focus",
+            "focusType": "grounding",
+            "tooltip": "Promotes relaxed alertness and creative flow"
+        }
+    ]
+}

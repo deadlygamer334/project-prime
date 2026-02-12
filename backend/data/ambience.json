@@ -1,0 +1,44 @@
+[
+    {
+        "id": "card-1",
+        "icon": "🌧️",
+        "title": "Gentle Rain",
+        "type": "Nature",
+        "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    },
+    {
+        "id": "card-2",
+        "icon": "🎋",
+        "title": "Zen Garden",
+        "type": "Ambient",
+        "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+    },
+    {
+        "id": "card-3",
+        "icon": "☕",
+        "title": "Paris Café",
+        "type": "Lo-Fi",
+        "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    },
+    {
+        "id": "card-4",
+        "icon": "🌊",
+        "title": "Ocean Waves",
+        "type": "Nature",
+        "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+    },
+    {
+        "id": "card-5",
+        "icon": "🌲",
+        "title": "Deep Forest",
+        "type": "Ambient",
+        "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+    },
+    {
+        "id": "card-6",
+        "icon": "🚋",
+        "title": "Night Train",
+        "type": "Mechanical",
+        "audioSrc": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+    }
+]

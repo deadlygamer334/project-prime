@@ -1,0 +1,13 @@
+﻿C:\Users\divya\Downloads\Deadly-System\backend\data\ambience.json
+C:\Users\divya\Downloads\Deadly-System\backend\data\database.sqlite
+C:\Users\divya\Downloads\Deadly-System\backend\data\habit_tracker.db
+C:\Users\divya\Downloads\Deadly-System\backend\data\quotes.json
+C:\Users\divya\Downloads\Deadly-System\backend\data\reels.json
+C:\Users\divya\Downloads\Deadly-System\backend\data\timer_backgrounds.json
+C:\Users\divya\Downloads\Deadly-System\backend\routes\__pycache__\export.cpython-313.pyc
+C:\Users\divya\Downloads\Deadly-System\backend\routes\__pycache__\focus.cpython-313.pyc
+C:\Users\divya\Downloads\Deadly-System\backend\routes\__pycache__\habits.cpython-313.pyc
+C:\Users\divya\Downloads\Deadly-System\backend\routes\__pycache__\tasks.cpython-313.pyc
+C:\Users\divya\Downloads\Deadly-System\backend\routes\__pycache__\__init__.cpython-313.pyc
+C:\Users\divya\Downloads\Deadly-System\backend\__pycache__\database.cpython-313.pyc
+C:\Users\divya\Downloads\Deadly-System\backend\__pycache__\models.cpython-313.pyc
