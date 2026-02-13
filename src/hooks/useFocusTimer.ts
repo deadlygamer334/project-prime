@@ -43,6 +43,16 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     // Load state from localStorage on mount
     const [isLoaded, setIsLoaded] = useState(false);
 
+    // Refs for closure access in onSnapshot
+    const isActiveRef = useRef(isActive);
+    const modeRef = useRef(mode);
+    const lastLocalStopRef = useRef<number>(0);
+
+    useEffect(() => {
+        isActiveRef.current = isActive;
+        modeRef.current = mode;
+    }, [isActive, mode]);
+
     // 1. Sync FROM Cloud (Multi-device support)
     useEffect(() => {
         if (!user || !isLoaded) return;
@@ -51,7 +61,8 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         const unsubscribe = onSnapshot(timerRef, (docSnap) => {
             if (!docSnap.exists()) {
                 // Remote document deleted (Stop/Reset) - Handle STOP
-                if (isActive) {
+                // Use REF to check current state, preventing stale closure issues
+                if (isActiveRef.current) {
                     setIsActive(false);
                     endTimeRef.current = null;
                 }
@@ -63,13 +74,23 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
             // Handle ACTIVE state update
             if (data.isActive && data.endTime > now) {
+                // If we stopped locally less than 2 seconds ago, ignore cloud "active" signal
+                // to prevent race conditions (Zombie Timer)
+                if (Date.now() - lastLocalStopRef.current < 2000) {
+                    return;
+                }
+
                 const remaining = Math.ceil((data.endTime - now) / 1000);
 
                 // Only sync if significant drift or status change
-                const currentRemaining = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
+                // Use REF for mode check
+                const currentMode = modeRef.current;
+                // Note: focusTimeLeft/breakTimeLeft are stale from closure, but since snapshot only fires
+                // on significant remote events (not per second), syncing to remote time is desired behavior.
+                const currentRemaining = currentMode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
                 const drift = Math.abs(currentRemaining - remaining);
 
-                if (!isActive || drift > 2 || mode !== data.mode) {
+                if (!isActiveRef.current || drift > 2 || currentMode !== data.mode) {
                     setMode(data.mode);
                     setIsActive(true);
                     endTimeRef.current = data.endTime;
@@ -83,7 +104,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 }
             } else if (!data.isActive) {
                 // Explicitly marked as not active
-                if (isActive) {
+                if (isActiveRef.current) {
                     setIsActive(false);
                     endTimeRef.current = null;
                 }
@@ -218,6 +239,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         if (isActive) {
             setIsActive(false);
             endTimeRef.current = null;
+            lastLocalStopRef.current = Date.now();
             // Immediate cloud stop
             if (user) {
                 deleteDoc(doc(db, "users", user.uid, "activeTimer", "current"))
@@ -248,6 +270,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
     const resetTimer = useCallback(() => {
         setIsActive(false);
+        lastLocalStopRef.current = Date.now();
         if (mode === "FOCUS") setIsFocusStarted(false);
         endTimeRef.current = null;
         if (user) {

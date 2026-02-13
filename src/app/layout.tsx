@@ -21,34 +21,34 @@ const robotoFont = Roboto({ weight: ["300", "400", "500", "700"], subsets: ["lat
 
 export const metadata: Metadata = {
   title: {
-    default: "Nano Banana | Master Your Focus. Track Your Progress.",
-    template: "%s | Nano Banana"
+    default: "Prime | Master Your Focus. Track Your Progress.",
+    template: "%s | Prime"
   },
   description: "Advanced focus and productivity tracking system. Master your time with Pomodoro timers, habit tracking, goal management, and comprehensive analytics. Built for serious achievers.",
   keywords: ["productivity", "focus timer", "pomodoro", "habit tracker", "goal tracking", "time management", "analytics"],
-  authors: [{ name: "Nano Banana Team" }],
-  creator: "Nano Banana",
-  publisher: "Nano Banana",
+  authors: [{ name: "Prime Team" }],
+  creator: "Prime",
+  publisher: "Prime",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://paarangat.vercel.app'),
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
-    title: "Nano Banana | Master Your Focus. Track Your Progress.",
+    title: "Prime | Master Your Focus. Track Your Progress.",
     description: "Advanced focus and productivity tracking system. Master your time with Pomodoro timers, habit tracking, goal management, and comprehensive analytics.",
-    siteName: "Nano Banana",
+    siteName: "Prime",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Nano Banana - Master Your Focus. Track Your Progress."
+        alt: "Prime - Master Your Focus. Track Your Progress."
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nano Banana | Master Your Focus. Track Your Progress.",
+    title: "Prime | Master Your Focus. Track Your Progress.",
     description: "Advanced focus and productivity tracking system for serious achievers.",
     images: ["/og-image.png"]
   },
