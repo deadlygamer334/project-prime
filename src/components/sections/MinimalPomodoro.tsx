@@ -186,7 +186,6 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
             alert("Please select a subject first!");
             return;
         }
-
         toggleTimer();
     };
 

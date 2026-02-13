@@ -62,8 +62,19 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     if (data.mode === "FOCUS") setFocusTimeLeft(remaining);
                     else setBreakTimeLeft(remaining);
                     setIsFocusStarted(data.isFocusStarted ?? true);
-                } else if (!data.isActive && isActive) {
-                    // Remote stop
+
+                    // Sync subject if provided
+                    if (data.selectedSubject !== undefined) {
+                        setSelectedSubject(data.selectedSubject);
+                    }
+                } else if (!data.isActive) {
+                    // Remote explicitly set to inactive
+                    setIsActive(false);
+                    endTimeRef.current = null;
+                }
+            } else {
+                // Remote document deleted (Stop/Reset)
+                if (isActive) {
                     setIsActive(false);
                     endTimeRef.current = null;
                 }
@@ -129,6 +140,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 endTime: endTimeRef.current,
                 isActive,
                 isFocusStarted,
+                selectedSubject,
                 updatedAt: Date.now()
             }, { merge: true }).catch(err => console.error("Cloud sync failed:", err));
         }
@@ -194,6 +206,11 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     .catch(e => console.error(e));
             }
         } else {
+            // Validate subject before starting focus
+            if (mode === "FOCUS" && !selectedSubject) {
+                return;
+            }
+
             const currentLeft = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
             if (mode === "FOCUS") setIsFocusStarted(true);
 
@@ -209,7 +226,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             }
             setIsActive(true);
         }
-    }, [isActive, focusTimeLeft, breakTimeLeft, mode, baselineFocusSecs, baselineBreakSecs]);
+    }, [isActive, focusTimeLeft, breakTimeLeft, mode, baselineFocusSecs, baselineBreakSecs, user, selectedSubject]);
 
     const resetTimer = useCallback(() => {
         setIsActive(false);
