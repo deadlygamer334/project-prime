@@ -20,7 +20,7 @@ export default function HomePage() {
       <DynamicBackground />
 
       <AppHeader
-        title="Prime"
+        title="Nano Banana"
         activePath="/"
         showSearch={false}
       />

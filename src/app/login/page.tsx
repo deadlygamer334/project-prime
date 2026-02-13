@@ -91,13 +91,16 @@ export default function LoginPage() {
 
                 {/* Visual Anchor / Logo */}
                 <div className="mb-10 relative group">
-                    <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                    <div className="w-16 h-16 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl flex items-center justify-center relative overflow-hidden shadow-2xl">
-                        <svg viewBox="0 0 512 512" className="w-10 h-10">
-                            <path d="M160 140 h120 c60 0 100 40 100 100 s-40 100 -100 100 h-70 v132 h-50 z m50 50 v100 h70 c30 0 50 -20 50 -50 s-20 -50 -50 -50 z" fill="white" />
-                            <circle cx="360" cy="380" r="25" fill="#3b82f6" className="animate-pulse" />
+                    <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <div className="w-20 h-20 rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-xl flex items-center justify-center relative overflow-hidden shadow-2xl transition-all duration-500 group-hover:bg-white/10 group-hover:border-white/20">
+                        <svg viewBox="0 0 512 512" className="w-12 h-12 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
+                            <path
+                                d="M144 80 C 144 80, 120 120, 120 200 C 120 320, 220 400, 360 400 C 400 400, 440 380, 440 380 L 440 340 C 440 340, 400 360, 360 360 C 260 360, 180 300, 180 200 C 180 140, 190 100, 190 100 L 144 80"
+                                fill="#fbbf24"
+                            />
+                            <path d="M144 80 L 160 60 L 180 75 L 170 95 Z" fill="#4ade80" />
                         </svg>
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-500 to-yellow-300" />
                     </div>
                 </div>
 
@@ -107,10 +110,10 @@ export default function LoginPage() {
 
                     {/* Header */}
                     <header className="text-center space-y-2 relative">
-                        <h1 className="text-4xl font-black tracking-tight text-white">
-                            PRIME
+                        <h1 className="text-4xl font-black tracking-tighter text-white">
+                            NANO BANANA
                         </h1>
-                        <p className="text-purple-400 text-[10px] font-bold tracking-[0.4em] uppercase">
+                        <p className="text-yellow-500 text-[10px] font-bold tracking-[0.4em] uppercase">
                             {isLogin ? "Neural Interface Login" : "Initialize New Sequence"}
                         </p>
                     </header>

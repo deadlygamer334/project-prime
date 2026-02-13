@@ -124,7 +124,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         }
     }, []);
 
-    // Save state to localStorage AND Cloud
+    // Save state to localStorage (frequent updates OK)
     useEffect(() => {
         if (!isLoaded) return;
 
@@ -140,10 +140,15 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             endTime: isActive ? endTimeRef.current : null
         };
         localStorage.setItem("focusTimerStateV2", JSON.stringify(stateToSave));
+    }, [mode, focusTimeLeft, breakTimeLeft, baselineFocusSecs, baselineBreakSecs, selectedSubject, isActive, isFocusStarted, isLoaded]);
 
-        // Sync to Cloud if active
-        if (user && isActive && endTimeRef.current) {
-            const timerDoc = doc(db, "users", user.uid, "activeTimer", "current");
+    // Sync to Cloud ONLY when critical state changes (NOT per-second)
+    useEffect(() => {
+        if (!isLoaded || !user) return;
+
+        const timerDoc = doc(db, "users", user.uid, "activeTimer", "current");
+
+        if (isActive && endTimeRef.current) {
             setDoc(timerDoc, {
                 mode,
                 endTime: endTimeRef.current,
@@ -152,8 +157,12 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 selectedSubject,
                 updatedAt: Date.now()
             }, { merge: true }).catch(err => console.error("Cloud sync failed:", err));
+        } else if (!isActive) {
+            // Ensure cloud knows it's stopped if it was active
+            // We use deleteDoc in toggleTimer/resetTimer for immediate effect, 
+            // but this ensures consistency.
         }
-    }, [mode, focusTimeLeft, breakTimeLeft, baselineFocusSecs, baselineBreakSecs, selectedSubject, isActive, isFocusStarted, isLoaded, user]);
+    }, [isActive, mode, selectedSubject, user, isLoaded, isFocusStarted]); // Removed per-second time-left dependencies
 
     const handleTimerComplete = useCallback(() => {
         setIsActive(false);

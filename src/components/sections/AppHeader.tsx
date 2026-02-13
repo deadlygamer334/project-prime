@@ -68,10 +68,13 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         <div className="header-left flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="relative">
-              <div className={`absolute -inset-1.5 rounded-full blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-500 ${isDark ? "bg-white" : "bg-black"}`}></div>
-              <svg viewBox="0 0 512 512" className="w-6 h-6 relative z-10">
-                <path d="M160 140 h120 c60 0 100 40 100 100 s-40 100 -100 100 h-70 v132 h-50 z m50 50 v100 h70 c30 0 50 -20 50 -50 s-20 -50 -50 -50 z" fill={isDark ? "white" : "black"} />
-                <circle cx="360" cy="380" r="25" fill="#3b82f6" />
+              <div className={`absolute -inset-1.5 rounded-full blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-500 ${isDark ? "bg-yellow-400" : "bg-yellow-500"}`}></div>
+              <svg viewBox="0 0 512 512" className="w-8 h-8 relative z-10 transition-transform duration-500 group-hover:scale-110">
+                <path
+                  d="M144 80 C 144 80, 120 120, 120 200 C 120 320, 220 400, 360 400 C 400 400, 440 380, 440 380 L 440 340 C 440 340, 400 360, 360 360 C 260 360, 180 300, 180 200 C 180 140, 190 100, 190 100 L 144 80"
+                  fill={isDark ? "#fbbf24" : "#f59e0b"}
+                />
+                <path d="M144 80 L 160 60 L 180 75 L 170 95 Z" fill="#4ade80" />
               </svg>
             </div>
             <h1
@@ -82,7 +85,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                 lineHeight: "1.2"
               }}
             >
-              {title}
+              Nano Banana
             </h1>
           </Link>
         </div>
