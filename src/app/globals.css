@@ -185,6 +185,7 @@
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
   body {
@@ -194,6 +195,8 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: var(--font-current);
     overflow-x: hidden;
+    position: relative;
+    width: 100%;
   }
 
   .container {
@@ -376,5 +379,14 @@
   /* Midnight (Deep Dark) */
   .bg-midnight {
     background: linear-gradient(to bottom, #020617, #0f172a);
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

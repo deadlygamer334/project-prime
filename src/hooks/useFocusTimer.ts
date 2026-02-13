@@ -49,13 +49,27 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
         const timerRef = doc(db, "users", user.uid, "activeTimer", "current");
         const unsubscribe = onSnapshot(timerRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                const now = Date.now();
+            if (!docSnap.exists()) {
+                // Remote document deleted (Stop/Reset) - Handle STOP
+                if (isActive) {
+                    setIsActive(false);
+                    endTimeRef.current = null;
+                }
+                return;
+            }
 
-                // Only update locally if the remote state is different or newer
-                if (data.isActive && data.endTime > now) {
-                    const remaining = Math.ceil((data.endTime - now) / 1000);
+            const data = docSnap.data();
+            const now = Date.now();
+
+            // Handle ACTIVE state update
+            if (data.isActive && data.endTime > now) {
+                const remaining = Math.ceil((data.endTime - now) / 1000);
+
+                // Only sync if significant drift or status change
+                const currentRemaining = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
+                const drift = Math.abs(currentRemaining - remaining);
+
+                if (!isActive || drift > 2 || mode !== data.mode) {
                     setMode(data.mode);
                     setIsActive(true);
                     endTimeRef.current = data.endTime;
@@ -63,17 +77,12 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     else setBreakTimeLeft(remaining);
                     setIsFocusStarted(data.isFocusStarted ?? true);
 
-                    // Sync subject if provided
                     if (data.selectedSubject !== undefined) {
                         setSelectedSubject(data.selectedSubject);
                     }
-                } else if (!data.isActive) {
-                    // Remote explicitly set to inactive
-                    setIsActive(false);
-                    endTimeRef.current = null;
                 }
-            } else {
-                // Remote document deleted (Stop/Reset)
+            } else if (!data.isActive) {
+                // Explicitly marked as not active
                 if (isActive) {
                     setIsActive(false);
                     endTimeRef.current = null;

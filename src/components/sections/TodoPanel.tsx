@@ -280,11 +280,11 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
       style={{ height: "auto", minHeight: "500px" }}
     >
       {/* Todo Header Navigation */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className={`text-[24px] font-bold tracking-[-0.02em] ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h2 className={`text-[20px] md:text-[24px] font-bold tracking-[-0.02em] ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
           To-do list
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setMoveCompletedToBottom(!moveCompletedToBottom)}
             className={`p-2 rounded-xl border transition-all ${moveCompletedToBottom
@@ -295,27 +295,27 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
           >
             <Settings2 size={18} />
           </button>
-          <div className={`flex items-center rounded-xl p-1 ${isDark ? "bg-[#1c1c1e]" : "bg-[#f5f5f7]"}`}>
+          <div className={`flex items-center rounded-xl p-1 ${isDark ? "bg-[#1c1c1e]" : "bg-[#f5f5f7]"} overflow-x-auto max-w-full hide-scrollbar`}>
             <button
               onClick={goToPreviousDay}
-              className={`flex items-center px-4 py-2 text-[14.4px] font-medium transition-colors rounded-lg ${isDark ? "text-white hover:bg-[#3a3a3c]" : "text-[#1d1d1f] hover:bg-[#e5e5ea]"}`}
+              className={`flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg ${isDark ? "text-white hover:bg-[#3a3a3c]" : "text-[#1d1d1f] hover:bg-[#e5e5ea]"}`}
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+              <ChevronLeft className="w-3 md:w-4 h-3 md:h-4 mr-1" /> Prev
             </button>
             <button
               onClick={goToToday}
-              className={`flex items-center px-4 py-2 text-[14.4px] font-medium transition-colors rounded-lg border-x ${isDark ? "text-white hover:bg-[#3a3a3c] border-black/20" : "text-[#1d1d1f] hover:bg-[#e5e5ea] border-black/5"}`}
+              className={`flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg border-x ${isDark ? "text-white hover:bg-[#3a3a3c] border-black/20" : "text-[#1d1d1f] hover:bg-[#e5e5ea] border-black/5"}`}
             >
               Today
             </button>
             <button
               onClick={goToNextDay}
-              className={`flex items-center px-4 py-2 text-[14.4px] font-medium transition-colors rounded-lg ${isDark ? "text-white hover:bg-[#3a3a3c]" : "text-[#1d1d1f] hover:bg-[#e5e5ea]"}`}
+              className={`flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg ${isDark ? "text-white hover:bg-[#3a3a3c]" : "text-[#1d1d1f] hover:bg-[#e5e5ea]"}`}
             >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
+              Next <ChevronRight className="w-3 md:w-4 h-3 md:h-4 ml-1" />
             </button>
           </div>
-          <span className={`text-[14.4px] px-4 py-2 ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
+          <span className={`text-[12px] md:text-[14.4px] font-medium px-2 py-2 whitespace-nowrap ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
             {formatDisplayDate(currentDate)}
           </span>
         </div>

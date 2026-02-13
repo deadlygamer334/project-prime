@@ -107,7 +107,7 @@ export default function LoginPage() {
 
                     {/* Header */}
                     <header className="text-center space-y-2 relative">
-                        <h1 className="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
+                        <h1 className="text-4xl font-black tracking-tight text-white">
                             PRIME
                         </h1>
                         <p className="text-purple-400 text-[10px] font-bold tracking-[0.4em] uppercase">

@@ -69,8 +69,8 @@ const HabitTrackerMain = () => {
         style={{ minHeight: '600px' }}
       >
         {/* Month Navigation */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4 mb-8">
+          <div className="flex items-center gap-3 md:gap-4">
             <button
               onClick={prevMonth}
               className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors cursor-pointer bg-muted/50 hover:bg-muted"
@@ -78,7 +78,7 @@ const HabitTrackerMain = () => {
             >
               <ChevronLeft size={20} className="text-foreground" strokeWidth={2.5} />
             </button>
-            <h2 className="text-[24px] md:text-[32px] font-bold tracking-tight leading-none text-foreground">
+            <h2 className="text-[20px] md:text-[32px] font-bold tracking-tight leading-none text-foreground whitespace-nowrap">
               {monthName} {currentYear}
             </h2>
             <button
@@ -92,28 +92,32 @@ const HabitTrackerMain = () => {
         </div>
 
         {/* Summary Statistics Bar */}
-        <div className="rounded-xl p-6 mb-8 flex flex-wrap items-center gap-8 border transition-colors bg-muted/20 border-border/50">
-          <div className="flex flex-col gap-1 shrink-0">
-            <span className="text-[13px] font-medium leading-tight text-muted-foreground">Number of habits</span>
-            <span className="text-2xl font-semibold text-foreground">{habits.length}</span>
+        <div className="rounded-xl p-4 md:p-6 mb-8 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 border transition-colors bg-muted/20 border-border/50">
+          <div className="flex md:flex-row gap-4 md:gap-8 w-full md:w-auto">
+            <div className="flex flex-col gap-1 shrink-0">
+              <span className="text-[11px] md:text-[13px] font-medium leading-tight text-muted-foreground uppercase tracking-widest">Habits</span>
+              <span className="text-xl md:text-2xl font-bold text-foreground">{habits.length}</span>
+            </div>
+
+            <div className="flex flex-col gap-1 shrink-0">
+              <span className="text-[11px] md:text-[13px] font-medium leading-tight text-muted-foreground uppercase tracking-widest">Today</span>
+              <span className="text-xl md:text-2xl font-bold text-foreground">{overallStats.completedToday}</span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1 shrink-0">
-            <span className="text-[13px] font-medium leading-tight text-muted-foreground">Completed today</span>
-            <span className="text-2xl font-semibold text-foreground">{overallStats.completedToday}</span>
-          </div>
-
-          <Reveal delay={100} className="flex flex-col gap-2 flex-grow min-w-[200px]">
-            <span className="text-[13px] font-medium leading-tight text-muted-foreground">Average Progress</span>
+          <Reveal delay={100} className="flex flex-col gap-2 w-full flex-grow">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] md:text-[13px] font-medium leading-tight text-muted-foreground uppercase tracking-widest">Average Progress</span>
+              <span className="text-[14px] md:text-[16px] font-bold leading-tight text-foreground">
+                <Counter value={overallStats.averageProgress} decimals={2} suffix="%" />
+              </span>
+            </div>
             <div className="relative h-2 w-full rounded-full overflow-hidden bg-muted">
               <div
                 className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all duration-1000 shadow-[0_0_10px_0_rgba(var(--primary),0.5)]"
                 style={{ width: `${overallStats.averageProgress}%` }}
               />
             </div>
-            <span className="text-[16px] font-medium leading-tight text-foreground">
-              <Counter value={overallStats.averageProgress} decimals={2} suffix="%" />
-            </span>
           </Reveal>
         </div>
 
@@ -121,7 +125,7 @@ const HabitTrackerMain = () => {
 
         {/* Action Bar / Add Habit Section */}
         <div className="flex flex-col gap-4 mb-6">
-          <div className="rounded-xl p-4 flex flex-col md:flex-row items-stretch md:items-center gap-4 bg-muted/30">
+          <div className="rounded-xl p-3 md:p-4 flex flex-col gap-4 bg-muted/30">
             <input
               type="text"
               placeholder="Add a new habit..."
@@ -131,29 +135,28 @@ const HabitTrackerMain = () => {
                 if (error) setError(null);
               }}
               onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()}
-              className={`flex-grow border-none rounded-xl py-3 px-4 outline-none text-base transition-colors bg-card text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary ${error ? "ring-1 ring-destructive bg-destructive/10" : ""}`}
+              className={`w-full border-none rounded-xl py-3 px-4 outline-none text-base transition-colors bg-card text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary ${error ? "ring-1 ring-destructive bg-destructive/10" : ""}`}
             />
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleAddHabit}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg shrink-0 active:scale-95 whitespace-nowrap"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg grow active:scale-95 whitespace-nowrap"
               >
                 Add Habit
               </button>
 
               <button
                 onClick={copyFromPreviousMonth}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shrink-0 active:scale-95 bg-card hover:bg-muted text-foreground whitespace-nowrap"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all grow active:scale-95 bg-card hover:bg-muted text-foreground whitespace-nowrap"
                 title="Copy from Previous Month"
               >
                 <Copy size={16} />
-                <span className="hidden sm:inline">Copy Previous</span>
-                <span className="sm:hidden">Copy</span>
+                <span>Previous</span>
               </button>
               <button
                 onClick={() => setIsStatsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shrink-0 active:scale-95 bg-card hover:bg-muted text-foreground whitespace-nowrap"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all grow active:scale-95 bg-card hover:bg-muted text-foreground whitespace-nowrap"
               >
                 <BarChart3 size={16} />
                 <span>Stats</span>

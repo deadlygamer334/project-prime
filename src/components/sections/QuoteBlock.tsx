@@ -13,16 +13,28 @@ export default function QuoteBlock() {
     const fetchQuotes = async () => {
         try {
             const response = await fetch('/api/quotes');
-            const data = await response.json();
-            if (Array.isArray(data)) {
-                setQuotesList(data);
-                if (data.length > 0) {
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    setQuotesList(data);
                     setQuote(data[Math.floor(Math.random() * data.length)]);
+                    return;
                 }
             }
         } catch (error) {
             console.error('Error fetching quotes:', error);
         }
+
+        // Fallback quotes if API fails
+        const fallbacks = [
+            "🔋 Your energy is your currency. Invest it wisely today.",
+            "🚀 Focus is the bridge between goals and accomplishment.",
+            "💎 Progress over perfection, every single day.",
+            "🌊 Stay calm, stay focused, stay productive.",
+            "✨ Your future self will thank you for the work you do today."
+        ];
+        setQuotesList(fallbacks);
+        setQuote(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
     };
 
     useEffect(() => {
@@ -42,15 +54,15 @@ export default function QuoteBlock() {
         <div className="group relative w-full max-w-[600px] mx-auto px-4">
             <div
                 className={`flex flex-col items-center p-6 rounded-3xl border transition-all duration-500 backdrop-blur-md ${isDark
-                        ? "bg-white/5 border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.07] hover:border-white/20"
-                        : "bg-white/40 border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:border-black/10"
+                    ? "bg-white/5 border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.07] hover:border-white/20"
+                    : "bg-white/40 border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:border-black/10"
                     }`}
             >
                 <h2
                     className={`text-[16px] md:text-[18px] font-semibold leading-relaxed tracking-tight transition-all duration-500 text-center ${isDark ? "text-white/90" : "text-black/80"
-                        } ${quote ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+                        } opacity-100 translate-y-0`}
                 >
-                    {quote || "🔋 Your energy is your currency. Invest it wisely today."}
+                    {quote}
                 </h2>
                 <button
                     onClick={refreshQuote}

@@ -75,7 +75,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
               </svg>
             </div>
             <h1
-              className={`page-title text-[18px] md:text-[22px] font-bold tracking-tight cursor-pointer transition-all whitespace-nowrap ${isDark ? "bg-gradient-to-r from-white via-white/90 to-white/30 bg-clip-text text-transparent" : "bg-gradient-to-r from-black via-black/80 to-black/50 bg-clip-text text-transparent"
+              className={`page-title text-[18px] md:text-[22px] font-bold tracking-tight cursor-pointer transition-all whitespace-nowrap ${isDark ? "text-white" : "text-[#1d1d1f]"
                 }`}
               style={{
                 letterSpacing: "-0.03em",
