@@ -65,10 +65,17 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         }}
       >
         {/* Header Left: Logo/Title */}
-        <div className="header-left flex items-center gap-4">
-          <Link href="/">
+        <div className="header-left flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="relative">
+              <div className={`absolute -inset-1.5 rounded-full blur-md opacity-0 group-hover:opacity-20 transition-opacity duration-500 ${isDark ? "bg-white" : "bg-black"}`}></div>
+              <svg viewBox="0 0 512 512" className="w-6 h-6 relative z-10">
+                <path d="M160 140 h120 c60 0 100 40 100 100 s-40 100 -100 100 h-70 v132 h-50 z m50 50 v100 h70 c30 0 50 -20 50 -50 s-20 -50 -50 -50 z" fill={isDark ? "white" : "black"} />
+                <circle cx="360" cy="380" r="25" fill="#3b82f6" />
+              </svg>
+            </div>
             <h1
-              className={`page-title text-[18px] md:text-[22px] font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap ${isDark ? "bg-gradient-to-r from-white via-white/90 to-white/30 bg-clip-text text-transparent" : "bg-gradient-to-r from-black via-black/80 to-black/50 bg-clip-text text-transparent"
+              className={`page-title text-[18px] md:text-[22px] font-bold tracking-tight cursor-pointer transition-all whitespace-nowrap ${isDark ? "bg-gradient-to-r from-white via-white/90 to-white/30 bg-clip-text text-transparent" : "bg-gradient-to-r from-black via-black/80 to-black/50 bg-clip-text text-transparent"
                 }`}
               style={{
                 letterSpacing: "-0.03em",

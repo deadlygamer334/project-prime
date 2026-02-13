@@ -93,7 +93,10 @@ export default function LoginPage() {
                 <div className="mb-10 relative group">
                     <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                     <div className="w-16 h-16 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl flex items-center justify-center relative overflow-hidden shadow-2xl">
-                        <Zap size={28} className="text-purple-400 animate-pulse" />
+                        <svg viewBox="0 0 512 512" className="w-10 h-10">
+                            <path d="M160 140 h120 c60 0 100 40 100 100 s-40 100 -100 100 h-70 v132 h-50 z m50 50 v100 h70 c30 0 50 -20 50 -50 s-20 -50 -50 -50 z" fill="white" />
+                            <circle cx="360" cy="380" r="25" fill="#3b82f6" className="animate-pulse" />
+                        </svg>
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
                     </div>
                 </div>
@@ -105,7 +108,7 @@ export default function LoginPage() {
                     {/* Header */}
                     <header className="text-center space-y-2 relative">
                         <h1 className="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
-                            PAARANGAT
+                            PRIME
                         </h1>
                         <p className="text-purple-400 text-[10px] font-bold tracking-[0.4em] uppercase">
                             {isLogin ? "Neural Interface Login" : "Initialize New Sequence"}
