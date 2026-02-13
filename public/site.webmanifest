@@ -1,7 +1,7 @@
 {
     "gcm_sender_id": "103953800507",
-    "name": "Paarangat System",
-    "short_name": "Paarangat",
+    "name": "Prime",
+    "short_name": "Prime",
     "description": "Master Your Focus. Track Your Progress.",
     "start_url": "/",
     "display": "standalone",
