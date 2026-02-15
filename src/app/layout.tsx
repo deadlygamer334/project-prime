@@ -13,11 +13,27 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import FloatingMusicPlayer from "@/components/FloatingMusicPlayer";
 import SecurityGatekeeper from "@/components/security/SecurityGatekeeper";
 import DynamicBackground from "@/components/sections/DynamicBackground";
+import LayoutHandlers from "@/components/LayoutHandlers";
+import { KeyboardShortcutsProvider } from "@/lib/KeyboardShortcutsContext";
+import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
+import QueryProvider from "@/components/QueryProvider";
+import OfflineStatus from "@/components/OfflineStatus";
+import { GoalProvider } from "@/lib/GoalContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 const merriweather = Merriweather({ weight: ["300", "400", "700", "900"], subsets: ["latin"], variable: "--font-merriweather", display: "swap" });
 const robotoFont = Roboto({ weight: ["300", "400", "500", "700"], subsets: ["latin"], variable: "--font-roboto", display: "swap" });
+
+import { Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -71,13 +87,6 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest"
 };
 
-import { KeyboardShortcutsProvider } from "@/lib/KeyboardShortcutsContext";
-import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
-
-import QueryProvider from "@/components/QueryProvider";
-import OfflineStatus from "@/components/OfflineStatus";
-import { GoalProvider } from "@/lib/GoalContext";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -86,51 +95,53 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`antialiased ${inter.variable} ${mono.variable} ${merriweather.variable} ${robotoFont.variable}`}>
-        <a
-          href="#main-content"
-          className="absolute left-0 top-[-9999px] z-[9999] bg-white text-black p-4 transition-all focus:top-0 focus:left-0"
-        >
-          Skip to main content
-        </a>
         <GlobalErrorBoundary>
           <QueryProvider>
             <SettingsProvider>
-              <ThemeProvider>
-                <KeyboardShortcutsProvider>
-                  <HabitProvider>
-                    <GoalProvider>
-                      <Script
-                        id="orchids-browser-logs"
-                        src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
-                        strategy="afterInteractive"
-                        data-orchids-project-id="af7ac36f-acf0-497f-baa0-ffab1e811bf8"
-                      />
-                      <ErrorReporter />
-                      <Script
-                        src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
-                        strategy="afterInteractive"
-                        data-target-origin="*"
-                        data-message-type="ROUTE_CHANGE"
-                        data-include-search-params="true"
-                        data-only-in-iframe="true"
-                        data-debug="true"
-                        data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
-                      />
-                      <AmbienceProvider>
-                        <SecurityGatekeeper />
-                        <DynamicBackground />
-                        <ProtectedRoute>
-                          {children}
-                        </ProtectedRoute>
-                        <FloatingMusicPlayer />
-                      </AmbienceProvider>
-                      <KeyboardShortcutsModal />
-                      <VisualEditsMessenger />
-                      <OfflineStatus />
-                    </GoalProvider>
-                  </HabitProvider>
-                </KeyboardShortcutsProvider>
-              </ThemeProvider>
+              <LayoutHandlers>
+                <ThemeProvider>
+                  <KeyboardShortcutsProvider>
+                    <HabitProvider>
+                      <GoalProvider>
+                        <a
+                          href="#main-content"
+                          className="absolute left-0 top-[-9999px] z-[9999] bg-white text-black p-4 transition-all focus:top-0 focus:left-0"
+                        >
+                          Skip to main content
+                        </a>
+                        <Script
+                          id="orchids-browser-logs"
+                          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
+                          strategy="afterInteractive"
+                          data-orchids-project-id="af7ac36f-acf0-497f-baa0-ffab1e811bf8"
+                        />
+                        <ErrorReporter />
+                        <Script
+                          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
+                          strategy="afterInteractive"
+                          data-target-origin="*"
+                          data-message-type="ROUTE_CHANGE"
+                          data-include-search-params="true"
+                          data-only-in-iframe="true"
+                          data-debug="true"
+                          data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
+                        />
+                        <AmbienceProvider>
+                          <SecurityGatekeeper />
+                          <DynamicBackground />
+                          <ProtectedRoute>
+                            {children}
+                          </ProtectedRoute>
+                          <FloatingMusicPlayer />
+                        </AmbienceProvider>
+                        <KeyboardShortcutsModal />
+                        <VisualEditsMessenger />
+                        <OfflineStatus />
+                      </GoalProvider>
+                    </HabitProvider>
+                  </KeyboardShortcutsProvider>
+                </ThemeProvider>
+              </LayoutHandlers>
             </SettingsProvider>
           </QueryProvider>
         </GlobalErrorBoundary>

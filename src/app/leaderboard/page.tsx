@@ -37,7 +37,7 @@ export default function LeaderboardPage() {
         <div className="min-h-screen flex flex-col transition-colors duration-300 text-foreground">
             <AppHeader title="Leaderboard" activePath="/leaderboard" />
 
-            <main className="container mx-auto flex-grow py-8 px-6 relative z-10">
+            <main className="container mx-auto flex-grow py-8 px-6 relative z-10 pb-24 md:pb-8">
                 <div className="max-w-4xl mx-auto">
                     {/* Back Button */}
                     <Link href="/" className="inline-flex items-center gap-2 mb-8 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground">

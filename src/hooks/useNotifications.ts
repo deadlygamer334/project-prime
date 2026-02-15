@@ -75,28 +75,21 @@ export function useNotifications() {
      * Send timer completion notification
      */
     const sendTimerNotification = useCallback(async (
-        mode: "FOCUS" | "BREAK",
+        mode: "FOCUS" | "BREAK" | "STOPWATCH",
         duration: number,
         subject?: string
     ): Promise<void> => {
         const isFocus = mode === "FOCUS";
+        const isStopwatch = mode === "STOPWATCH";
 
         await sendNotification({
             type: isFocus ? "timer_complete" : "break_complete",
-            title: isFocus ? "🎯 Session Complete!" : "☕ Break Over!",
-            body: isFocus
+            title: isFocus ? "🎯 Session Complete!" : isStopwatch ? "⏱️ Stopwatch Stopped" : "☕ Break Over!",
+            body: isFocus || isStopwatch
                 ? `Great job! You completed ${duration.toFixed(0)} minutes${subject ? ` of ${subject}` : ""}.`
                 : "Ready to get back to work?",
             icon: "/icon.svg",
             badge: "/icon.svg",
-            requireInteraction: true,
-            actions: isFocus ? [
-                { action: "start_break", title: "Start Break" },
-                { action: "continue", title: "Keep Going" },
-            ] : [
-                { action: "start_focus", title: "Start Focus" },
-                { action: "dismiss", title: "Dismiss" },
-            ],
             data: {
                 mode,
                 duration,
@@ -119,7 +112,6 @@ export function useNotifications() {
             body: description,
             icon: "/icon.svg",
             badge: "/icon.svg",
-            requireInteraction: true,
             data: {
                 timestamp: Date.now(),
             },

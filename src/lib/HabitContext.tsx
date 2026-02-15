@@ -11,6 +11,7 @@ export interface Habit {
   name: string;
   completions: { [monthKey: string]: { [day: number]: boolean } }; // monthKey is "YYYY-MM"
   createdAt: number;
+  monthKeys?: string[]; // Array of "YYYY-MM" keys where this habit is active
 }
 
 interface HabitContextType {
@@ -18,6 +19,7 @@ interface HabitContextType {
   addHabit: (name: string) => void;
   toggleHabitCompletion: (habitId: string, day: number) => void;
   deleteHabit: (id: string) => void;
+  removeHabitFromMonth: (id: string) => void;
   copyFromPreviousMonth: () => void;
   getStatsForDay: (day: number) => { total: number; completed: number; percent: number };
   overallStats: {
@@ -49,163 +51,162 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-  // Auth Listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (!currentUser) {
-        setHabits([]);
-        setIsLoaded(true);
-      }
+  // --- 1. Derived State ---
+  const visibleHabits = useMemo(() => {
+    const monthKey = `${currentYear}-${currentMonth}`;
+    return habits.filter(h => {
+      // Legacy habits without monthKeys property show up everywhere
+      if (h.monthKeys === undefined) return true;
+      // Habits with empty monthKeys array are hidden (removed from all months)
+      if (h.monthKeys.length === 0) return false;
+      // Scoped habits only show if key matches
+      return h.monthKeys.includes(monthKey);
     });
-    return () => unsubscribe();
-  }, []);
+  }, [habits, currentMonth, currentYear]);
 
-  // Firestore Sync - History in Subcollections
-  useEffect(() => {
-    if (!user) return;
+  // --- 2. Stats Functions ---
+  const getMonthlyStats = useCallback(() => {
+    const monthKey = `${currentYear}-${currentMonth}`;
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    const habitsRef = collection(db, "users", user.uid, "habits");
-    const unsubscribe = onSnapshot(habitsRef, (snapshot) => {
-      const fetchedHabits: Habit[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        completions: {}, // Default to empty
-        ...doc.data()
-      } as Habit));
+    let totalCompletions = 0;
+    const dailyCounts: { [day: number]: number } = {};
 
-      // Sort by creation time
-      fetchedHabits.sort((a, b) => a.createdAt - b.createdAt);
-
-      // MIGRATION CHECK: If habit has 'completions' field on main doc, migrate it
-      fetchedHabits.forEach(async (h) => {
-        if (h.completions && Object.keys(h.completions).length > 0) {
-          console.log(`Migrating history for habit ${h.name}...`);
-          const batch = writeBatch(db);
-          const habitRef = doc(db, "users", user.uid, "habits", h.id);
-
-          // Move each month to sub-collection
-          for (const [monthKey, data] of Object.entries(h.completions)) {
-            const historyRef = doc(db, "users", user.uid, "habits", h.id, "history", monthKey);
-            batch.set(historyRef, { ...data }); // Use set to overwrite/create
-          }
-
-          // Remove completions from main doc
-          batch.update(habitRef, { completions: {} }); // Or deleteField()
-          // But we need to keep completions for optimistic UI? 
-          // Ideally we load it back. 
-          // For now, let's just clear it to finish migration.
-          await batch.commit();
+    visibleHabits.forEach(habit => {
+      const monthData = habit.completions[monthKey] || {};
+      Object.keys(monthData).forEach(dayStr => {
+        const day = parseInt(dayStr);
+        if (monthData[day]) {
+          totalCompletions++;
+          dailyCounts[day] = (dailyCounts[day] || 0) + 1;
         }
       });
-
-      // After fetching habits, we need to LISTEN to their history sub-collections
-      // For "Past 2 months" + Current month.
-      // This is dynamic. 
-      // To avoid 10+ listeners, maybe we just fetch current month?
-      // Or we accept we need listeners for the currently visible range.
-      // Let's implement a "loadHistoryForMonth" function.
-
-      setHabits(fetchedHabits);
-      setIsLoaded(true);
-    }, (error) => {
-      console.error("HabitContext: Habits sync error:", error);
-      setIsLoaded(true);
     });
 
-    return () => unsubscribe();
-  }, [user]);
+    const completionRate = visibleHabits.length > 0
+      ? (totalCompletions / (visibleHabits.length * daysInMonth)) * 100
+      : 0;
 
-  // Listener for Current Month History
-  useEffect(() => {
-    if (!user || habits.length === 0) return;
+    let bestDay = null;
+    let maxCompleted = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const count = dailyCounts[d] || 0;
+      if (count > maxCompleted) {
+        maxCompleted = count;
+        bestDay = {
+          day: d,
+          count,
+          percentage: (count / visibleHabits.length) * 100
+        };
+      }
+    }
 
-    const monthKey = `${currentYear}-${currentMonth}`;
-    // Also listen to previous month for "Streak" calculations working across months
-    const prevDate = new Date(currentYear, currentMonth - 1);
-    const prevMonthKey = `${prevDate.getFullYear()}-${prevDate.getMonth()}`;
+    // Streak calculation
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
 
-    const unsubscribes: (() => void)[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      if (dailyCounts[d] > 0) {
+        tempStreak++;
+        if (tempStreak > longestStreak) longestStreak = tempStreak;
+      } else {
+        tempStreak = 0;
+      }
+    }
 
-    habits.forEach(h => {
-      // Listen to Current Month
-      const historyRef = doc(db, "users", user.uid, "habits", h.id, "history", monthKey);
-      unsubscribes.push(onSnapshot(historyRef, (snap) => {
-        if (snap.exists()) {
-          setHabits(prev => prev.map(habit => {
-            if (habit.id === h.id) {
-              const newCompletions = { ...habit.completions, [monthKey]: snap.data() };
-              return { ...habit, completions: newCompletions };
-            }
-            return habit;
-          }));
+    // Current streak logic (backwards from today if current month)
+    const todayDateObj = new Date();
+    todayDateObj.setHours(0, 0, 0, 0);
+    const isCurrentMonth = todayDateObj.getMonth() === currentMonth && todayDateObj.getFullYear() === currentYear;
+
+    if (isCurrentMonth) {
+      for (let d = todayDateObj.getDate(); d >= 1; d--) {
+        if (dailyCounts[d] > 0) {
+          currentStreak++;
+        } else if (d < todayDateObj.getDate()) {
+          break;
         }
-      }, (err) => {
-        if (err.code !== 'permission-denied') {
-          console.error(`HabitContext: History sync error for ${h.id}:`, err);
-        }
-      }));
+      }
+    } else {
+      currentStreak = tempStreak;
+    }
 
-      // Listen to Previous Month
-      const prevHistoryRef = doc(db, "users", user.uid, "habits", h.id, "history", prevMonthKey);
-      unsubscribes.push(onSnapshot(prevHistoryRef, (snap) => {
-        if (snap.exists()) {
-          setHabits(prev => prev.map(habit => {
-            if (habit.id === h.id) {
-              const newCompletions = { ...habit.completions, [prevMonthKey]: snap.data() };
-              return { ...habit, completions: newCompletions };
-            }
-            return habit;
-          }));
-        }
-      }, (err) => {
-        if (err.code !== 'permission-denied') {
-          console.error(`HabitContext: Prev history error for ${h.id}:`, err);
-        }
-      }));
+    return {
+      completionRate,
+      totalCompleted: totalCompletions,
+      currentStreak,
+      longestStreak,
+      bestDay
+    };
+  }, [currentYear, currentMonth, visibleHabits]);
+
+  const getYearlyOverview = useCallback(() => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return months.map((month, m) => {
+      const monthKey = `${currentYear}-${m}`;
+      const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+      let completions = 0;
+
+      visibleHabits.forEach(h => {
+        const data = h.completions[monthKey] || {};
+        completions += Object.values(data).filter(Boolean).length;
+      });
+
+      const percentage = visibleHabits.length > 0
+        ? (completions / (visibleHabits.length * daysInMonth)) * 100
+        : 0;
+
+      return { month, percentage };
     });
+  }, [currentYear, visibleHabits]);
 
-    return () => unsubscribes.forEach(u => u());
-  }, [user, currentMonth, currentYear, habits.length]); // Re-run if habits list changes (add/remove) or month changes
+  const overallStats = useMemo(() => {
+    const todayDateObj = new Date();
+    todayDateObj.setHours(0, 0, 0, 0);
+    const todayDay = todayDateObj.getDate();
+    const currentMonthKeyStr = `${todayDateObj.getFullYear()}-${todayDateObj.getMonth()}`;
 
+    return {
+      totalHabits: visibleHabits.length,
+      completedToday: visibleHabits.filter((h) => h.completions[currentMonthKeyStr]?.[todayDay]).length,
+      averageProgress: visibleHabits.length > 0 ? visibleHabits.reduce((acc, h) => {
+        const monthKey = `${currentYear}-${currentMonth}`;
+        const done = Object.values(h.completions[monthKey] || {}).filter(Boolean).length;
+        return acc + (done / 31);
+      }, 0) / visibleHabits.length * 100 : 0,
+    };
+  }, [visibleHabits, currentYear, currentMonth]);
+
+  // --- 3. Actions ---
   const addHabit = useCallback(async (name: string) => {
     if (!name.trim() || !user) return;
-
+    const monthKey = `${currentYear}-${currentMonth}`;
     const newHabit = {
       name,
-      // completions: {}, // Don't store completions on main doc anymore
       createdAt: Date.now(),
+      monthKeys: [monthKey]
     };
-
-    // Optimistic Update
     const tempId = crypto.randomUUID();
-    const optimisticHabit = { ...newHabit, id: tempId, completions: {} } as Habit;
-    setHabits(prev => [...prev, optimisticHabit]);
+    setHabits(prev => [...prev, { ...newHabit, id: tempId, completions: {} } as Habit]);
 
     try {
       await addDoc(collection(db, "users", user.uid, "habits"), newHabit);
     } catch (e) {
-      console.error("Error adding habit to Firestore:", e);
+      console.error("Error adding habit:", e);
       setHabits(prev => prev.filter(h => h.id !== tempId));
     }
-  }, [user]);
+  }, [user, currentYear, currentMonth]);
 
   const toggleHabitCompletion = useCallback(async (habitId: string, day: number) => {
     if (!user) return;
-
     const monthKey = `${currentYear}-${currentMonth}`;
-    const habit = habits.find(h => h.id === habitId);
-    if (!habit) return;
 
-    // Calculate new value
-    const currentVal = habit.completions[monthKey]?.[day] || false;
-    const newVal = !currentVal;
-
-    // Optimistic Update
     setHabits(prev => prev.map(h => {
       if (h.id === habitId) {
         const newCompletions = { ...h.completions };
         const monthCompletions = { ...(newCompletions[monthKey] || {}) };
-        monthCompletions[day] = newVal;
+        monthCompletions[day] = !monthCompletions[day];
         newCompletions[monthKey] = monthCompletions;
         return { ...h, completions: newCompletions };
       }
@@ -214,35 +215,115 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       const historyRef = doc(db, "users", user.uid, "habits", habitId, "history", monthKey);
-      // We need to use "merge: true" with setDoc because updateDoc fails if doc doesn't exist
+      const habit = habits.find(h => h.id === habitId);
+      const newVal = !habit?.completions[monthKey]?.[day];
+
       await setDoc(historyRef, { [day]: newVal }, { merge: true });
 
-      // Trigger achievement/streak checks if completed
       if (newVal) {
         const stats = getMonthlyStats();
         if (stats.currentStreak > 0) {
-          await NotificationEngine.getInstance().checkStreakMilestones(stats.currentStreak);
+          // Decoupled notification call to prevent render issues
+          setTimeout(() => {
+            NotificationEngine.getInstance().checkStreakMilestones(stats.currentStreak);
+          }, 0);
         }
       }
     } catch (e) {
       console.error("Error toggling habit:", e);
     }
-  }, [user, currentYear, currentMonth, habits]);
+  }, [user, currentYear, currentMonth, habits, getMonthlyStats]); // Kept getMonthlyStats dependency but decoupled execution
 
   const deleteHabit = useCallback(async (id: string) => {
     if (!user) return;
-
-    // Optimistic
     setHabits(prev => prev.filter(h => h.id !== id));
-
     try {
       await deleteDoc(doc(db, "users", user.uid, "habits", id));
-      // Optionally delete sub-collections? Firestore doesn't cascade delete. 
-      // For now, we leave history or use a Cloud Function for cleanup.
     } catch (e) {
       console.error("Error deleting habit:", e);
     }
   }, [user]);
+
+  const removeHabitFromMonth = useCallback(async (id: string) => {
+    if (!user) return;
+    const monthKey = `${currentYear}-${currentMonth}`;
+
+    // Find the habit before optimistic update
+    const habitToUpdate = habits.find(h => h.id === id);
+    if (!habitToUpdate) {
+      console.error("Habit not found:", id);
+      return;
+    }
+
+    let newMonthKeys: string[];
+
+    // Handle legacy habits (no monthKeys property) by converting them to scoped habits
+    if (habitToUpdate.monthKeys === undefined) {
+      console.log("Converting legacy habit to scoped habit and removing from current month");
+
+      let createdDate: Date;
+      // Robustly handle createdAt (could be number, string, or Firestore Timestamp)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const createdAt = habitToUpdate.createdAt as any;
+      if (createdAt && typeof createdAt.toDate === 'function') {
+        createdDate = createdAt.toDate();
+      } else {
+        createdDate = new Date(createdAt);
+      }
+
+      // Fallback for invalid dates: use Jan 1st of current year to safeguard against data loss
+      if (isNaN(createdDate.getTime())) {
+        console.warn("Invalid createdAt for habit", id, createdAt, "Using fallback.");
+        createdDate = new Date(currentYear, 0, 1);
+      }
+
+      const createdYear = createdDate.getFullYear();
+      const createdMonth = createdDate.getMonth();
+      const allMonthKeys: string[] = [];
+
+      // Cap at 5 years back to prevent performance issues with very old/buggy dates
+      let year = Math.max(createdYear, currentYear - 5);
+      let month = (year === createdYear) ? createdMonth : 0;
+
+      while (year < currentYear || (year === currentYear && month <= currentMonth)) {
+        const key = `${year}-${month}`;
+        if (key !== monthKey) { // Exclude current month
+          allMonthKeys.push(key);
+        }
+        month++;
+        if (month > 11) {
+          month = 0;
+          year++;
+        }
+      }
+      newMonthKeys = allMonthKeys;
+    } else {
+      // For scoped habits, just remove current month
+      newMonthKeys = habitToUpdate.monthKeys.filter(m => m !== monthKey);
+    }
+
+    // Optimistic update
+    setHabits(prev => prev.map(h => {
+      if (h.id === id) {
+        return { ...h, monthKeys: newMonthKeys };
+      }
+      return h;
+    }));
+
+    try {
+      await updateDoc(doc(db, "users", user.uid, "habits", id), { monthKeys: newMonthKeys });
+      console.log(`Habit ${id} removed from month ${monthKey}. New monthKeys:`, newMonthKeys);
+    } catch (e) {
+      console.error("Error removing habit from month:", e);
+      // Revert optimistic update on error
+      setHabits(prev => prev.map(h => {
+        if (h.id === id) {
+          return { ...h, monthKeys: habitToUpdate.monthKeys };
+        }
+        return h;
+      }));
+    }
+  }, [user, currentYear, currentMonth, habits]);
 
   const nextMonth = useCallback(() => {
     if (currentMonth === 11) {
@@ -264,7 +345,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const copyFromPreviousMonth = useCallback(async () => {
     if (!user) return;
-
     const prevM = currentMonth === 0 ? 11 : currentMonth - 1;
     const prevY = currentMonth === 0 ? currentYear - 1 : currentYear;
     const prevKey = `${prevY}-${prevM}`;
@@ -273,153 +353,110 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const batch = writeBatch(db);
     let hasUpdates = false;
 
-    habits.forEach(async (h) => {
-      // We might not have previous month data loaded if we only listen to current/prev. 
-      // But assuming we do (since we added listener for prev month):
+    habits.forEach((h) => {
+      const wasActiveInPrev = h.monthKeys?.includes(prevKey);
+      const isActiveInCurrent = h.monthKeys?.includes(currentKey);
+
+      if (wasActiveInPrev && !isActiveInCurrent) {
+        const habitRef = doc(db, "users", user.uid, "habits", h.id);
+        const newMonthKeys = [...(h.monthKeys || []), currentKey];
+        batch.update(habitRef, { monthKeys: newMonthKeys });
+        hasUpdates = true;
+      }
+
       const prevData = h.completions[prevKey];
       if (prevData) {
         const historyRef = doc(db, "users", user.uid, "habits", h.id, "history", currentKey);
-        batch.set(historyRef, prevData, { merge: true }); // Merge to avoid overwriting existing progress?
+        batch.set(historyRef, prevData, { merge: true });
         hasUpdates = true;
       }
     });
 
-    if (hasUpdates) {
-      await batch.commit();
-    }
+    if (hasUpdates) await batch.commit();
   }, [user, currentMonth, currentYear, habits]);
 
-  const getStatsForDay = useCallback((day: number) => {
-    const monthKey = `${currentYear}-${currentMonth}`;
-    const total = habits.length;
-    const completed = habits.filter((h) => h.completions[monthKey]?.[day]).length;
-    return {
-      total,
-      completed,
-      percent: total > 0 ? (completed / total) * 100 : 0,
-    };
-  }, [currentYear, currentMonth, habits]);
-
-  const overallStats = useMemo(() => {
-    // Reset time to midnight for accurate day comparison
-    const todayDateObj = new Date();
-    todayDateObj.setHours(0, 0, 0, 0);
-    const todayDay = todayDateObj.getDate();
-    const currentMonthKeyStr = `${todayDateObj.getFullYear()}-${todayDateObj.getMonth()}`;
-
-    return {
-      totalHabits: habits.length,
-      completedToday: habits.filter((h) => h.completions[currentMonthKeyStr]?.[todayDay]).length,
-      averageProgress: habits.length > 0 ? habits.reduce((acc, h) => {
-        const monthKey = `${currentYear}-${currentMonth}`;
-        const done = Object.values(h.completions[monthKey] || {}).filter(Boolean).length;
-        return acc + (done / 31);
-      }, 0) / habits.length * 100 : 0,
-    };
-  }, [habits, currentYear, currentMonth]);
-
-  const getMonthlyStats = useCallback(() => {
-    const monthKey = `${currentYear}-${currentMonth}`;
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-    let totalCompletions = 0;
-    const dailyCounts: { [day: number]: number } = {};
-
-    habits.forEach(habit => {
-      const monthData = habit.completions[monthKey] || {};
-      Object.keys(monthData).forEach(dayStr => {
-        const day = parseInt(dayStr);
-        if (monthData[day]) {
-          totalCompletions++;
-          dailyCounts[day] = (dailyCounts[day] || 0) + 1;
-        }
-      });
+  // --- 4. Effects ---
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
+        setHabits([]);
+        setIsLoaded(true);
+      }
     });
+    return () => unsubscribe();
+  }, []);
 
-    const completionRate = habits.length > 0
-      ? (totalCompletions / (habits.length * daysInMonth)) * 100
-      : 0;
-
-    let bestDay = null;
-    let maxCompleted = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const count = dailyCounts[d] || 0;
-      if (count > maxCompleted) {
-        maxCompleted = count;
-        bestDay = {
-          day: d,
-          count,
-          percentage: (count / habits.length) * 100
-        };
-      }
-    }
-
-    // Streak calculation (any habit completed)
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-
-    const todayDateObj = new Date();
-    todayDateObj.setHours(0, 0, 0, 0);
-    const isCurrentMonth = todayDateObj.getMonth() === currentMonth && todayDateObj.getFullYear() === currentYear;
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      if (dailyCounts[d] > 0) {
-        tempStreak++;
-        if (tempStreak > longestStreak) longestStreak = tempStreak;
-      } else {
-        tempStreak = 0;
-      }
-    }
-
-    if (isCurrentMonth) {
-      for (let d = todayDateObj.getDate(); d >= 1; d--) {
-        if (dailyCounts[d] > 0) {
-          currentStreak++;
-        } else if (d < todayDateObj.getDate()) {
-          break;
-        }
-      }
-    } else {
-      currentStreak = tempStreak;
-    }
-
-    return {
-      completionRate,
-      totalCompleted: totalCompletions,
-      currentStreak,
-      longestStreak,
-      bestDay
-    };
-  }, [currentYear, currentMonth, habits]);
-
-  const getYearlyOverview = useCallback(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return months.map((month, m) => {
-      const monthKey = `${currentYear}-${m}`;
-      const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
-      let completions = 0;
-
-      habits.forEach(h => {
-        const data = h.completions[monthKey] || {};
-        completions += Object.values(data).filter(Boolean).length;
-      });
-
-      const percentage = habits.length > 0
-        ? (completions / (habits.length * daysInMonth)) * 100
-        : 0;
-
-      return { month, percentage };
+  useEffect(() => {
+    if (!user) return;
+    const habitsRef = collection(db, "users", user.uid, "habits");
+    const unsubscribe = onSnapshot(habitsRef, (snapshot) => {
+      const fetchedHabits = snapshot.docs.map(doc => ({
+        id: doc.id,
+        completions: {},
+        ...doc.data()
+      } as Habit));
+      fetchedHabits.sort((a, b) => a.createdAt - b.createdAt);
+      setHabits(fetchedHabits);
+      setIsLoaded(true);
+    }, (error) => {
+      console.error("Habit sync error:", error);
+      setIsLoaded(true);
     });
-  }, [currentYear, habits]);
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || habits.length === 0) return;
+    const monthKey = `${currentYear}-${currentMonth}`;
+    const prevDate = new Date(currentYear, currentMonth - 1);
+    const prevMonthKey = `${prevDate.getFullYear()}-${prevDate.getMonth()}`;
+    const unsubscribes: (() => void)[] = [];
+
+    habits.forEach(h => {
+      const historyRef = doc(db, "users", user.uid, "habits", h.id, "history", monthKey);
+      unsubscribes.push(onSnapshot(historyRef, (snap) => {
+        if (snap.exists()) {
+          setHabits(prev => prev.map(habit => {
+            if (habit.id === h.id) {
+              const newCompletions = { ...habit.completions, [monthKey]: snap.data() };
+              return { ...habit, completions: newCompletions };
+            }
+            return habit;
+          }));
+        }
+      }));
+
+      const prevHistoryRef = doc(db, "users", user.uid, "habits", h.id, "history", prevMonthKey);
+      unsubscribes.push(onSnapshot(prevHistoryRef, (snap) => {
+        if (snap.exists()) {
+          setHabits(prev => prev.map(habit => {
+            if (habit.id === h.id) {
+              const newCompletions = { ...habit.completions, [prevMonthKey]: snap.data() };
+              return { ...habit, completions: newCompletions };
+            }
+            return habit;
+          }));
+        }
+      }));
+    });
+    return () => unsubscribes.forEach(u => u());
+  }, [user, currentMonth, currentYear, habits.length]);
 
   const value = useMemo(() => ({
-    habits,
+    habits: visibleHabits,
+    allHabits: habits,
     addHabit,
     toggleHabitCompletion,
     deleteHabit,
+    removeHabitFromMonth,
     copyFromPreviousMonth,
-    getStatsForDay,
+    getStatsForDay: (day: number) => {
+      const monthKey = `${currentYear}-${currentMonth}`;
+      const total = visibleHabits.length;
+      const completed = visibleHabits.filter((h) => h.completions[monthKey]?.[day]).length;
+      return { total, completed, percent: total > 0 ? (completed / total) * 100 : 0 };
+    },
     overallStats,
     currentMonth,
     currentYear,
@@ -429,9 +466,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getYearlyOverview,
     isLoaded,
   }), [
-    habits, addHabit, toggleHabitCompletion, deleteHabit, copyFromPreviousMonth,
-    getStatsForDay, overallStats, currentMonth, currentYear, nextMonth,
-    prevMonth, getMonthlyStats, getYearlyOverview, isLoaded
+    visibleHabits, habits, addHabit, toggleHabitCompletion, deleteHabit, removeHabitFromMonth,
+    copyFromPreviousMonth, overallStats, currentMonth, currentYear,
+    nextMonth, prevMonth, getMonthlyStats, getYearlyOverview, isLoaded
   ]);
 
   return (

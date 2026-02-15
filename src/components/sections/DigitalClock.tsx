@@ -192,7 +192,7 @@ export default function DigitalClock() {
     };
 
     return (
-        <div className="w-full flex justify-center mb-8">
+        <div className="w-full flex justify-center mb-8 select-text">
             {renderClock()}
         </div>
     );

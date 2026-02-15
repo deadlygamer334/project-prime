@@ -16,7 +16,7 @@ export default function PomodoroPanel() {
   const settings = useSettings();
 
   const handleComplete = useCallback((mode: TimerMode, duration: number, subject: Subject) => {
-    if (mode === "FOCUS") {
+    if (mode === "FOCUS" || mode === "STOPWATCH") {
       addSession("focus", duration, subject || undefined);
     }
   }, [addSession]);

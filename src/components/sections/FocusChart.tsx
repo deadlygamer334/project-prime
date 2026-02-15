@@ -49,13 +49,13 @@ export default function FocusChart({ data, timeframe }: FocusChartProps) {
             <div className="flex items-center justify-between mb-8 px-2">
                 <div>
                     <h3 className={`text-sm font-medium uppercase tracking-widest text-muted-foreground`}>
-                        Focus Trends
+                        Timer Trends
                     </h3>
                     <p className={`text-sm text-muted-foreground/60`}>
                         {timeframe === "day" && "Minutes per hour"}
-                        {timeframe === "week" && "Daily focus total"}
-                        {timeframe === "month" && "Daily focus total"}
-                        {timeframe === "year" && "Monthly focus total"}
+                        {timeframe === "week" && "Daily timer total"}
+                        {timeframe === "month" && "Daily timer total"}
+                        {timeframe === "year" && "Monthly timer total"}
                     </p>
                 </div>
                 {/* Total for the chart period */}

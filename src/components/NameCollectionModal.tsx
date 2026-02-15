@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { Loader2, User } from "lucide-react";
+import { EmailAuthProvider, linkWithCredential } from "firebase/auth";
 
 interface NameCollectionModalProps {
     userId: string;
+    isGoogleUser?: boolean;
     onComplete: () => void;
 }
 
-export default function NameCollectionModal({ userId, onComplete }: NameCollectionModalProps) {
+export default function NameCollectionModal({ userId, isGoogleUser, onComplete }: NameCollectionModalProps) {
     const [displayName, setDisplayName] = useState("");
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -19,9 +22,15 @@ export default function NameCollectionModal({ userId, onComplete }: NameCollecti
         e.preventDefault();
 
         const trimmedName = displayName.trim();
+        const trimmedPassword = password.trim();
 
         if (!trimmedName) {
             setError("Please enter your name");
+            return;
+        }
+
+        if (isGoogleUser && !trimmedPassword) {
+            setError("Please enter a password");
             return;
         }
 
@@ -34,12 +43,63 @@ export default function NameCollectionModal({ userId, onComplete }: NameCollecti
         setError("");
 
         try {
+            // If Google User, try to link password credential first
+            if (isGoogleUser && auth.currentUser && auth.currentUser.email) {
+                try {
+                    const credential = EmailAuthProvider.credential(auth.currentUser.email, trimmedPassword);
+                    console.log("NameCollectionModal: Attempting to link credential...");
+                    await linkWithCredential(auth.currentUser, credential);
+                    console.log("NameCollectionModal: Credential linked successfully.");
+                } catch (linkError: any) {
+                    const errorCode = linkError.code;
+                    console.log("NameCollectionModal: Link credential error code:", errorCode);
+
+                    if (errorCode === 'auth/requires-recent-login') {
+                        setError("For security, please sign out and sign in again to set a password.");
+                        setLoading(false);
+                        return;
+                    } else if (errorCode === 'auth/weak-password') {
+                        setError("Password should be at least 6 characters.");
+                        setLoading(false);
+                        return;
+                    } else if (
+                        errorCode === 'auth/email-already-in-use' ||
+                        errorCode === 'auth/credential-already-in-use' ||
+                        errorCode === 'auth/provider-already-linked' ||
+                        errorCode === 'provider-already-linked' ||
+                        errorCode === 'credential-already-in-use'
+                    ) {
+                        // This might happen if they already have a password set, we can ignore or warn
+                        console.warn("NameCollectionModal: Credential already linked, proceeding to save metadata.");
+                    } else {
+                        console.error("NameCollectionModal: Unexpected link credential error:", linkError);
+                        setError("Failed to link password: " + linkError.message);
+                        setLoading(false);
+                        return;
+                    }
+                }
+            }
+
             const userRef = doc(db, "users", userId);
-            await setDoc(userRef, {
+            const userData: {
+                displayName: string;
+                leaderboardPublic: boolean;
+                createdAt: string;
+                lastSeen: string;
+                password?: string;
+            } = {
                 displayName: trimmedName,
+                leaderboardPublic: true,
                 createdAt: new Date().toISOString(),
                 lastSeen: new Date().toISOString(),
-            }, { merge: true });
+            };
+
+            if (isGoogleUser) {
+                userData.password = trimmedPassword;
+            }
+
+            console.log("NameCollectionModal: Metadata saved, calling onComplete...");
+            await setDoc(userRef, userData, { merge: true });
             onComplete();
         } catch (err) {
             console.error("Failed to save display name:", err);
@@ -84,6 +144,27 @@ export default function NameCollectionModal({ userId, onComplete }: NameCollecti
                             This name will be visible on the leaderboard
                         </p>
                     </div>
+
+                    {isGoogleUser && (
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                                Set Password
+                            </label>
+                            <input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Choose a password"
+                                className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                disabled={loading}
+                                required
+                            />
+                            <p className="mt-1 text-xs text-zinc-400">
+                                Required for Google login accounts
+                            </p>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg">

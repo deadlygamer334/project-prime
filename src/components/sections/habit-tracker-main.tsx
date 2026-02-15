@@ -16,6 +16,7 @@ const HabitTrackerMain = () => {
     addHabit,
     toggleHabitCompletion,
     deleteHabit,
+    removeHabitFromMonth,
     copyFromPreviousMonth,
     getStatsForDay,
     overallStats,
@@ -171,13 +172,13 @@ const HabitTrackerMain = () => {
           )}
         </div>
 
-        {/* Habit Data Table Header / Container */}
-        <div className="overflow-x-auto custom-scrollbar rounded-xl border border-border">
+        {/* Habit Data Table - Desktop (md+) */}
+        <div className="hidden md:block overflow-x-auto custom-scrollbar rounded-xl border border-border">
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-10 backdrop-blur-md bg-card/95">
               <tr>
                 <th
-                  className="sticky left-0 min-w-[200px] text-left px-4 py-4 text-[13px] font-semibold border-b border-border z-20 bg-card text-foreground"
+                  className="sticky left-0 min-w-[200px] text-left px-4 py-4 text-[13px] font-semibold border-b border-border z-30 bg-background text-foreground shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)]"
                 >
                   My Habits
                 </th>
@@ -201,11 +202,12 @@ const HabitTrackerMain = () => {
               ) : (
                 habits.map((habit) => (
                   <tr key={habit.id} className="group transition-colors hover:bg-muted/30">
-                    <td className="sticky left-0 z-10 px-4 py-3 border-b border-r border-border flex items-center justify-between bg-card text-foreground">
+                    <td className="sticky left-0 z-20 px-4 py-3 border-b border-r border-border flex items-center justify-between bg-background text-foreground shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)] select-text">
                       <span className="truncate max-w-[140px] font-medium">{habit.name}</span>
                       <button
-                        onClick={() => deleteHabit(habit.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 text-destructive rounded-lg transition-all"
+                        onClick={() => removeHabitFromMonth(habit.id)}
+                        className="opacity-100 md:opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 text-destructive rounded-lg transition-all"
+                        title="Remove from this month"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -231,6 +233,74 @@ const HabitTrackerMain = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Habit List - Mobile/Tablet (<md) */}
+        <div className="md:hidden space-y-8">
+          {habits.length === 0 ? (
+            <div className="py-12 text-center italic text-sm text-muted-foreground border rounded-xl border-dashed">
+              No habits added yet.
+            </div>
+          ) : (
+            habits.map((habit) => (
+              <div key={habit.id} className="flex flex-col gap-4">
+                {/* Habit Header */}
+                <div className="flex items-center justify-between px-1 select-text">
+                  <h3 className="text-lg font-bold tracking-tight text-foreground truncate max-w-[80%]">
+                    {habit.name}
+                  </h3>
+                  <button
+                    onClick={() => removeHabitFromMonth(habit.id)}
+                    className="p-2 bg-destructive/10 text-destructive rounded-xl active:scale-90 transition-transform"
+                    aria-label={`Remove ${habit.name} from this month`}
+                    title="Remove from this month"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+
+                {/* Labelling and Scrolling Grid */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                    My Habits Progress
+                  </span>
+
+                  <div className="overflow-x-auto custom-scrollbar pb-4 -mx-1 px-1 snap-x select-none touch-pan-x">
+                    <div className="flex items-center gap-2.5 min-w-max">
+                      {days.map((item) => (
+                        <div
+                          key={item.date}
+                          className={`flex flex-col items-center gap-3 p-2 rounded-2xl border snap-center transition-colors ${item.date === today
+                            ? "bg-primary/10 border-primary/30"
+                            : "bg-muted/10 border-border"
+                            }`}
+                        >
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground leading-none">
+                              {item.day}
+                            </span>
+                            <span className={`text-[13px] font-black ${item.date === today ? "text-primary" : "text-foreground"}`}>
+                              {item.date}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => toggleHabitCompletion(habit.id, item.date)}
+                            className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center ${habit.completions[`${currentYear}-${currentMonth}`]?.[item.date]
+                              ? "bg-primary border-primary text-primary-foreground shadow-[0_0_12px_rgba(var(--primary),0.4)]"
+                              : "bg-background border-muted dark:border-white/10 text-transparent active:border-primary"
+                              }`}
+                          >
+                            {habit.completions[`${currentYear}-${currentMonth}`]?.[item.date] && <Check size={20} strokeWidth={3} />}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

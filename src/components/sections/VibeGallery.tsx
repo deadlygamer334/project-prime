@@ -33,7 +33,7 @@ const VIBE_METADATA: Record<ThemeVibe, { label: string; description: string; col
     },
     minimal: {
         label: "Clarity",
-        description: "Bright, minimalist white workspace.",
+        description: "Clean, minimalist focused workspace.",
         colors: ["#f8fafc", "#334155"]
     }
 };

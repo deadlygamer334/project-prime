@@ -53,7 +53,7 @@ export default function QuoteBlock() {
     return (
         <div className="group relative w-full max-w-[600px] mx-auto px-4">
             <div
-                className={`flex flex-col items-center p-6 rounded-3xl border transition-all duration-500 backdrop-blur-md ${isDark
+                className={`flex flex-col items-center justify-center min-h-[140px] p-8 rounded-3xl border transition-all duration-500 backdrop-blur-md relative overflow-hidden select-text ${isDark
                     ? "bg-white/5 border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.07] hover:border-white/20"
                     : "bg-white/40 border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:border-black/10"
                     }`}
@@ -64,14 +64,17 @@ export default function QuoteBlock() {
                 >
                     {quote}
                 </h2>
-                <button
-                    onClick={refreshQuote}
-                    className={`mt-4 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all ${isDark ? 'text-white/40 hover:text-white hover:bg-white/10' : 'text-black/30 hover:text-black hover:bg-black/5'
-                        }`}
-                    title="Refresh Quote"
-                >
-                    <RotateCcw size={16} className="hover:rotate-180 transition-transform duration-500" />
-                </button>
+
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                    <button
+                        onClick={refreshQuote}
+                        className={`p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all ${isDark ? 'text-white/40 hover:text-white hover:bg-white/10' : 'text-black/30 hover:text-black hover:bg-black/5'
+                            }`}
+                        title="Refresh Quote"
+                    >
+                        <RotateCcw size={16} className="hover:rotate-180 transition-transform duration-500" />
+                    </button>
+                </div>
             </div>
         </div>
     );

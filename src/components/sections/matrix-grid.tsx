@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, CheckCircle2, Circle, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useHomeTodo, HomeTask, Priority } from '@/hooks/useHomeTodo';
 import { useTheme } from '@/lib/ThemeContext';
+import { DatePicker } from '@/components/ui/date-picker';
 
 export type QuadrantId = "urgent-important" | "not-urgent-important" | "urgent-not-important" | "not-urgent-not-important";
 
@@ -279,8 +280,13 @@ const MatrixGrid = () => {
               <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           </div>
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-card/50 text-foreground/80`}>
-            <span className="text-[14.4px] font-semibold whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            <DatePicker
+              date={currentDate}
+              setDate={(d) => d && setCurrentDate(d)}
+              className="h-[46.4px] px-4 py-2 rounded-xl border border-border bg-card/50 text-foreground/80 shadow-none hover:bg-muted"
+            />
+            <span className={`hidden sm:inline-block text-[14.4px] font-semibold whitespace-nowrap px-2 ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
               {formatDisplayDate(currentDate)}
             </span>
           </div>

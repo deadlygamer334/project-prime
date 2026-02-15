@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Sun, Moon, ChevronDown, Search, LayoutGrid, Target, Zap, Headphones, Settings } from "lucide-react";
+import { Menu, X, Sun, Moon, ChevronDown, Search, LayoutGrid, Target, Zap, Headphones, Settings, Home, CheckCircle2, Calendar, Trophy } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRef } from "react";
+import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription, DrawerClose } from "@/components/ui/drawer";
+import { usePathname } from "next/navigation";
 
 interface AppHeaderProps {
   title: string;
@@ -16,10 +17,11 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ title, activePath, onSearch, onClearAll, showSearch = false }: AppHeaderProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { theme, toggleTheme } = useTheme();
+  const pathname = usePathname();
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMoreMouseEnter = () => {
@@ -37,15 +39,15 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
   };
 
   const mainNavItems = [
-    { label: "Home", href: "/" },
-    { label: "Habits", href: "/habit-tracker" },
-    { label: "Calendar", href: "/calendar" },
-    { label: "Leaderboard", href: "/leaderboard" },
+    { label: "Home", href: "/", icon: Home },
+    { label: "Habits", href: "/habit-tracker", icon: CheckCircle2 },
+    { label: "Calendar", href: "/calendar", icon: Calendar },
+    { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
   ];
 
   const toolItems = [
     { label: "Matrix", href: "/matrix", icon: LayoutGrid, desc: "Prioritize tasks" },
-    { label: "Focus Progress", href: "/focus-progress", icon: Target, desc: "Track goals" },
+    { label: "Timer Progress", href: "/focus-progress", icon: Target, desc: "Track goals" },
     { label: "Motivation", href: "/motivation", icon: Zap, desc: "Fuel your drive" },
     { label: "Ambience", href: "/ambience", icon: Headphones, desc: "Soundscapes" },
     { label: "Settings", href: "/settings", icon: Settings, desc: "Customize app" },
@@ -215,60 +217,93 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            {/* Mobile Menu Toggle (Visible on Mobile/Tablet) */}
-            <button
-              className={`lg:hidden flex items-center justify-center w-9 h-9 rounded-full transition-colors ${isDark ? "text-white hover:bg-white/10" : "text-black hover:bg-black/10"
-                }`}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle Mobile Menu"
-            >
-              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+            {/* Mobile Menu Toggle (DEPRECATED - Removed in favor of Bottom Dock) */}
+            <div className="lg:hidden flex items-center justify-center w-9 h-9">
+              {/* Intentional space to keep theme toggle centered/right-aligned */}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <div className={`lg:hidden fixed inset-0 top-0 left-0 w-full h-screen z-[999] animate-in fade-in duration-300 backdrop-blur-[32px] pointer-events-auto ${isDark ? "bg-[#0a0a0c]/90" : "bg-[#ffffff]/90"
-          }`}>
-          <div className="flex flex-col h-full pt-[100px] px-8 gap-2 overflow-y-auto pb-20 custom-scrollbar">
-            <div className="flex items-center justify-between mb-6 shrink-0 border-b border-white/10 pb-4">
-              <span className="text-[24px] font-bold tracking-tight">Navigation</span>
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-                aria-label="Close Mobile Menu"
-              >
-                <X size={24} />
-              </button>
-            </div>
+      {/* Floating Bottom Dock (Visible only on Mobile/Tablet) */}
+      <div className="lg:hidden fixed bottom-6 left-0 right-0 z-[1001] px-4 pointer-events-none">
+        <div className="flex justify-center max-w-md mx-auto pointer-events-auto">
+          <nav
+            className={`flex items-center gap-1 p-2 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-500 ${isDark
+              ? "bg-[rgba(20,20,20,0.8)] border-white/20 text-white"
+              : "bg-[rgba(255,255,255,0.8)] border-black/10 text-black"
+              }`}
+          >
+            {mainNavItems.map((item) => {
+              const isActive = (activePath || pathname) === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ${isActive
+                    ? isDark ? "text-white" : "text-black"
+                    : isDark ? "text-white/40 hover:text-white/60" : "text-black/40 hover:text-black/60"
+                    }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="mobileActiveHighlight"
+                      className={`absolute inset-0 z-0 rounded-full ${isDark ? "bg-white/10" : "bg-black/5"
+                        }`}
+                      transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                    />
+                  )}
+                  <item.icon size={20} className="relative z-10" />
+                  <span className="text-[9px] font-bold tracking-tighter uppercase mt-1 relative z-10">{item.label}</span>
+                </Link>
+              );
+            })}
 
-            {/* Mobile Nav Items */}
-            {[...mainNavItems, ...toolItems].map((item, idx) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`flex items-center gap-4 py-4 px-2 rounded-2xl text-[18px] font-semibold transition-all active:scale-95 ${activePath === item.href
-                  ? isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
-                  : isDark ? "text-white/60 hover:text-white" : "text-black/60 hover:text-black"
-                  }`}
-                onClick={() => setIsMenuOpen(false)}
-                style={{ animationDelay: `${idx * 50}ms` }}
-              >
-                {/* Show Icons if available for better mobile UX */}
-                {'icon' in item && item.icon ? (
-                  // @ts-ignore
-                  <item.icon size={20} className="opacity-70" />
-                ) : (
-                  <div className="w-5 h-5" /> // Spacer
-                )}
-                {item.label}
-              </Link>
-            ))}
-          </div>
+            {/* More Drawer Trigger */}
+            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+              <DrawerTrigger asChild>
+                <button
+                  className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ${isDrawerOpen
+                    ? isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
+                    : isDark ? "text-white/40 hover:text-white/60" : "text-black/40 hover:text-black/60"
+                    }`}
+                >
+                  <Menu size={20} />
+                  <span className="text-[9px] font-bold tracking-tighter uppercase mt-1">More</span>
+                </button>
+              </DrawerTrigger>
+              <DrawerContent className={`rounded-t-[32px] border-t backdrop-blur-3xl transition-[background-color] duration-500 overflow-hidden ${isDark
+                ? "bg-[#0a0a0c]/90 border-white/10"
+                : "bg-white/95 border-black/5"
+                }`}>
+                <div className="mx-auto w-12 h-1.5 rounded-full bg-white/20 mt-4 mb-4" />
+                <DrawerHeader>
+                  <DrawerTitle className={`text-2xl font-bold tracking-tight text-center ${isDark ? "text-white" : "text-black"}`}>Apps & Tools</DrawerTitle>
+                  <DrawerDescription className={`text-center mb-6 ${isDark ? "text-white/40" : "text-black/40"}`}>
+                    All your productivity tools in one place
+                  </DrawerDescription>
+                </DrawerHeader>
+                <div className="grid grid-cols-3 gap-y-8 px-6 pb-12 overflow-y-auto max-h-[60vh]">
+                  {toolItems.map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="flex flex-col items-center gap-3 transition-transform active:scale-90"
+                    >
+                      <div className={`p-4 rounded-[24px] shadow-xl transition-all ${isDark ? "bg-white/5 border border-white/5" : "bg-black/5 border border-black/5"}`}>
+                        <item.icon size={28} className={isDark ? "text-white" : "text-black"} />
+                      </div>
+                      <span className={`text-[13px] font-bold tracking-tight ${isDark ? "text-white" : "text-black"}`}>{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </nav>
         </div>
-      )}
+      </div>
+
     </header>
   );
 }

@@ -156,7 +156,7 @@ export default function FocusProgressPage() {
 
     return (
         <div className="min-h-screen flex flex-col transition-colors duration-500 bg-background text-foreground">
-            <AppHeader title="Focus Progress" activePath="/focus-progress" />
+            <AppHeader title="Timer Progress" activePath="/focus-progress" />
 
             <div className="max-w-6xl mx-auto w-full p-6 md:p-12 relative z-10">
 
@@ -164,7 +164,7 @@ export default function FocusProgressPage() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-light tracking-tight mb-2 opacity-90">
-                            Focus Progress
+                            Timer Progress
                         </h1>
                     </div>
 
@@ -188,7 +188,7 @@ export default function FocusProgressPage() {
                 {/* Metric Strip - No Cards */}
                 <div className="flex flex-wrap gap-6 md:gap-24 mb-16 pb-8 border-b border-border">
                     <Metric
-                        label="Total Focus"
+                        label="Total Timer"
                         value={totalFocusTime > 60
                             ? `${(totalFocusTime / 60).toFixed(2)}h`
                             : `${totalFocusTime.toFixed(2)}m`}
@@ -288,7 +288,7 @@ export default function FocusProgressPage() {
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div>
-                                                    <h4 className="text-base font-medium text-foreground">{session.subject || "Focus"}</h4>
+                                                    <h4 className="text-base font-medium text-foreground">{session.subject || "Timer"}</h4>
                                                     <p className="text-xs opacity-40 mt-1 uppercase tracking-wider">
                                                         {format(new Date(session.timestamp), "MMM d • h:mm a")}
                                                     </p>
@@ -298,9 +298,11 @@ export default function FocusProgressPage() {
                                             <div className="flex items-center gap-6">
                                                 <div className="text-right">
                                                     <p className="text-base font-medium tabular-nums text-foreground">
-                                                        {session.duration < (1 / 60)
-                                                            ? (session.duration * 60).toFixed(2)
-                                                            : session.duration.toFixed(2)} <span className="text-xs opacity-40 font-normal">{session.duration < (1 / 60) ? "s" : "m"}</span>
+                                                        {session.duration < 1
+                                                            ? Math.round(session.duration * 60)
+                                                            : session.duration % 1 === 0
+                                                                ? session.duration
+                                                                : session.duration.toFixed(2)} <span className="text-xs opacity-40 font-normal">{session.duration < 1 ? "s" : "m"}</span>
                                                     </p>
                                                 </div>
 

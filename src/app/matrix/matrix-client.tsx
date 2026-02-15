@@ -16,7 +16,7 @@ export default function MatrixPage() {
 
       <AppHeader title="Mind Matrix" activePath="/matrix" />
 
-      <main className="container mx-auto flex-grow py-8 px-6 relative z-10">
+      <main className="container mx-auto flex-grow py-8 px-6 relative z-10 pb-24 md:pb-8">
         <MatrixHero />
         <MatrixToolbar />
         <MatrixGrid />

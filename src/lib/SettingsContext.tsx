@@ -67,6 +67,8 @@ interface SettingsContextType extends Settings {
     resetSettings: () => void;
     addSubject: (name: string) => Promise<void>;
     removeSubject: (name: string) => Promise<void>;
+    isZenMode: boolean;
+    setIsZenMode: (v: boolean) => void;
 }
 
 const defaultSettings: Settings = {
@@ -113,6 +115,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [settings, setSettings] = useState<Settings>(defaultSettings);
     const [user, setUser] = useState<User | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isZenMode, setIsZenMode] = useState(false);
 
 
     // Listen for Auth Changes
@@ -137,7 +140,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 if (data.settings) {
-                    setSettings((prev) => ({ ...prev, ...data.settings }));
+                    setSettings((prev) => {
+                        const newSettings = { ...prev, ...data.settings };
+                        // If root displayName exists but settings name is default, sync it
+                        if (data.displayName && (!data.settings.userName || data.settings.userName === "User")) {
+                            newSettings.userName = data.displayName;
+                        }
+                        return newSettings;
+                    });
+                } else if (data.displayName) {
+                    // Fallback for cases where settings don't exist yet but displayName does
+                    setSettings(prev => ({ ...prev, userName: data.displayName }));
                 }
             }
             setIsLoaded(true);
@@ -318,12 +331,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 dark: {
                     background: "#09090b",
                     foreground: "#fafafa",
-                    primary: "#27272a",
+                    primary: "#e4e4e7",
                     button: "#fafafa", // White Button
                     buttonForeground: "#000000", // Black Text
                     card: "rgba(255, 255, 255, 0.03)",
                     border: "rgba(255, 255, 255, 0.05)",
-                    muted: "#71717a",
+                    muted: "#a1a1aa",
                     accent: "rgba(255, 255, 255, 0.05)",
                     orb1: "transparent",
                     orb2: "transparent",
@@ -442,7 +455,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             // though Firestore calls are usually safe.
             if (user) {
                 const userRef = doc(db, "users", user.uid);
-                setDoc(userRef, { settings: newSettings }, { merge: true }).catch(err => {
+                const updates: any = { settings: newSettings };
+
+                // Also persist leaderboardPublic at the root for easier querying
+                if (key === "leaderboardPublic") {
+                    updates.leaderboardPublic = value;
+                }
+
+                // Sync userName with root displayName for the leaderboard
+                if (key === "userName") {
+                    updates.displayName = value;
+                }
+
+                setDoc(userRef, updates, { merge: true }).catch(err => {
                     console.error("Failed to save settings to cloud", err);
                 });
             }
@@ -454,7 +479,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setSettings(defaultSettings);
         if (user) {
             const userRef = doc(db, "users", user.uid);
-            await updateDoc(userRef, { settings: defaultSettings });
+            await updateDoc(userRef, {
+                settings: defaultSettings,
+                leaderboardPublic: defaultSettings.leaderboardPublic
+            });
         }
     }, [user]);
 
@@ -475,9 +503,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 ...settings,
                 updateSetting,
                 resetSettings,
-                // @ts-ignore - we'll update the type in a bit or just pass them
                 addSubject,
-                removeSubject
+                removeSubject,
+                isZenMode,
+                setIsZenMode
             }}
         >
             {children}

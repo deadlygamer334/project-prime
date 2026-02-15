@@ -7,6 +7,8 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import NameCollectionModal from "./NameCollectionModal";
 import PremiumSkeleton from "./ui/PremiumSkeleton";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useSettings } from "@/lib/SettingsContext";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -15,10 +17,16 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     const [authorized, setAuthorized] = useState(false);
     const [showNameModal, setShowNameModal] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
+    const [isGoogleUser, setIsGoogleUser] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
+
+        const handleDeletionStart = () => setIsDeleting(true);
+        window.addEventListener('account-deletion-started', handleDeletionStart);
+        return () => window.removeEventListener('account-deletion-started', handleDeletionStart);
     }, []);
 
     // List of public paths that don't satisfy the protection rule
@@ -56,9 +64,15 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                 }
             } else {
                 setUserId(user.uid);
+                // Check if user logged in with Google
+                const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+                setIsGoogleUser(isGoogle);
+
                 // Check if user has display name
                 const userRef = doc(db, "users", user.uid);
                 unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+                    if (isDeleting) return; // Ignore updates if we're in the middle of deletion
+
                     if (docSnap.exists()) {
                         const userData = docSnap.data();
                         if (!userData.displayName || userData.displayName.trim() === "") {
@@ -69,6 +83,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                             setAuthorized(true);
                         }
                     } else {
+                        // Document deleted (could be account deletion in progress)
                         setShowNameModal(true);
                         setAuthorized(false);
                     }
@@ -90,7 +105,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                 unsubscribeUser();
             }
         };
-    }, [router, pathname]);
+    }, [router, pathname, isDeleting]);
 
     if (!isMounted) return null;
 
@@ -114,10 +129,11 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
 
     // Show name collection modal if needed
-    if (showNameModal && userId) {
+    if (showNameModal && userId && !isDeleting) {
         return (
             <NameCollectionModal
                 userId={userId}
+                isGoogleUser={isGoogleUser}
                 onComplete={() => {
                     setShowNameModal(false);
                     setAuthorized(true);
@@ -127,7 +143,41 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
 
     // If not authorized (and not loading), we are likely redirecting, so render nothing or null
-    if (!authorized && !PUBLIC_PATHS.includes(pathname)) return null;
+    if (!authorized && !PUBLIC_PATHS.includes(pathname) && !isDeleting) return null;
 
-    return <>{children}</>;
+    return (
+        <>
+            {children}
+            {authorized && !showNameModal && <NotificationPermissionHandler />}
+        </>
+    );
+}
+
+function NotificationPermissionHandler() {
+    const { requestPermission, permissionStatus } = useNotifications();
+    const { updateSetting, notificationsEnabled } = useSettings();
+
+    useEffect(() => {
+        if (typeof window === "undefined" || !("Notification" in window)) return;
+
+        const handlePermission = async () => {
+            // If permission is default (never asked), prompt the user
+            if (Notification.permission === "default") {
+                console.log("Automatically prompting for notification permission...");
+                const granted = await requestPermission();
+                if (!granted) {
+                    updateSetting("notificationsEnabled", false);
+                }
+            }
+            // If permission is already denied but setting is ON, sync it to OFF
+            else if (Notification.permission === "denied" && notificationsEnabled) {
+                console.log("Notifications blocked by browser, disabling in settings.");
+                updateSetting("notificationsEnabled", false);
+            }
+        };
+
+        handlePermission();
+    }, [requestPermission, updateSetting, notificationsEnabled]);
+
+    return null;
 }

@@ -19,7 +19,7 @@ export default function HabitTracker() {
 
       <AppHeader title="Habit Tracker" activePath="/habit-tracker" />
 
-      <main className="container mx-auto flex-grow py-8 px-6 relative z-10">
+      <main className="container mx-auto flex-grow py-8 px-6 relative z-10 pb-24 md:pb-8">
         <GlobalErrorBoundary>
           <HabitTrackerMain />
         </GlobalErrorBoundary>

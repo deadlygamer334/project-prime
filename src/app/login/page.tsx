@@ -6,7 +6,8 @@ import {
     signInWithPopup,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    signInWithCustomToken
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Chrome, ArrowRight, Loader2, ShieldCheck, Zap } from "lucide-react";
@@ -50,7 +51,30 @@ export default function LoginPage() {
             }
             router.push("/");
         } catch (err: any) {
-            setError(err.message);
+            if (err.code === 'auth/operation-not-allowed') {
+                setError("Email/Password login is not enabled in Firebase Console. Please enable it in Authentication > Sign-in method.");
+            } else {
+                setError(err.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDevLogin = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const response = await fetch('/api/auth/dev-token', { method: 'POST' });
+            const data = await response.json();
+            if (data.token) {
+                await signInWithCustomToken(auth, data.token);
+                router.push("/");
+            } else {
+                throw new Error(data.error || "Failed to generate dev token");
+            }
+        } catch (err: any) {
+            setError("Dev Login Error: " + err.message);
         } finally {
             setLoading(false);
         }
@@ -200,6 +224,16 @@ export default function LoginPage() {
                                 )}
                             </button>
                         </form>
+
+                        {process.env.NODE_ENV === 'development' && isLogin && (
+                            <button
+                                onClick={handleDevLogin}
+                                disabled={loading}
+                                className="w-full py-3 border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-300 rounded-xl text-[10px] font-bold uppercase tracking-[2px] text-purple-400"
+                            >
+                                Dev Login (Test Account)
+                            </button>
+                        )}
                     </div>
 
                     {/* Footer Actions */}

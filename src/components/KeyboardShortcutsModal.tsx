@@ -34,7 +34,7 @@ export default function KeyboardShortcutsModal() {
         { key: "2-Finger Swipe Left", label: "Next Tab (Forward)", category: "Navigation" },
         { key: "2-Finger Swipe Right", label: "Prev Tab (Back)", category: "Navigation" },
         { key: "2-Finger Swipe Down", label: "Toggle Shortcuts", category: "Global" },
-        { key: "3-Finger Tap", label: "Toggle Zen Mode (Planned)", category: "Timer" },
+        { key: "2-Finger Vertical Swipe", label: "Resize Timer (Zen Mode)", category: "Timer" },
     ];
 
     const currentShortcuts = activeTab === "keyboard" ? shortcuts : gestures;

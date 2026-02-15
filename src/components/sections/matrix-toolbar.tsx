@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export default function MatrixToolbar() {
   const { theme } = useTheme();
@@ -59,9 +60,13 @@ export default function MatrixToolbar() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Calendar size={16} className="text-muted-foreground" />
+        <DatePicker
+          date={currentDate}
+          setDate={(d) => d && setCurrentDate(d)}
+          className="h-10 px-4 py-2 rounded-full border-none shadow-none bg-muted text-muted-foreground hover:bg-muted/80"
+        />
         <span
-          className={`text-[15px] font-semibold uppercase tracking-widest text-foreground/80`}
+          className={`hidden sm:inline-block text-[15px] font-semibold uppercase tracking-widest text-foreground/80`}
           style={{ fontFamily: 'var(--font-current)' }}
         >
           {formatDisplayDate(currentDate)}

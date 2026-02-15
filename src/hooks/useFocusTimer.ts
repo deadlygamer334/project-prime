@@ -3,7 +3,7 @@ import { auth, db } from "@/lib/firebase";
 import { doc, onSnapshot, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 
-export type TimerMode = "FOCUS" | "BREAK";
+export type TimerMode = "FOCUS" | "BREAK" | "STOPWATCH";
 export type Subject = string;
 
 interface UseFocusTimerProps {
@@ -23,6 +23,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const [mode, setMode] = useState<TimerMode>("FOCUS");
     const [focusTimeLeft, setFocusTimeLeft] = useState(25 * 60);
     const [breakTimeLeft, setBreakTimeLeft] = useState(5 * 60);
+    const [stopwatchElapsed, setStopwatchElapsed] = useState(0);
     const [isActive, setIsActive] = useState(false);
     const [isFocusStarted, setIsFocusStarted] = useState(false);
     const [selectedSubject, setSelectedSubject] = useState<Subject>("");
@@ -32,12 +33,13 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const [baselineBreakSecs, setBaselineBreakSecs] = useState(5 * 60);
 
     // Derived
-    const timeLeft = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
-    const currentBaseline = mode === "FOCUS" ? baselineFocusSecs : baselineBreakSecs;
+    const timeLeft = mode === "FOCUS" ? focusTimeLeft : mode === "BREAK" ? breakTimeLeft : stopwatchElapsed;
+    const currentBaseline = mode === "FOCUS" ? baselineFocusSecs : mode === "BREAK" ? baselineBreakSecs : 0;
     const progress = currentBaseline > 0 ? ((currentBaseline - timeLeft) / currentBaseline) * 100 : 0;
 
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const endTimeRef = useRef<number | null>(null);
+    const startTimeRef = useRef<number | null>(null); // For Stopwatch
     const sessionStartBaselineRef = useRef<number | null>(null);
 
     // Load state from localStorage on mount
@@ -94,8 +96,19 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     setMode(data.mode);
                     setIsActive(true);
                     endTimeRef.current = data.endTime;
+                    startTimeRef.current = data.startTime || null; // For stopwatch sync
                     if (data.mode === "FOCUS") setFocusTimeLeft(remaining);
-                    else setBreakTimeLeft(remaining);
+                    else if (data.mode === "BREAK") setBreakTimeLeft(remaining);
+                    else if (data.mode === "STOPWATCH") {
+                        // For stopwatch, calculate elapsed based on startTime if active
+                        // If we are just syncing state but not active, use data.stopwatchElapsed
+                        // But here we are in the 'active' block.
+                        if (data.startTime) {
+                            const elapsed = Math.floor((now - data.startTime) / 1000);
+                            setStopwatchElapsed(elapsed);
+                        }
+                    }
+
                     setIsFocusStarted(data.isFocusStarted ?? true);
 
                     if (data.selectedSubject !== undefined) {
@@ -122,19 +135,30 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 if (parsed.mode) setMode(parsed.mode);
                 setFocusTimeLeft(parsed.focusTimeLeft ?? 25 * 60);
                 setBreakTimeLeft(parsed.breakTimeLeft ?? 5 * 60);
+                setStopwatchElapsed(parsed.stopwatchElapsed ?? 0);
                 setBaselineFocusSecs(parsed.baselineFocusSecs || 25 * 60);
                 setBaselineBreakSecs(parsed.baselineBreakSecs || 5 * 60);
                 setSelectedSubject(parsed.selectedSubject || "");
                 setIsFocusStarted(parsed.isFocusStarted || false);
 
-                if (parsed.isActive && parsed.endTime) {
+                if (parsed.isActive) {
                     const now = Date.now();
-                    const remaining = Math.ceil((parsed.endTime - now) / 1000);
-                    if (remaining > 0) {
-                        if (parsed.mode === "FOCUS") setFocusTimeLeft(remaining);
-                        else setBreakTimeLeft(remaining);
-                        endTimeRef.current = parsed.endTime;
+
+                    if (parsed.mode === "STOPWATCH" && parsed.startTime) {
+                        // Resume stopwatch
+                        const elapsed = Math.floor((now - parsed.startTime) / 1000);
+                        setStopwatchElapsed(elapsed);
+                        startTimeRef.current = parsed.startTime;
                         setIsActive(true);
+                    } else if (parsed.endTime) {
+                        // Resume Timer
+                        const remaining = Math.ceil((parsed.endTime - now) / 1000);
+                        if (remaining > 0) {
+                            if (parsed.mode === "FOCUS") setFocusTimeLeft(remaining);
+                            else setBreakTimeLeft(remaining);
+                            endTimeRef.current = parsed.endTime;
+                            setIsActive(true);
+                        }
                     }
                 }
             }
@@ -153,12 +177,14 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             mode,
             focusTimeLeft,
             breakTimeLeft,
+            stopwatchElapsed,
             baselineFocusSecs,
             baselineBreakSecs,
             selectedSubject,
             isActive,
             isFocusStarted,
-            endTime: isActive ? endTimeRef.current : null
+            endTime: isActive ? endTimeRef.current : null,
+            startTime: isActive ? startTimeRef.current : null
         };
         localStorage.setItem("focusTimerStateV2", JSON.stringify(stateToSave));
     }, [mode, focusTimeLeft, breakTimeLeft, baselineFocusSecs, baselineBreakSecs, selectedSubject, isActive, isFocusStarted, isLoaded]);
@@ -169,10 +195,11 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
         const timerDoc = doc(db, "users", user.uid, "activeTimer", "current");
 
-        if (isActive && endTimeRef.current) {
+        if (isActive && (endTimeRef.current || startTimeRef.current)) {
             setDoc(timerDoc, {
                 mode,
                 endTime: endTimeRef.current,
+                startTime: startTimeRef.current,
                 isActive,
                 isFocusStarted,
                 selectedSubject,
@@ -202,31 +229,68 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
         // Reset the mode that just finished
         if (mode === "FOCUS") setFocusTimeLeft(baselineFocusSecs);
-        else setBreakTimeLeft(baselineBreakSecs);
+        else if (mode === "BREAK") setBreakTimeLeft(baselineBreakSecs);
+        else if (mode === "STOPWATCH") setStopwatchElapsed(0);
 
         if (onComplete) {
             // Pass actual duration in minutes (float)
-            const durationMinutes = loggedBaseline / 60;
-            // Round to 2 decimals for cleaner logging but allow < 1 minute
-            const preciseDuration = Math.round(durationMinutes * 100) / 100;
-            onComplete(mode, preciseDuration, selectedSubject);
+            const durationMinutes = mode === "STOPWATCH" ? 0 : (loggedBaseline / 60); // Stopwatch handled manually usually? 
+            // Actually, handleTimerComplete is for AUTO completion (timer runs out). 
+            // Stopwatch never runs out automatically. 
+            // But if called manually, we should pass elapsed.
+            // If manual completion (Stopwatch), loggedBaseline isn't useful.
+            // We'll update completeSession to handle this.
+
+            if (mode !== "STOPWATCH") {
+                onComplete(mode, durationMinutes, selectedSubject);
+            }
         }
     }, [currentBaseline, mode, selectedSubject, onComplete, baselineFocusSecs, baselineBreakSecs]);
+
+    const completeSession = useCallback(() => {
+        // Manual finish for Stopwatch (or premature timer finish if we allowed it, but mainly for stopwatch)
+        setIsActive(false);
+        const durationMinutes = mode === "STOPWATCH" ? (stopwatchElapsed / 60) : (currentBaseline - timeLeft) / 60;
+
+        if (onComplete) {
+            onComplete(mode, durationMinutes, selectedSubject);
+        }
+
+        // Reset after completion
+        if (mode === "STOPWATCH") setStopwatchElapsed(0);
+        else if (mode === "FOCUS") setFocusTimeLeft(baselineFocusSecs);
+        else setBreakTimeLeft(baselineBreakSecs);
+
+        endTimeRef.current = null;
+        startTimeRef.current = null;
+
+        if (user) {
+            deleteDoc(doc(db, "users", user.uid, "activeTimer", "current")).catch(console.error);
+        }
+    }, [mode, stopwatchElapsed, currentBaseline, timeLeft, onComplete, selectedSubject, baselineFocusSecs, baselineBreakSecs, user]);
 
     // Timer Interval
     useEffect(() => {
         if (isActive) {
             timerRef.current = setInterval(() => {
                 const now = Date.now();
-                const remaining = Math.ceil((endTimeRef.current! - now) / 1000);
 
-                if (remaining <= 0) {
-                    if (mode === "FOCUS") setFocusTimeLeft(0);
-                    else setBreakTimeLeft(0);
-                    handleTimerComplete();
+                if (mode === "STOPWATCH") {
+                    if (startTimeRef.current) {
+                        const elapsed = Math.floor((now - startTimeRef.current) / 1000);
+                        setStopwatchElapsed(elapsed);
+                    }
                 } else {
-                    if (mode === "FOCUS") setFocusTimeLeft(remaining);
-                    else setBreakTimeLeft(remaining);
+                    const remaining = Math.ceil((endTimeRef.current! - now) / 1000);
+
+                    if (remaining <= 0) {
+                        if (mode === "FOCUS") setFocusTimeLeft(0);
+                        else setBreakTimeLeft(0);
+                        handleTimerComplete();
+                    } else {
+                        if (mode === "FOCUS") setFocusTimeLeft(remaining);
+                        else setBreakTimeLeft(remaining);
+                    }
                 }
             }, 1000);
         }
@@ -239,6 +303,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         if (isActive) {
             setIsActive(false);
             endTimeRef.current = null;
+            startTimeRef.current = null;
             lastLocalStopRef.current = Date.now();
             // Immediate cloud stop
             if (user) {
@@ -246,43 +311,55 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     .catch(e => console.error(e));
             }
         } else {
-            // Validate subject before starting focus
-            if (mode === "FOCUS" && !selectedSubject) {
+            // Validate subject before starting focus or stopwatch
+            if ((mode === "FOCUS" || mode === "STOPWATCH") && !selectedSubject) {
                 return;
             }
 
-            const currentLeft = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
-            if (mode === "FOCUS") setIsFocusStarted(true);
-
-            if (currentLeft <= 0) {
-                const newTime = mode === "FOCUS" ? baselineFocusSecs : baselineBreakSecs;
-                if (mode === "FOCUS") setFocusTimeLeft(newTime);
-                else setBreakTimeLeft(newTime);
-                endTimeRef.current = Date.now() + newTime * 1000;
-                sessionStartBaselineRef.current = newTime;
+            if (mode === "STOPWATCH") {
+                // Start Stopwatch
+                // elapsed = (now - start) / 1000 => start = now - (elapsed * 1000)
+                startTimeRef.current = Date.now() - (stopwatchElapsed * 1000);
+                endTimeRef.current = null;
             } else {
-                endTimeRef.current = Date.now() + currentLeft * 1000;
-                sessionStartBaselineRef.current = currentLeft;
+                // Countdown Logic
+                const currentLeft = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
+                if (mode === "FOCUS") setIsFocusStarted(true);
+
+                if (currentLeft <= 0) {
+                    const newTime = mode === "FOCUS" ? baselineFocusSecs : baselineBreakSecs;
+                    if (mode === "FOCUS") setFocusTimeLeft(newTime);
+                    else setBreakTimeLeft(newTime);
+                    endTimeRef.current = Date.now() + newTime * 1000;
+                    sessionStartBaselineRef.current = newTime;
+                } else {
+                    endTimeRef.current = Date.now() + currentLeft * 1000;
+                    sessionStartBaselineRef.current = currentLeft;
+                }
             }
             setIsActive(true);
         }
-    }, [isActive, focusTimeLeft, breakTimeLeft, mode, baselineFocusSecs, baselineBreakSecs, user, selectedSubject]);
+    }, [isActive, focusTimeLeft, breakTimeLeft, stopwatchElapsed, mode, baselineFocusSecs, baselineBreakSecs, user, selectedSubject]);
 
     const resetTimer = useCallback(() => {
         setIsActive(false);
         lastLocalStopRef.current = Date.now();
         if (mode === "FOCUS") setIsFocusStarted(false);
         endTimeRef.current = null;
+        startTimeRef.current = null;
         if (user) {
             deleteDoc(doc(db, "users", user.uid, "activeTimer", "current"))
                 .catch(e => console.error(e));
         }
         if (mode === "FOCUS") setFocusTimeLeft(baselineFocusSecs);
-        else setBreakTimeLeft(baselineBreakSecs);
+        else if (mode === "BREAK") setBreakTimeLeft(baselineBreakSecs);
+        else if (mode === "STOPWATCH") setStopwatchElapsed(0);
     }, [mode, baselineFocusSecs, baselineBreakSecs, user]);
 
     const adjustTime = useCallback((secondsDelta: number) => {
         if (isFocusStarted && mode === "FOCUS") return;
+        if (mode === "STOPWATCH") return; // No adjusting stopwatch
+
         if (mode === "FOCUS") {
             setFocusTimeLeft(prev => Math.max(0, Math.min(359999, prev + secondsDelta)));
             setBaselineFocusSecs(prev => Math.max(0, Math.min(359999, prev + secondsDelta)));
@@ -298,12 +375,16 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
     const setTimeLeftWrapper = useCallback((seconds: number) => {
         if (isFocusStarted && mode === "FOCUS") return;
+        if (mode === "STOPWATCH") return;
+
         if (mode === "FOCUS") setFocusTimeLeft(seconds);
         else setBreakTimeLeft(seconds);
     }, [isFocusStarted, mode]);
 
     const setBaselineWrapper = useCallback((seconds: number) => {
         if (isFocusStarted && mode === "FOCUS") return;
+        if (mode === "STOPWATCH") return;
+
         if (mode === "FOCUS") setBaselineFocusSecs(seconds);
         else setBaselineBreakSecs(seconds);
     }, [isFocusStarted, mode]);
@@ -317,6 +398,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         progress,
         toggleTimer,
         resetTimer,
+        completeSession,
         selectedSubject,
         setSelectedSubject,
         adjustTime,

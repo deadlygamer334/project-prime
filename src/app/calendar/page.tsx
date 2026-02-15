@@ -22,7 +22,7 @@ export default function CalendarPage() {
                 activePath="/calendar"
             />
 
-            <main className="container mx-auto flex-grow py-4 px-6 relative z-10 flex flex-col">
+            <main className="container mx-auto flex-grow py-4 px-6 relative z-10 flex flex-col pb-24 md:pb-4">
                 <CalendarGrid />
             </main>
 

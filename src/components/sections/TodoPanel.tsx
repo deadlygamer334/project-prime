@@ -8,6 +8,7 @@ import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useSettings } from "@/lib/SettingsContext";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface PriorityDropdownProps {
   currentPriority: Priority;
@@ -315,7 +316,14 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
               Next <ChevronRight className="w-3 md:w-4 h-3 md:h-4 ml-1" />
             </button>
           </div>
-          <span className={`text-[12px] md:text-[14.4px] font-medium px-2 py-2 whitespace-nowrap ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
+
+          <DatePicker
+            date={currentDate}
+            setDate={(d) => d && setCurrentDate(d)}
+            className="h-10 md:h-[44px] px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-xl border-none shadow-none hover:bg-black/5 dark:hover:bg-white/5"
+          />
+
+          <span className={`hidden sm:inline-block text-[12px] md:text-[14.4px] font-medium px-2 py-2 whitespace-nowrap ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
             {formatDisplayDate(currentDate)}
           </span>
         </div>
@@ -458,7 +466,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
               </motion.button>
 
               {/* Task Content */}
-              <div className="flex flex-col flex-1 min-w-0">
+              <div className="flex flex-col flex-1 min-w-0 select-text">
                 <motion.span
                   animate={task.completed ? { scale: [1, 1.02, 1], opacity: 0.5 } : { scale: 1, opacity: 1 }}
                   className={`text-[15px] font-medium transition-all truncate ${task.completed ? "line-through" : isDark ? "text-white" : "text-black"}`}
