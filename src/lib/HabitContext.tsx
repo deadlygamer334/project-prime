@@ -19,6 +19,7 @@ interface HabitContextType {
   addHabit: (name: string) => void;
   toggleHabitCompletion: (habitId: string, day: number) => void;
   deleteHabit: (id: string) => void;
+  renameHabit: (id: string, newName: string) => Promise<void>;
   removeHabitFromMonth: (id: string) => void;
   copyFromPreviousMonth: () => void;
   getStatsForDay: (day: number) => { total: number; completed: number; percent: number };
@@ -244,6 +245,17 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [user]);
 
+  const renameHabit = useCallback(async (id: string, newName: string) => {
+    if (!user || !newName.trim()) return;
+    setHabits(prev => prev.map(h => h.id === id ? { ...h, name: newName } : h));
+    try {
+      await updateDoc(doc(db, "users", user.uid, "habits", id), { name: newName });
+    } catch (e) {
+      console.error("Error renaming habit:", e);
+      // Optional: revert state on error if needed, but Firestore is usually reliable
+    }
+  }, [user]);
+
   const removeHabitFromMonth = useCallback(async (id: string) => {
     if (!user) return;
     const monthKey = `${currentYear}-${currentMonth}`;
@@ -449,6 +461,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addHabit,
     toggleHabitCompletion,
     deleteHabit,
+    renameHabit,
     removeHabitFromMonth,
     copyFromPreviousMonth,
     getStatsForDay: (day: number) => {

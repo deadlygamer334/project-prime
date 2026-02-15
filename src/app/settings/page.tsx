@@ -4,6 +4,7 @@ import React from "react";
 import AppHeader from "@/components/sections/AppHeader";
 import Footer from "@/components/sections/Footer";
 import { useTheme } from "@/lib/ThemeContext";
+import { useNotification } from "@/lib/NotificationContext";
 import { useSettings, AccentColor, FontFamily, BackgroundStyle, TickSound, AlarmSound } from "@/lib/SettingsContext";
 import { useKeyboardShortcuts } from "@/lib/KeyboardShortcutsContext";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -23,6 +24,7 @@ import VibeGallery from "@/components/sections/VibeGallery";
 
 export default function SettingsPage() {
     const { theme, toggleTheme } = useTheme();
+    const { showToast, showConfirm } = useNotification();
     const isDark = theme === "dark";
     const settings = useSettings();
     const { playTick, playAlarm } = useSoundEffects();
@@ -34,6 +36,7 @@ export default function SettingsPage() {
     const handleSignOut = async () => {
         try {
             await signOut(auth);
+            showToast("Signed out successfully", "info");
             router.push("/");
         } catch (error) {
             console.error("Error signing out:", error);
@@ -56,6 +59,7 @@ export default function SettingsPage() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        showToast("Data exported successfully", "success");
     };
 
     const fonts: { id: FontFamily; label: string }[] = [
@@ -425,7 +429,18 @@ export default function SettingsPage() {
 
                         <div className="mt-8 pt-6 border-t border-border flex justify-center">
                             <button
-                                onClick={settings.resetSettings}
+                                onClick={async () => {
+                                    const confirmed = await showConfirm({
+                                        title: "Reset Settings",
+                                        description: "Are you sure you want to reset all settings to default? This cannot be undone.",
+                                        confirmText: "Reset",
+                                        cancelText: "Cancel"
+                                    });
+                                    if (confirmed) {
+                                        settings.resetSettings();
+                                        showToast("Settings reset to defaults", "success");
+                                    }
+                                }}
                                 className="text-xs text-muted-foreground hover:text-destructive transition-colors"
                             >
                                 Reset all settings to default

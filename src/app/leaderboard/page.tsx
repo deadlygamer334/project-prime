@@ -48,7 +48,7 @@ export default function LeaderboardPage() {
                     <div className="text-center mb-12">
                         <div className="flex items-center justify-center gap-3 mb-4">
                             <Trophy className="w-12 h-12 text-yellow-500" />
-                            <h1 className="text-4xl font-bold">Weekly Leaderboard</h1>
+                            <h1 className={`text-4xl font-bold ${isDark ? "text-white" : "text-black"}`}>Weekly Leaderboard</h1>
                         </div>
                         <p className="text-lg text-muted-foreground">
                             Top performers this week

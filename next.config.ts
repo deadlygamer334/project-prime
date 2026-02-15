@@ -46,4 +46,4 @@ const nextConfig: NextConfig = {
 };
 
 export default withPWA(nextConfig);
-// Orchids restart: 1769085002323
+// Visual editor restart: 1769085002323

@@ -149,12 +149,12 @@ export const useFocusProgress = () => {
     const addSession = useCallback(async (type: "focus" | "break", duration: number, subject?: string) => {
         if (!user) return;
 
-        const newSession = {
+        const newSession: any = {
             type,
             duration,
             timestamp: new Date().toISOString(),
-            subject: subject || undefined
         };
+        if (subject) newSession.subject = subject;
 
         // Optimistic
         const tempId = crypto.randomUUID();

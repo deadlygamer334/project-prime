@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Trash2, Check, BarChart3, Copy } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Check, BarChart3, Copy, Pencil, X } from "lucide-react";
 import { useHabitContext } from "@/lib/HabitContext";
 import { useTheme } from "@/lib/ThemeContext";
 import MonthlyStatsModal from "./monthly-stats-modal";
@@ -24,6 +24,7 @@ const HabitTrackerMain = () => {
     currentYear,
     nextMonth,
     prevMonth,
+    renameHabit,
     isLoaded
   } = useHabitContext();
 
@@ -32,6 +33,8 @@ const HabitTrackerMain = () => {
   const [newHabitName, setNewHabitName] = useState("");
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const monthName = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
@@ -57,6 +60,24 @@ const HabitTrackerMain = () => {
 
     addHabit(newHabitName);
     setNewHabitName("");
+  };
+
+  const handleRename = async (id: string) => {
+    setError(null);
+    if (!editingName.trim()) {
+      setEditingHabitId(null);
+      return;
+    }
+
+    const result = HabitSchema.safeParse({ name: editingName });
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      return;
+    }
+
+    await renameHabit(id, editingName);
+    setEditingHabitId(null);
+    setEditingName("");
   };
 
   const today = new Date().getDate();
@@ -203,14 +224,50 @@ const HabitTrackerMain = () => {
                 habits.map((habit) => (
                   <tr key={habit.id} className="group transition-colors hover:bg-muted/30">
                     <td className="sticky left-0 z-20 px-4 py-3 border-b border-r border-border flex items-center justify-between bg-background text-foreground shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)] select-text">
-                      <span className="truncate max-w-[140px] font-medium">{habit.name}</span>
-                      <button
-                        onClick={() => removeHabitFromMonth(habit.id)}
-                        className="opacity-100 md:opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 text-destructive rounded-lg transition-all"
-                        title="Remove from this month"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {editingHabitId === habit.id ? (
+                        <div className="flex items-center gap-2 w-full">
+                          <input
+                            autoFocus
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRename(habit.id);
+                              if (e.key === 'Escape') setEditingHabitId(null);
+                            }}
+                            className="w-full bg-card border border-primary rounded-md px-2 py-1 text-sm outline-none"
+                          />
+                          <button onClick={() => handleRename(habit.id)} className="text-primary hover:text-primary/80">
+                            <Check size={14} />
+                          </button>
+                          <button onClick={() => setEditingHabitId(null)} className="text-muted-foreground hover:text-foreground">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="truncate max-w-[140px] font-medium">{habit.name}</span>
+                          <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => {
+                                setEditingHabitId(habit.id);
+                                setEditingName(habit.name);
+                              }}
+                              className="p-1.5 hover:bg-primary/10 text-primary rounded-lg transition-all"
+                              title="Rename habit"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => removeHabitFromMonth(habit.id)}
+                              className="p-1.5 hover:bg-destructive/10 text-destructive rounded-lg transition-all"
+                              title="Remove from this month"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </td>
                     {days.map((day) => (
                       <td
@@ -246,17 +303,50 @@ const HabitTrackerMain = () => {
               <div key={habit.id} className="flex flex-col gap-4">
                 {/* Habit Header */}
                 <div className="flex items-center justify-between px-1 select-text">
-                  <h3 className="text-lg font-bold tracking-tight text-foreground truncate max-w-[80%]">
-                    {habit.name}
-                  </h3>
-                  <button
-                    onClick={() => removeHabitFromMonth(habit.id)}
-                    className="p-2 bg-destructive/10 text-destructive rounded-xl active:scale-90 transition-transform"
-                    aria-label={`Remove ${habit.name} from this month`}
-                    title="Remove from this month"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {editingHabitId === habit.id ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRename(habit.id);
+                          if (e.key === 'Escape') setEditingHabitId(null);
+                        }}
+                        className="w-full bg-card border border-primary rounded-xl px-4 py-2 text-base outline-none"
+                      />
+                      <button onClick={() => handleRename(habit.id)} className="p-2 bg-primary text-primary-foreground rounded-xl">
+                        <Check size={18} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-bold tracking-tight text-foreground truncate max-w-[70%]">
+                        {habit.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingHabitId(habit.id);
+                            setEditingName(habit.name);
+                          }}
+                          className="p-2 bg-primary/10 text-primary rounded-xl active:scale-90 transition-transform"
+                          title="Rename habit"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => removeHabitFromMonth(habit.id)}
+                          className="p-2 bg-destructive/10 text-destructive rounded-xl active:scale-90 transition-transform"
+                          aria-label={`Remove ${habit.name} from this month`}
+                          title="Remove from this month"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Labelling and Scrolling Grid */}

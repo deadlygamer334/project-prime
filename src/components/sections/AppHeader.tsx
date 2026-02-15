@@ -57,9 +57,9 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
 
   return (
     <>
-      <header className="transition-all duration-300 fixed top-0 w-full z-[1000] px-4 md:px-6 pt-4">
+      <header className="transition-all duration-300 fixed top-0 w-full z-[1000] px-4 md:px-6 pt-4 max-md:landscape:pt-2">
         <div
-          className={`mx-auto max-w-[1400px] flex relative items-center justify-between w-full h-[64px] px-4 md:px-6 rounded-2xl border backdrop-blur-[24px] transition-all duration-500 shadow-2xl ${isDark
+          className={`mx-auto max-w-[1400px] flex relative items-center justify-between w-full h-[64px] max-md:landscape:h-[44px] px-4 md:px-6 max-md:landscape:pl-28 rounded-2xl border backdrop-blur-[24px] transition-all duration-500 shadow-2xl ${isDark
             ? "bg-[rgba(20,20,20,0.6)] border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
             : "bg-[rgba(255,255,255,0.6)] border-white/40 text-[#1d1d1f] shadow-[0_8px_32px_rgba(0,0,0,0.05)]"
             }`}
@@ -78,7 +78,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                 </svg>
               </div>
               <h1
-                className={`page-title text-[18px] md:text-[22px] font-bold tracking-tight cursor-pointer transition-all whitespace-nowrap ${isDark ? "text-white" : "text-[#1d1d1f]"
+                className={`page-title text-[18px] md:text-[22px] max-md:landscape:text-sm font-bold tracking-tight cursor-pointer transition-all whitespace-nowrap ${isDark ? "text-white" : "text-[#1d1d1f]"
                   }`}
                 style={{
                   letterSpacing: "-0.03em",
@@ -227,10 +227,10 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         </div>
 
         {/* Floating Bottom Dock (Visible only on Mobile/Tablet) */}
-        <div className="lg:hidden fixed bottom-6 left-0 right-0 landscape:bottom-auto landscape:top-1/2 landscape:-translate-y-1/2 landscape:left-4 landscape:right-auto landscape:w-auto z-[1001] px-4 landscape:px-0 pointer-events-none">
+        <div className="md:hidden fixed bottom-6 left-0 right-0 landscape:bottom-auto landscape:top-1/2 landscape:-translate-y-1/2 landscape:left-4 landscape:right-auto landscape:w-auto z-[1001] px-4 landscape:px-0 pointer-events-none">
           <div className="flex justify-center max-w-md mx-auto pointer-events-auto">
             <nav
-              className={`flex items-center landscape:flex-col gap-1 p-2 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-500 ${isDark
+              className={`flex items-center max-md:landscape:flex-col gap-1 p-2 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-500 ${isDark
                 ? "bg-[rgba(20,20,20,0.8)] border-white/20 text-white"
                 : "bg-[rgba(255,255,255,0.8)] border-black/10 text-black"
                 }`}
@@ -268,7 +268,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                       className="relative z-10 flex flex-col items-center justify-center"
                     >
                       <item.icon size={20} />
-                      <span className="text-[9px] font-bold tracking-tighter uppercase mt-1 landscape:hidden">{item.label}</span>
+                      <span className="text-[9px] font-bold tracking-tighter uppercase mt-1 max-md:landscape:hidden">{item.label}</span>
                     </motion.div>
                   </Link>
                 );
@@ -284,22 +284,22 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                       }`}
                   >
                     <Menu size={20} />
-                    <span className="text-[9px] font-bold tracking-tighter uppercase mt-1 landscape:hidden">More</span>
+                    <span className="text-[9px] font-bold tracking-tighter uppercase mt-1 max-md:landscape:hidden">More</span>
                   </button>
                 </DrawerTrigger>
-                <DrawerContent className={`rounded-t-[32px] landscape:rounded-l-[32px] landscape:rounded-tr-none border-t landscape:border-l landscape:border-t-0 backdrop-blur-3xl transition-[background-color] duration-500 overflow-hidden ${isDark
-                  ? "bg-[#0a0a0c]/90 border-white/10"
-                  : "bg-white/95 border-black/5"
+                <DrawerContent className={`rounded-t-[32px] rounded-b-[32px] mb-28 mx-4 max-md:landscape:mb-0 max-md:landscape:mx-0 max-md:landscape:rounded-l-[32px] max-md:landscape:rounded-r-none max-md:landscape:rounded-tr-none border backdrop-blur-3xl transition-[background-color] duration-500 overflow-hidden ${isDark
+                  ? "bg-[#0a0a0c]/90 border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.5)]"
+                  : "bg-white/95 border-black/5 shadow-[0_-8px_32px_rgba(0,0,0,0.05)]"
                   }`}>
-                  <div className="mx-auto w-12 h-1.5 landscape:w-1.5 landscape:h-12 rounded-full bg-white/20 mt-4 mb-4 landscape:my-auto landscape:ml-2 landscape:mr-4" />
-                  <div className="landscape:flex-1 landscape:overflow-y-auto">
+                  <div className="mx-auto w-12 h-1.5 max-md:landscape:w-1.5 max-md:landscape:h-12 rounded-full bg-white/20 mt-4 mb-4 max-md:landscape:my-auto max-md:landscape:ml-2 max-md:landscape:mr-4" />
+                  <div className="max-md:landscape:flex-1 max-md:landscape:overflow-y-auto">
                     <DrawerHeader>
                       <DrawerTitle className={`text-2xl font-bold tracking-tight text-center ${isDark ? "text-white" : "text-black"}`}>Apps & Tools</DrawerTitle>
                       <DrawerDescription className={`text-center mb-6 ${isDark ? "text-white/40" : "text-black/40"}`}>
                         All your productivity tools in one place
                       </DrawerDescription>
                     </DrawerHeader>
-                    <div className="grid grid-cols-3 landscape:grid-cols-2 gap-y-8 px-6 pb-12 overflow-y-auto max-h-[60vh] landscape:max-h-[80vh]">
+                    <div className="grid grid-cols-3 max-md:landscape:grid-cols-2 gap-y-8 px-6 pb-12 overflow-y-auto max-h-[60vh] max-md:landscape:max-h-[80vh]">
                       {toolItems.map((item) => (
                         <Link
                           key={item.label}
@@ -322,7 +322,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         </div>
       </header>
       {/* Spacer to compensate for fixed header */}
-      <div className="h-[80px] w-full" />
+      <div className="h-[80px] max-md:landscape:h-[52px] w-full" />
     </>
   );
 }

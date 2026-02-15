@@ -274,7 +274,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
 
   return (
     <section
-      className={`todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] landscape:min-h-0 ${isDark
+      className={`todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] max-md:landscape:min-h-0 ${isDark
         ? "bg-[rgba(10,10,10,0.6)] border-white/5 shadow-[0_24px_48px_rgba(0,0,0,0.4)]"
         : "bg-[rgba(255,255,255,0.6)] border-white shadow-[0_24px_48px_rgba(0,0,0,0.05)]"
         }`}

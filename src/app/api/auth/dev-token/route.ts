@@ -10,8 +10,23 @@ export async function POST() {
     try {
         const TEST_EMAIL = 'test@prime.local';
 
-        // Find user by email
-        const userRecord = await authAdmin.getUserByEmail(TEST_EMAIL);
+        // Find or Create user
+        let userRecord;
+        try {
+            userRecord = await authAdmin.getUserByEmail(TEST_EMAIL);
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+                console.log(`🔨 Creating dev test user: ${TEST_EMAIL}`);
+                userRecord = await authAdmin.createUser({
+                    email: TEST_EMAIL,
+                    emailVerified: true,
+                    displayName: 'Prime Dev Explorer',
+                    photoURL: 'https://api.dicebear.com/7.x/bottts/svg?seed=Prime',
+                });
+            } else {
+                throw error;
+            }
+        }
 
         // Create custom token
         const customToken = await authAdmin.createCustomToken(userRecord.uid);

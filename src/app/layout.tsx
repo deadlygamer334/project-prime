@@ -20,6 +20,7 @@ import QueryProvider from "@/components/QueryProvider";
 import OfflineStatus from "@/components/OfflineStatus";
 import { GoalProvider } from "@/lib/GoalContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { NotificationProvider } from "@/components/providers/NotificationProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -99,49 +100,53 @@ export default function RootLayout({
             <SettingsProvider>
               <LayoutHandlers>
                 <ThemeProvider>
-                  <KeyboardShortcutsProvider>
-                    <HabitProvider>
-                      <GoalProvider>
-                        <a
-                          href="#main-content"
-                          className="absolute left-0 top-[-9999px] z-[9999] bg-white text-black p-4 transition-all focus:top-0 focus:left-0"
-                        >
-                          Skip to main content
-                        </a>
-                        <Script
-                          id="orchids-browser-logs"
-                          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
-                          strategy="afterInteractive"
-                          data-orchids-project-id="af7ac36f-acf0-497f-baa0-ffab1e811bf8"
-                        />
-                        <ErrorReporter />
-                        <Script
-                          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
-                          strategy="afterInteractive"
-                          data-target-origin="*"
-                          data-message-type="ROUTE_CHANGE"
-                          data-include-search-params="true"
-                          data-only-in-iframe="true"
-                          data-debug="true"
-                          data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
-                        />
-                        <AmbienceProvider>
-                          <SecurityGatekeeper />
-                          <DynamicBackground />
-                          <ProtectedRoute>
-                            {children}
-                            {/* Mobile Bottom Dock Spacer */}
-                            <div className="lg:hidden h-32" aria-hidden="true" />
-                          </ProtectedRoute>
-                          <FloatingMusicPlayer />
-                        </AmbienceProvider>
-                        <KeyboardShortcutsModal />
-                        <VisualEditsMessenger />
-                        <OfflineStatus />
-                        <SpeedInsights />
-                      </GoalProvider>
-                    </HabitProvider>
-                  </KeyboardShortcutsProvider>
+                  <NotificationProvider>
+                    <KeyboardShortcutsProvider>
+                      <HabitProvider>
+                        <GoalProvider>
+                          <a
+                            href="#main-content"
+                            className="absolute left-0 top-[-9999px] z-[9999] bg-white text-black p-4 transition-all focus:top-0 focus:left-0"
+                          >
+                            Skip to main content
+                          </a>
+                          <Script
+                            id="prime-browser-logs"
+                            src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
+                            strategy="afterInteractive"
+                            data-visual-project-id="af7ac36f-acf0-497f-baa0-ffab1e811bf8"
+                          />
+                          <ErrorReporter />
+                          <Script
+                            src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
+                            strategy="afterInteractive"
+                            data-target-origin="*"
+                            data-message-type="ROUTE_CHANGE"
+                            data-include-search-params="true"
+                            data-only-in-iframe="true"
+                            data-debug="true"
+                            data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
+                          />
+                          <AmbienceProvider>
+                            <SecurityGatekeeper />
+                            <DynamicBackground />
+                            <ProtectedRoute>
+                              <div className="max-md:landscape:pl-28 transition-all duration-500">
+                                {children}
+                                {/* Mobile Bottom Dock Spacer */}
+                                <div className="lg:hidden h-32" aria-hidden="true" />
+                              </div>
+                            </ProtectedRoute>
+                            <FloatingMusicPlayer />
+                          </AmbienceProvider>
+                          <KeyboardShortcutsModal />
+                          <VisualEditsMessenger />
+                          <OfflineStatus />
+                          <SpeedInsights />
+                        </GoalProvider>
+                      </HabitProvider>
+                    </KeyboardShortcutsProvider>
+                  </NotificationProvider>
                 </ThemeProvider>
               </LayoutHandlers>
             </SettingsProvider>

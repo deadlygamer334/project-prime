@@ -25,8 +25,8 @@ export default function HomePage() {
         showSearch={false}
       />
 
-      <main className="container mx-auto flex-grow py-4 px-6 relative z-10 flex flex-col justify-center pb-24 md:pb-4">
-        <div className="grid grid-cols-1 gap-6 landscape:grid-cols-2 landscape:gap-4 md:grid-cols-2 lg:gap-8 items-start">
+      <main className="container mx-auto flex-grow py-4 max-md:landscape:py-2 px-6 relative z-10 flex flex-col justify-center pb-24 md:pb-4">
+        <div className="grid grid-cols-1 gap-6 max-md:landscape:gap-4 md:gap-8 max-md:landscape:grid-cols-2 md:grid-cols-2 items-start">
           {/* Timer: First on Mobile, Left in Landscape */}
           <div className={`flex flex-col gap-6 ${settings.dashboardLayout === "reversed" ? "" : "md:order-2"}`}>
             <GlobalErrorBoundary moduleName="Focus Engine">

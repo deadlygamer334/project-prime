@@ -27,6 +27,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const [stopwatchElapsed, setStopwatchElapsed] = useState(0);
     const [isActive, setIsActive] = useState(false);
     const [isFocusStarted, setIsFocusStarted] = useState(false);
+    const [isBreakStarted, setIsBreakStarted] = useState(false);
     const [selectedSubject, setSelectedSubject] = useState<Subject>("");
 
     // Baselines from Settings
@@ -148,6 +149,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 setStopwatchElapsed(parsed.stopwatchElapsed ?? 0);
                 setSelectedSubject(parsed.selectedSubject || "");
                 setIsFocusStarted(parsed.isFocusStarted || false);
+                setIsBreakStarted(parsed.isBreakStarted || false);
 
                 if (parsed.isActive) {
                     const now = Date.now();
@@ -175,7 +177,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         } finally {
             setIsLoaded(true);
         }
-    }, [baselineFocusSecs, baselineBreakSecs]);
+    }, []); // Only run on mount
 
     // Save state to localStorage (frequent updates OK)
     useEffect(() => {
@@ -191,6 +193,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             selectedSubject,
             isActive,
             isFocusStarted,
+            isBreakStarted,
             endTime: isActive ? endTimeRef.current : null,
             startTime: isActive ? startTimeRef.current : null
         };
@@ -210,6 +213,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 startTime: startTimeRef.current,
                 isActive,
                 isFocusStarted,
+                isBreakStarted,
                 selectedSubject,
                 updatedAt: Date.now()
             }, { merge: true }).catch(err => console.error("Cloud sync failed:", err));
@@ -223,6 +227,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const handleTimerComplete = useCallback(() => {
         setIsActive(false);
         if (mode === "FOCUS") setIsFocusStarted(false);
+        if (mode === "BREAK") setIsBreakStarted(false);
         endTimeRef.current = null;
 
         // Cleanup Cloud activeTimer immediately
@@ -248,18 +253,29 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 onComplete(mode, durationMinutes, selectedSubject);
             }
         }
+
+        // Reset subject after logging
+        setSelectedSubject("");
     }, [currentBaseline, mode, selectedSubject, onComplete]);
 
     const completeSession = useCallback(() => {
         // Manual finish for Stopwatch (or premature timer finish if we allowed it, but mainly for stopwatch)
         setIsActive(false);
-        const durationMinutes = mode === "STOPWATCH" ? (stopwatchElapsed / 60) : (currentBaseline - timeLeft) / 60;
+
+        // Use the baseline captured at the START of the session for logging accuracy
+        const loggedBaseline = sessionStartBaselineRef.current ?? currentBaseline;
+        sessionStartBaselineRef.current = null;
+
+        const durationMinutes = mode === "STOPWATCH" ? (stopwatchElapsed / 60) : (loggedBaseline - timeLeft) / 60;
 
         if (onComplete) {
             onComplete(mode, durationMinutes, selectedSubject);
         }
 
-        // Reset after completion
+        if (mode === "STOPWATCH") setStopwatchElapsed(0);
+        else if (mode === "FOCUS") setIsFocusStarted(false);
+        else setIsBreakStarted(false);
+
         if (mode === "STOPWATCH") setStopwatchElapsed(0);
         else if (mode === "FOCUS") setFocusTimeLeft(0);
         else setBreakTimeLeft(0);
@@ -270,6 +286,9 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         if (user) {
             deleteDoc(doc(db, "users", user.uid, "activeTimer", "current")).catch(console.error);
         }
+
+        // Reset subject after completion
+        setSelectedSubject("");
     }, [mode, stopwatchElapsed, currentBaseline, timeLeft, onComplete, selectedSubject, user]);
 
     // Timer Interval
@@ -328,6 +347,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 // Countdown Logic
                 const currentLeft = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
                 if (mode === "FOCUS") setIsFocusStarted(true);
+                if (mode === "BREAK") setIsBreakStarted(true);
 
                 // If currentLeft is 0 (completed), explicitly reset to baseline
                 if (currentLeft <= 0) {
@@ -349,6 +369,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         setIsActive(false);
         lastLocalStopRef.current = Date.now();
         if (mode === "FOCUS") setIsFocusStarted(false);
+        if (mode === "BREAK") setIsBreakStarted(false);
         endTimeRef.current = null;
         startTimeRef.current = null;
         if (user) {
@@ -361,28 +382,34 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     }, [mode, baselineFocusSecs, baselineBreakSecs, user]);
 
     const adjustTime = useCallback((secondsDelta: number) => {
-        if (isFocusStarted && mode === "FOCUS") return;
-        if (mode === "STOPWATCH") return; // No adjusting stopwatch
+        if (isActive || (isFocusStarted && mode === "FOCUS")) return;
+        if (mode === "STOPWATCH") return;
 
-        // Convert delta only (since we are updating minutes in settings)
-        // This is tricky. adjustTime in the UI likely sends +60, -60, +300 etc.
-        // We need to update the SETTING, not the LOCAL STATE.
-
-        const minutesDelta = secondsDelta / 60;
+        // Determine if we should update global settings (persistent duration)
+        // or just local state (transient adjustment). 
+        // Rule: If it's a multiple of 60s, update settings.
+        const isMinuteAdjustment = secondsDelta !== 0 && secondsDelta % 60 === 0;
 
         if (mode === "FOCUS") {
-            const newMinutes = Math.max(1, Math.min(180, timerDurations.focus + minutesDelta));
-            const newSeconds = newMinutes * 60;
-            updateSetting("timerDurations", { ...timerDurations, focus: newMinutes });
-            // Also update local state to reflect immediately
+            const currentSeconds = focusTimeLeft + secondsDelta;
+            const newSeconds = Math.max(10, Math.min(1440 * 60, currentSeconds));
             setFocusTimeLeft(newSeconds);
+
+            if (isMinuteAdjustment) {
+                const newMinutes = Math.round(newSeconds / 60);
+                updateSetting("timerDurations", { ...timerDurations, focus: newMinutes });
+            }
         } else {
-            const newMinutes = Math.max(1, Math.min(60, timerDurations.shortBreak + minutesDelta));
-            const newSeconds = newMinutes * 60;
-            updateSetting("timerDurations", { ...timerDurations, shortBreak: newMinutes });
+            const currentSeconds = breakTimeLeft + secondsDelta;
+            const newSeconds = Math.max(10, Math.min(720 * 60, currentSeconds));
             setBreakTimeLeft(newSeconds);
+
+            if (isMinuteAdjustment) {
+                const newMinutes = Math.round(newSeconds / 60);
+                updateSetting("timerDurations", { ...timerDurations, shortBreak: newMinutes });
+            }
         }
-    }, [isFocusStarted, mode, timerDurations, updateSetting]);
+    }, [isActive, isFocusStarted, mode, focusTimeLeft, breakTimeLeft, timerDurations, updateSetting]);
 
     const setModeWrapper = useCallback((m: TimerMode) => {
         setMode(m);
@@ -433,6 +460,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         timeLeft,
         isActive,
         isFocusStarted,
+        isBreakStarted,
         progress,
         toggleTimer,
         resetTimer,

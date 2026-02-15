@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useFocusProgress, FocusSession } from "@/hooks/useFocusProgress";
+import { useNotification } from "@/lib/NotificationContext";
 import { useTheme } from "@/lib/ThemeContext";
 import FocusChart from "@/components/sections/FocusChart";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,20 +16,30 @@ type Timeframe = "day" | "week" | "month" | "year";
 
 export default function FocusProgressPage() {
     const { getSessionsInRange, isLoaded, deleteSession } = useFocusProgress();
+    const { showConfirm, showToast } = useNotification();
     const { theme } = useTheme();
     const isDark = theme === "dark";
 
     const [timeframe, setTimeframe] = useState<Timeframe>("week");
     const [sessions, setSessions] = useState<FocusSession[]>([]);
     const [loading, setLoading] = useState(true);
+    const [displayLimit, setDisplayLimit] = useState(5);
 
     const handleDelete = async (session: FocusSession) => {
-        if (!confirm("Are you sure you want to delete this session? This will also update your total time.")) return;
+        const confirmed = await showConfirm({
+            title: "Delete Session",
+            description: "Are you sure you want to delete this session? This will also update your total time.",
+            confirmText: "Delete",
+            cancelText: "Cancel"
+        });
+
+        if (!confirmed) return;
 
         // Optimistic update locally in this component too
         setSessions(prev => prev.filter(s => s.id !== session.id));
 
         await deleteSession(session);
+        showToast("Session deleted successfully", "success");
     };
 
     // Fetch data when timeframe changes
@@ -59,6 +70,7 @@ export default function FocusProgressPage() {
 
             const data = await getSessionsInRange(start, end);
             setSessions(data);
+            setDisplayLimit(5); // Reset limit when timeframe changes
             setLoading(false);
         };
 
@@ -278,47 +290,60 @@ export default function FocusProgressPage() {
                                 ) : sessions.length === 0 ? (
                                     <p className="opacity-40 text-sm">No sessions in this period.</p>
                                 ) : (
-                                    sessions.slice(0, 5).map((session, i) => ( // Show top 5
-                                        <motion.div
-                                            key={session.id || i}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.05 }}
-                                            className="flex items-center justify-between py-4 border-b border-border"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div>
-                                                    <h4 className="text-base font-medium text-foreground">{session.subject || "Timer"}</h4>
-                                                    <p className="text-xs opacity-40 mt-1 uppercase tracking-wider">
-                                                        {format(new Date(session.timestamp), "MMM d • h:mm a")}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-6">
-                                                <div className="text-right">
-                                                    <p className="text-base font-medium tabular-nums text-foreground">
-                                                        {session.duration < 1
-                                                            ? Math.round(session.duration * 60)
-                                                            : session.duration % 1 === 0
-                                                                ? session.duration
-                                                                : session.duration.toFixed(2)} <span className="text-xs opacity-40 font-normal">{session.duration < 1 ? "s" : "m"}</span>
-                                                    </p>
+                                    <>
+                                        {sessions.slice(0, displayLimit).map((session, i) => (
+                                            <motion.div
+                                                key={session.id || i}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.05 }}
+                                                className="flex items-center justify-between py-4 border-b border-border"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div>
+                                                        <h4 className="text-base font-medium text-foreground">{session.subject || "Timer"}</h4>
+                                                        <p className="text-xs opacity-40 mt-1 uppercase tracking-wider">
+                                                            {format(new Date(session.timestamp), "MMM d • h:mm a")}
+                                                        </p>
+                                                    </div>
                                                 </div>
 
-                                                <button
-                                                    onClick={() => handleDelete(session)}
-                                                    className={`p-2 rounded-lg transition-all ${isDark
-                                                        ? "hover:bg-red-500/10 text-white/20 hover:text-red-400"
-                                                        : "hover:bg-red-500/5 text-black/20 hover:text-red-500"
-                                                        }`}
-                                                    title="Delete session"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    ))
+                                                <div className="flex items-center gap-6">
+                                                    <div className="text-right">
+                                                        <p className="text-base font-medium tabular-nums text-foreground">
+                                                            {session.duration < 1
+                                                                ? Math.round(session.duration * 60)
+                                                                : session.duration % 1 === 0
+                                                                    ? session.duration
+                                                                    : session.duration.toFixed(2)} <span className="text-xs opacity-40 font-normal">{session.duration < 1 ? "s" : "m"}</span>
+                                                        </p>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => handleDelete(session)}
+                                                        className={`p-2 rounded-lg transition-all ${isDark
+                                                            ? "hover:bg-red-500/10 text-white/20 hover:text-red-400"
+                                                            : "hover:bg-red-500/5 text-black/20 hover:text-red-500"
+                                                            }`}
+                                                        title="Delete session"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+
+                                        {sessions.length > displayLimit && (
+                                            <motion.button
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                onClick={() => setDisplayLimit(prev => prev + 5)}
+                                                className={`w-full py-4 text-xs font-bold tracking-widest uppercase opacity-40 hover:opacity-100 transition-all border-b border-transparent hover:border-border mt-2`}
+                                            >
+                                                Load More ({sessions.length - displayLimit} remaining)
+                                            </motion.button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
