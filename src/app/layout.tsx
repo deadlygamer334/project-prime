@@ -31,8 +31,6 @@ import { Viewport } from "next";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -132,12 +130,15 @@ export default function RootLayout({
                           <DynamicBackground />
                           <ProtectedRoute>
                             {children}
+                            {/* Mobile Bottom Dock Spacer */}
+                            <div className="lg:hidden h-32" aria-hidden="true" />
                           </ProtectedRoute>
                           <FloatingMusicPlayer />
                         </AmbienceProvider>
                         <KeyboardShortcutsModal />
                         <VisualEditsMessenger />
                         <OfflineStatus />
+                        <SpeedInsights />
                       </GoalProvider>
                     </HabitProvider>
                   </KeyboardShortcutsProvider>
@@ -146,7 +147,6 @@ export default function RootLayout({
             </SettingsProvider>
           </QueryProvider>
         </GlobalErrorBoundary>
-        <SpeedInsights />
       </body>
     </html>
   );

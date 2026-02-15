@@ -28,6 +28,7 @@ export default function KeyboardShortcutsModal() {
         { key: "Alt + N", label: "New Task (Focus Input)", category: "Tasks" },
         { key: "Space", label: "Start / Pause Timer", category: "Timer" },
         { key: "F", label: "Zen Mode", category: "Timer" },
+        { key: "Double Click", label: "Play / Pause (Zen Mode)", category: "Timer" },
     ];
 
     const gestures = [
@@ -35,6 +36,7 @@ export default function KeyboardShortcutsModal() {
         { key: "2-Finger Swipe Right", label: "Prev Tab (Back)", category: "Navigation" },
         { key: "2-Finger Swipe Down", label: "Toggle Shortcuts", category: "Global" },
         { key: "2-Finger Vertical Swipe", label: "Resize Timer (Zen Mode)", category: "Timer" },
+        { key: "Double Tap", label: "Play / Pause (Zen Mode)", category: "Timer" },
     ];
 
     const currentShortcuts = activeTab === "keyboard" ? shortcuts : gestures;

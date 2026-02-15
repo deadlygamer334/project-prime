@@ -50,6 +50,12 @@ interface Settings {
     leaderboardPublic: boolean;
 
     // Pro Aesthetic Settings
+    dashboardLayout: "standard" | "reversed";
+    timerDurations: {
+        focus: number;
+        shortBreak: number;
+        longBreak: number;
+    };
     lineHeight: LineHeight;
     letterSpacing: LetterSpacing;
     paddingScale: PaddingScale;
@@ -98,6 +104,12 @@ const defaultSettings: Settings = {
     leaderboardPublic: true,
 
     // Defaults
+    dashboardLayout: "standard",
+    timerDurations: {
+        focus: 25,
+        shortBreak: 5,
+        longBreak: 15
+    },
     lineHeight: "comfort",
     letterSpacing: "normal",
     paddingScale: "normal",

@@ -63,8 +63,10 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
 
     // Touch Brightness Interaction
     const touchStartY = useRef<number | null>(null);
+    const lastTapTime = useRef<number>(0);
     const initialBrightness = useRef<number>(1);
     const initialScale = useRef<number>(0.8);
+
 
     const prevTimeLeft = useRef(timeLeft);
     const [currentTime, setCurrentTime] = useState("");
@@ -272,6 +274,17 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
     // Touch Handlers for Zen Mode Interaction
     const handleTouchStart = (e: React.TouchEvent) => {
         if (!isFullScreen) return;
+
+        // Double Tap detection
+        const now = Date.now();
+        const DOUBLE_TAP_DELAY = 300;
+        if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
+            handleStart();
+            lastTapTime.current = 0; // Reset to prevent triple-tap triggering again
+            return;
+        }
+        lastTapTime.current = now;
+
         if (e.touches.length === 1) {
             touchStartY.current = e.touches[0].clientY;
             initialBrightness.current = brightness;
@@ -281,6 +294,7 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
             initialScale.current = scale;
         }
     };
+
 
     const handleTouchMove = (e: React.TouchEvent) => {
         if (!isFullScreen || touchStartY.current === null) return;
@@ -473,16 +487,16 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
     );
 
     return (
-        <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto py-6 px-6 relative">
+        <div className="grid grid-cols-1 landscape:grid-cols-2 lg:landscape:grid-cols-1 items-center justify-center w-full max-w-2xl landscape:max-w-4xl lg:landscape:max-w-2xl mx-auto py-6 px-6 gap-6 landscape:gap-12 lg:landscape:gap-6 relative">
 
             {/* Mode Switcher */}
-            <div className={`flex gap-1 p-1 mb-6 rounded-full border backdrop-blur-sm ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"}`}>
+            <div className={`flex gap-1 p-1 mb-6 landscape:mb-0 lg:landscape:mb-6 rounded-full border backdrop-blur-sm order-1 landscape:order-2 lg:landscape:order-1 justify-self-center landscape:justify-self-start lg:landscape:justify-self-center ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"}`}>
                 {(["FOCUS", "BREAK", "STOPWATCH"] as TimerMode[]).map((m) => (
                     <button
                         key={m}
                         onClick={() => setMode(m)}
                         disabled={isActive && mode !== m}
-                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${mode === m
+                        className={`px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${mode === m
                             ? (isDark ? "bg-white/10 text-white shadow-lg" : "bg-white text-black shadow-md")
                             : (isDark ? "text-white/40 hover:text-white/70" : "text-black/40 hover:text-black/70")
                             }`}
@@ -494,12 +508,12 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
 
             {/* Subject Selector */}
             {(mode === "FOCUS" || mode === "STOPWATCH") && (
-                <div className="mb-6 w-full max-w-xs relative z-20">
+                <div className="mb-6 landscape:mb-0 lg:landscape:mb-6 w-full max-w-xs relative z-20 order-2 landscape:order-3 lg:landscape:order-2 justify-self-center landscape:justify-self-start lg:landscape:justify-self-center">
                     <CustomSelect
                         value={selectedSubject}
                         onChange={setSelectedSubject}
                         options={timerSubjects}
-                        disabled={isActive}
+                        disabled={isActive || (mode === "FOCUS" && isFocusStarted) || (mode === "STOPWATCH" && timeLeft > 0)}
                         placeholder="Select Subject"
                         onAdd={addSubject}
                         onRemove={removeSubject}
@@ -507,7 +521,7 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
                 </div>
             )}
 
-            <div className="relative mb-8 group w-full flex justify-center">
+            <div className={`relative mb-8 landscape:mb-0 lg:landscape:mb-8 group w-full flex justify-center order-3 landscape:order-1 landscape:row-span-3 lg:landscape:row-span-1 lg:landscape:order-3 justify-self-center landscape:justify-self-end lg:landscape:justify-self-center ${mode === "BREAK" ? "landscape:row-span-2 lg:landscape:row-span-1" : ""}`}>
                 <CompletionOverlay show={showCompletion} duration={lastSessionDuration} mode={completionMode} />
 
                 {/* Render Timer: Either in DOM or Placeholder if in PiP */}
@@ -532,17 +546,17 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
                 Actually, simpler to keep them visible but let PiP handle the main interaction.
             */}
             {!pipWindow && (
-                <div className="flex items-center gap-6 z-10">
+                <div className="flex items-center gap-4 sm:gap-6 z-10 order-4 landscape:order-4 lg:landscape:order-4 justify-self-center landscape:justify-self-start lg:landscape:justify-self-center">
                     {mode === "STOPWATCH" && timeLeft > 0 && (
                         <button
                             onClick={completeSession}
-                            className={`group flex items-center justify-center w-14 h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isDark
+                            className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isDark
                                 ? "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
                                 : "bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
                                 }`}
                             title="Finish Session"
                         >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-6 sm:h-6">
                                 <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </button>
@@ -550,7 +564,7 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
 
                     <button
                         onClick={handleStart}
-                        className={`group relative flex items-center justify-center w-20 h-20 rounded-full border transition-all ${isActive
+                        className={`group relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full border transition-all ${isActive
                             ? "bg-[var(--color-button)]/10 border-[var(--color-button)] text-[var(--color-button)] hover:scale-105"
                             : "hover:scale-105 hover:brightness-110 shadow-xl"
                             }`}
@@ -561,39 +575,39 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
                             boxShadow: "0 10px 40px -10px var(--color-button)"
                         } : {}}
                     >
-                        {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
+                        {isActive ? <Pause fill="currentColor" className="w-7 h-7 sm:w-8 sm:h-8" /> : <Play fill="currentColor" className="w-7 h-7 sm:w-8 sm:h-8 ml-1" />}
                     </button>
 
                     <button
                         onClick={resetTimer}
-                        className={`flex items-center justify-center w-14 h-14 rounded-full border transition-all hover:rotate-180 duration-500 ${isDark
+                        className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:rotate-180 duration-500 ${isDark
                             ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
                             : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
                             }`}
                     >
-                        <RotateCcw size={20} />
+                        <RotateCcw className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                     </button>
 
                     <button
                         onClick={toggleFullScreen}
-                        className={`flex items-center justify-center w-14 h-14 rounded-full border transition-all hover:scale-110 ${isDark
+                        className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isDark
                             ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
                             : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
                             }`}
                         title="Zen Mode"
                     >
-                        <Maximize2 size={20} />
+                        <Maximize2 className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                     </button>
 
                     <button
                         onClick={togglePiP}
-                        className={`flex items-center justify-center w-14 h-14 rounded-full border transition-all hover:scale-110 ${isDark
+                        className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isDark
                             ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
                             : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
                             }`}
                         title="Picture-in-Picture"
                     >
-                        <PictureInPicture2 size={20} />
+                        <PictureInPicture2 className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                     </button>
                 </div>
             )}
@@ -614,7 +628,9 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
+                    onDoubleClick={handleStart}
                     style={{ height: '100dvh', width: '100vw', zIndex: 999999, position: 'fixed', top: 0, left: 0, filter: `brightness(${brightness})` }}
+
                 >
                     {/* Themed Background Layer */}
                     <div className="absolute inset-0 z-0 pointer-events-none opacity-50 overflow-hidden">

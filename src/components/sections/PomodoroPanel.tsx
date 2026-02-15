@@ -22,7 +22,7 @@ export default function PomodoroPanel() {
   }, [addSession]);
 
   return (
-    <section className={`relative overflow-hidden rounded-3xl min-h-[450px] flex flex-col items-center justify-between py-6 transition-all duration-500 border ${isDark
+    <section className={`relative overflow-hidden rounded-3xl min-h-[450px] landscape:min-h-0 flex flex-col items-center justify-between py-6 transition-all duration-500 border ${isDark
       ? "bg-black border-white/5 shadow-[0_24px_48px_rgba(0,0,0,0.8)]"
       : "bg-white border-black/5 shadow-sm"
       }`}>

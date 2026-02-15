@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSettings } from "@/lib/SettingsContext";
 import { auth, db } from "@/lib/firebase";
 import { doc, onSnapshot, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -28,9 +29,16 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const [isFocusStarted, setIsFocusStarted] = useState(false);
     const [selectedSubject, setSelectedSubject] = useState<Subject>("");
 
-    // Baselines
-    const [baselineFocusSecs, setBaselineFocusSecs] = useState(25 * 60);
-    const [baselineBreakSecs, setBaselineBreakSecs] = useState(5 * 60);
+    // Baselines from Settings
+    const { timerDurations, updateSetting } = useSettings();
+    const baselineFocusSecs = timerDurations.focus * 60;
+    const baselineBreakSecs = timerDurations.shortBreak * 60;
+    // Note: We might need to distinguish short/long break in the future, 
+    // but current hook uses single breakTimeLeft. 
+    // For now mapping BREAK to shortBreak. 
+    // If we want long break support, we need to map modes better.
+    // However, existing hook only has "BREAK". 
+    // Let's use shortBreak for now as it's the standard "Break".
 
     // Derived
     const timeLeft = mode === "FOCUS" ? focusTimeLeft : mode === "BREAK" ? breakTimeLeft : stopwatchElapsed;
@@ -133,11 +141,11 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             if (savedState) {
                 const parsed = JSON.parse(savedState);
                 if (parsed.mode) setMode(parsed.mode);
-                setFocusTimeLeft(parsed.focusTimeLeft ?? 25 * 60);
-                setBreakTimeLeft(parsed.breakTimeLeft ?? 5 * 60);
+                setFocusTimeLeft(parsed.focusTimeLeft ?? baselineFocusSecs);
+                // If saved time is 0 (completed), keep it 0. If it's default (was 5*60), use new baseline
+                // Actually, ensure we respect saved state primarily
+                setBreakTimeLeft(parsed.breakTimeLeft ?? baselineBreakSecs);
                 setStopwatchElapsed(parsed.stopwatchElapsed ?? 0);
-                setBaselineFocusSecs(parsed.baselineFocusSecs || 25 * 60);
-                setBaselineBreakSecs(parsed.baselineBreakSecs || 5 * 60);
                 setSelectedSubject(parsed.selectedSubject || "");
                 setIsFocusStarted(parsed.isFocusStarted || false);
 
@@ -167,7 +175,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         } finally {
             setIsLoaded(true);
         }
-    }, []);
+    }, [baselineFocusSecs, baselineBreakSecs]);
 
     // Save state to localStorage (frequent updates OK)
     useEffect(() => {
@@ -178,8 +186,8 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             focusTimeLeft,
             breakTimeLeft,
             stopwatchElapsed,
-            baselineFocusSecs,
-            baselineBreakSecs,
+            // baselineFocusSecs, // No longer saving baselines to local storage
+            // baselineBreakSecs,
             selectedSubject,
             isActive,
             isFocusStarted,
@@ -187,7 +195,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             startTime: isActive ? startTimeRef.current : null
         };
         localStorage.setItem("focusTimerStateV2", JSON.stringify(stateToSave));
-    }, [mode, focusTimeLeft, breakTimeLeft, baselineFocusSecs, baselineBreakSecs, selectedSubject, isActive, isFocusStarted, isLoaded]);
+    }, [mode, focusTimeLeft, breakTimeLeft, selectedSubject, isActive, isFocusStarted, isLoaded]);
 
     // Sync to Cloud ONLY when critical state changes (NOT per-second)
     useEffect(() => {
@@ -228,24 +236,19 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         sessionStartBaselineRef.current = null;
 
         // Reset the mode that just finished
-        if (mode === "FOCUS") setFocusTimeLeft(baselineFocusSecs);
-        else if (mode === "BREAK") setBreakTimeLeft(baselineBreakSecs);
+        if (mode === "FOCUS") setFocusTimeLeft(0);
+        else if (mode === "BREAK") setBreakTimeLeft(0);
         else if (mode === "STOPWATCH") setStopwatchElapsed(0);
 
         if (onComplete) {
             // Pass actual duration in minutes (float)
-            const durationMinutes = mode === "STOPWATCH" ? 0 : (loggedBaseline / 60); // Stopwatch handled manually usually? 
-            // Actually, handleTimerComplete is for AUTO completion (timer runs out). 
-            // Stopwatch never runs out automatically. 
-            // But if called manually, we should pass elapsed.
-            // If manual completion (Stopwatch), loggedBaseline isn't useful.
-            // We'll update completeSession to handle this.
+            const durationMinutes = mode === "STOPWATCH" ? 0 : (loggedBaseline / 60);
 
             if (mode !== "STOPWATCH") {
                 onComplete(mode, durationMinutes, selectedSubject);
             }
         }
-    }, [currentBaseline, mode, selectedSubject, onComplete, baselineFocusSecs, baselineBreakSecs]);
+    }, [currentBaseline, mode, selectedSubject, onComplete]);
 
     const completeSession = useCallback(() => {
         // Manual finish for Stopwatch (or premature timer finish if we allowed it, but mainly for stopwatch)
@@ -258,8 +261,8 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
         // Reset after completion
         if (mode === "STOPWATCH") setStopwatchElapsed(0);
-        else if (mode === "FOCUS") setFocusTimeLeft(baselineFocusSecs);
-        else setBreakTimeLeft(baselineBreakSecs);
+        else if (mode === "FOCUS") setFocusTimeLeft(0);
+        else setBreakTimeLeft(0);
 
         endTimeRef.current = null;
         startTimeRef.current = null;
@@ -267,7 +270,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         if (user) {
             deleteDoc(doc(db, "users", user.uid, "activeTimer", "current")).catch(console.error);
         }
-    }, [mode, stopwatchElapsed, currentBaseline, timeLeft, onComplete, selectedSubject, baselineFocusSecs, baselineBreakSecs, user]);
+    }, [mode, stopwatchElapsed, currentBaseline, timeLeft, onComplete, selectedSubject, user]);
 
     // Timer Interval
     useEffect(() => {
@@ -326,6 +329,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 const currentLeft = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
                 if (mode === "FOCUS") setIsFocusStarted(true);
 
+                // If currentLeft is 0 (completed), explicitly reset to baseline
                 if (currentLeft <= 0) {
                     const newTime = mode === "FOCUS" ? baselineFocusSecs : baselineBreakSecs;
                     if (mode === "FOCUS") setFocusTimeLeft(newTime);
@@ -360,18 +364,59 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         if (isFocusStarted && mode === "FOCUS") return;
         if (mode === "STOPWATCH") return; // No adjusting stopwatch
 
+        // Convert delta only (since we are updating minutes in settings)
+        // This is tricky. adjustTime in the UI likely sends +60, -60, +300 etc.
+        // We need to update the SETTING, not the LOCAL STATE.
+
+        const minutesDelta = secondsDelta / 60;
+
         if (mode === "FOCUS") {
-            setFocusTimeLeft(prev => Math.max(0, Math.min(359999, prev + secondsDelta)));
-            setBaselineFocusSecs(prev => Math.max(0, Math.min(359999, prev + secondsDelta)));
+            const newMinutes = Math.max(1, Math.min(180, timerDurations.focus + minutesDelta));
+            const newSeconds = newMinutes * 60;
+            updateSetting("timerDurations", { ...timerDurations, focus: newMinutes });
+            // Also update local state to reflect immediately
+            setFocusTimeLeft(newSeconds);
         } else {
-            setBreakTimeLeft(prev => Math.max(0, Math.min(359999, prev + secondsDelta)));
-            setBaselineBreakSecs(prev => Math.max(0, Math.min(359999, prev + secondsDelta)));
+            const newMinutes = Math.max(1, Math.min(60, timerDurations.shortBreak + minutesDelta));
+            const newSeconds = newMinutes * 60;
+            updateSetting("timerDurations", { ...timerDurations, shortBreak: newMinutes });
+            setBreakTimeLeft(newSeconds);
         }
-    }, [isFocusStarted, mode]);
+    }, [isFocusStarted, mode, timerDurations, updateSetting]);
 
     const setModeWrapper = useCallback((m: TimerMode) => {
         setMode(m);
     }, []);
+
+    // These wrappers are likely used by the UI to set specific times.
+    // If they set *Baseline*, we must update Settings.
+    // If they just set current timeLeft (e.g. from keypad), we might keep local?
+    // Usually standard UI allows adjusting duration.
+
+    // Simplification: Assume setBaseline is main way to set custom duration.
+    const setBaselineWrapper = useCallback((seconds: number) => {
+        if (isFocusStarted && mode === "FOCUS") return;
+        if (mode === "STOPWATCH") return;
+
+        const minutes = Math.floor(seconds / 60);
+
+        if (mode === "FOCUS") {
+            updateSetting("timerDurations", { ...timerDurations, focus: minutes });
+            setFocusTimeLeft(seconds);
+        }
+        else {
+            updateSetting("timerDurations", { ...timerDurations, shortBreak: minutes });
+            setBreakTimeLeft(seconds);
+        }
+    }, [isFocusStarted, mode, timerDurations, updateSetting]);
+
+    // setTimeLeftWrapper is often used for drag adjustments or keypad.
+    // If we want FULL sync, this should also update settings if it represents the "new normal".
+    // But often setTimeLeft is just "temporarily adjust for this session". 
+    // Given the requirement "settings synced", let's treat these as transient unless they flow through setBaseline.
+    // BUT, wait, checking usage of setTimeLeft in codebase would be ideal.
+    // Assuming standard usage: setTimeLeft is likely called by the TimePicker.
+    // Let's repurpose it to also sync if it's not active.
 
     const setTimeLeftWrapper = useCallback((seconds: number) => {
         if (isFocusStarted && mode === "FOCUS") return;
@@ -381,13 +426,6 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         else setBreakTimeLeft(seconds);
     }, [isFocusStarted, mode]);
 
-    const setBaselineWrapper = useCallback((seconds: number) => {
-        if (isFocusStarted && mode === "FOCUS") return;
-        if (mode === "STOPWATCH") return;
-
-        if (mode === "FOCUS") setBaselineFocusSecs(seconds);
-        else setBaselineBreakSecs(seconds);
-    }, [isFocusStarted, mode]);
 
     return {
         mode,

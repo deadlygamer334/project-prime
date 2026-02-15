@@ -132,6 +132,13 @@ export default function SettingsPage() {
                                 <SectionHeading icon={Layout} title="Appearance" color="text-blue-400" />
 
                                 <div className="space-y-8">
+                                    <ToggleRow
+                                        label="Reverse Desktop Layout"
+                                        desc="Swap Timer and Todo columns"
+                                        value={settings.dashboardLayout === "reversed"}
+                                        onChange={(v) => settings.updateSetting("dashboardLayout", v ? "reversed" : "standard")}
+                                    />
+
                                     {/* Typography */}
                                     <div>
                                         <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block text-foreground/70">Typography</label>
