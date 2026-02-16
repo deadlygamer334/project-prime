@@ -87,6 +87,13 @@ export default function FocusProgressPage() {
 
     const [showBreakdown, setShowBreakdown] = useState(false);
 
+    // Extract all unique subjects first to ensure data consistency
+    const allSubjects = useMemo(() => {
+        const subjects = new Set<string>();
+        sessions.forEach(s => subjects.add(s.subject || "Uncategorized"));
+        return Array.from(subjects);
+    }, [sessions]);
+
     // Process Data for Chart
     const chartData = useMemo(() => {
         if (!sessions.length) return [];
@@ -94,7 +101,12 @@ export default function FocusProgressPage() {
         const now = new Date();
         const dataMap = new Map<string, any>();
 
-        const initEntry = () => ({ value: 0 });
+        // Create a base entry with 0 for all subjects
+        const initEntry = () => {
+            const entry: any = { value: 0 };
+            allSubjects.forEach(s => entry[s] = 0);
+            return entry;
+        };
 
         if (timeframe === "day") {
             // Group by Hour (0-23)
@@ -159,7 +171,7 @@ export default function FocusProgressPage() {
             date: name,
             ...data
         }));
-    }, [sessions, timeframe]);
+    }, [sessions, timeframe, allSubjects]);
 
     // Subject Breakdown
     const subjectStats = useMemo(() => {

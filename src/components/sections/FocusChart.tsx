@@ -105,7 +105,7 @@ export default function FocusChart({ data, timeframe, showBreakdown, subjects = 
                     <p className={`text-xs uppercase tracking-widest font-bold opacity-40 text-foreground`}>
                         Total
                     </p>
-                    <p className="text-2xl font-bold tabular-nums text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                    <p className="text-2xl font-bold tabular-nums text-foreground dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/60">
                         {formatDuration(data.reduce((acc, curr) => acc + (showBreakdown ? 0 : curr.value) + (showBreakdown ? subjects.reduce((sAcc, s) => sAcc + (curr[s] || 0), 0) : 0), 0))}
                         {/* Note: Logic above is a bit complex to handle both cases, simplification: just sum the values we display */}
                     </p>
