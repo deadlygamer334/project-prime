@@ -5,10 +5,52 @@ import { useSettings } from "@/lib/SettingsContext";
 import AppHeader from "@/components/sections/AppHeader";
 import Footer from "@/components/sections/Footer";
 import DynamicBackground from "@/components/sections/DynamicBackground";
-import DigitalClock from "@/components/sections/DigitalClock";
-import TodoPanel from "@/components/sections/TodoPanel";
-import PomodoroPanel from "@/components/sections/PomodoroPanel";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
+import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
+import dynamic from "next/dynamic";
+
+const DigitalClock = dynamic(() => import("@/components/sections/DigitalClock"), {
+  ssr: false,
+});
+
+const TodoPanel = dynamic(() => import("@/components/sections/TodoPanel"), {
+  ssr: false,
+  loading: () => (
+    <section className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 border min-h-[500px] bg-white/5 border-white/10">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <PremiumSkeleton height="32px" width="120px" borderRadius="8px" />
+        <div className="flex gap-2">
+          <PremiumSkeleton height="40px" width="100px" borderRadius="12px" />
+          <PremiumSkeleton height="40px" width="140px" borderRadius="12px" />
+        </div>
+      </div>
+      <PremiumSkeleton height="12px" width="100%" borderRadius="6px" className="mb-8" />
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map(i => (
+          <PremiumSkeleton key={i} height="72px" width="100%" borderRadius="16px" />
+        ))}
+      </div>
+    </section>
+  )
+});
+
+const PomodoroPanel = dynamic(() => import("@/components/sections/PomodoroPanel"), {
+  ssr: false,
+  loading: () => (
+    <section className="relative overflow-hidden rounded-3xl min-h-[450px] flex flex-col items-center justify-between py-6 border bg-white/5 border-white/10">
+      <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto py-6 px-6 gap-6">
+        <div className="flex gap-1 mb-6 order-1">
+          {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="32px" width="80px" borderRadius="999px" />)}
+        </div>
+        <PremiumSkeleton height="40px" width="200px" borderRadius="12px" className="mb-6 order-2" />
+        <PremiumSkeleton height="150px" width="100%" borderRadius="3rem" className="order-3" />
+        <div className="flex gap-6 order-4">
+          {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="64px" width="64px" borderRadius="999px" />)}
+        </div>
+      </div>
+    </section>
+  )
+});
 
 export default function HomePage() {
   const { theme } = useTheme();

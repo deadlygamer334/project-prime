@@ -18,8 +18,8 @@ export default function DynamicBackground() {
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
             {settings.backgroundStyle === "aurora" && (
                 <>
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-aurora blur-[80px] opacity-40 animate-float" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-aurora blur-[80px] opacity-40 animate-float" style={{ animationDelay: "-3s" }} />
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-aurora blur-[60px] opacity-40 animate-float will-change-transform" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-aurora blur-[60px] opacity-40 animate-float will-change-transform" style={{ animationDelay: "-3s" }} />
                     {/* Fallback/Base Glow */}
                     <div className={`absolute inset-0 bg-aurora opacity-20`} />
                 </>

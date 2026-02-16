@@ -8,6 +8,7 @@ import { useNotification } from "@/lib/NotificationContext";
 import useSoundEffects from "@/hooks/useSoundEffects";
 import { useFocusTimer, TimerMode, Subject } from "@/hooks/useFocusTimer";
 import { CustomSelect } from "@/components/ui/custom-select";
+import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
 import { CompletionOverlay } from "@/components/ui/completion-overlay";
 import { FlipDigit } from "@/components/ui/flip-digit";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -93,13 +94,14 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
     const prevTimeLeft = useRef(timeLeft);
 
 
+    const { setIsZenMode } = settings;
+
     // Ensure client-side mounting for Portal
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const { setIsZenMode } = settings;
 
     // Fullscreen Toggle Logic (Windowed Zen Mode only)
     const toggleFullScreen = () => {
@@ -365,6 +367,21 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
     };
 
     const fontClass = getFontClass(timerFont || "inter");
+
+    if (!mounted) {
+        return (
+            <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto py-6 px-6 gap-6">
+                <div className="flex gap-1 mb-6 order-1">
+                    {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="32px" width="80px" borderRadius="999px" />)}
+                </div>
+                <PremiumSkeleton height="40px" width="200px" borderRadius="12px" className="mb-6 order-2" />
+                <PremiumSkeleton height="150px" width="100%" borderRadius="3rem" className="order-3" />
+                <div className="flex gap-6 order-4">
+                    {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="64px" width="64px" borderRadius="999px" />)}
+                </div>
+            </div>
+        );
+    }
 
     // The content that goes into either the main window OR the PiP window
     const timerContent = (isPiP: boolean) => (
@@ -804,22 +821,6 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
                             </button>
                         </div>
 
-                        {/* Stop Button in Zen Mode */}
-                        {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    completeSession();
-                                }}
-                                className={`flex items-center gap-3 px-6 py-3 rounded-full backdrop-blur-md transition-all hover:scale-105 active:scale-95 ${isDark
-                                    ? "bg-red-500/20 border border-red-500/30 text-red-400"
-                                    : "bg-red-500/10 border border-red-500/20 text-red-600"
-                                    }`}
-                            >
-                                <Square size={16} fill="currentColor" />
-                                <span className="text-xs font-bold tracking-widest uppercase">Stop & Log</span>
-                            </button>
-                        )}
                     </div>
                 </motion.div>,
                 document.body

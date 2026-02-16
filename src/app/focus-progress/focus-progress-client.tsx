@@ -4,10 +4,16 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useFocusProgress, FocusSession } from "@/hooks/useFocusProgress";
 import { useNotification } from "@/lib/NotificationContext";
 import { useTheme } from "@/lib/ThemeContext";
-import FocusChart from "@/components/sections/FocusChart";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+
+const FocusChart = dynamic(() => import("@/components/sections/FocusChart"), {
+    ssr: false,
+    loading: () => <PremiumSkeleton height="400px" borderRadius="1.5rem" />
+});
 import { Clock, BarChart3, PieChart, Trash2 } from "lucide-react";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, eachDayOfInterval, format } from "date-fns";
+import { formatDuration } from "@/lib/dateUtils";
 import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
 import AppHeader from "@/components/sections/AppHeader";
 import DynamicBackground from "@/components/sections/DynamicBackground";
@@ -201,9 +207,7 @@ export default function FocusProgressPage() {
                 <div className="flex flex-wrap gap-6 md:gap-24 mb-16 pb-8 border-b border-border">
                     <Metric
                         label="Total Timer"
-                        value={totalFocusTime > 60
-                            ? `${(totalFocusTime / 60).toFixed(2)}h`
-                            : `${totalFocusTime.toFixed(2)}m`}
+                        value={formatDuration(totalFocusTime)}
                     />
                     <Metric
                         label="Top Subject"
@@ -211,7 +215,7 @@ export default function FocusProgressPage() {
                     />
                     <Metric
                         label="Avg Session"
-                        value={`${avgSessionLen.toFixed(2)}m`}
+                        value={formatDuration(avgSessionLen)}
                     />
                 </div>
 
@@ -259,7 +263,7 @@ export default function FocusProgressPage() {
                                                 <span className="text-lg font-light text-foreground">{stat.name}</span>
                                                 <div className="text-right">
                                                     <span className="text-lg font-light tabular-nums text-foreground">
-                                                        {stat.value.toFixed(2)}m
+                                                        {formatDuration(stat.value)}
                                                     </span>
                                                     <span className="text-xs opacity-40 ml-2">({stat.percent.toFixed(2)}%)</span>
                                                 </div>
@@ -311,11 +315,7 @@ export default function FocusProgressPage() {
                                                 <div className="flex items-center gap-6">
                                                     <div className="text-right">
                                                         <p className="text-base font-medium tabular-nums text-foreground">
-                                                            {session.duration < 1
-                                                                ? Math.round(session.duration * 60)
-                                                                : session.duration % 1 === 0
-                                                                    ? session.duration
-                                                                    : session.duration.toFixed(2)} <span className="text-xs opacity-40 font-normal">{session.duration < 1 ? "s" : "m"}</span>
+                                                            {formatDuration(session.duration)}
                                                         </p>
                                                     </div>
 

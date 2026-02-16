@@ -2,9 +2,13 @@
 
 import AppHeader from "@/components/sections/AppHeader";
 import MotivationHero from "@/components/sections/MotivationHero";
-import MotivationGrid from "@/components/sections/MotivationGrid";
 import Footer from "@/components/sections/Footer";
+import dynamic from "next/dynamic";
 import { useTheme } from "@/lib/ThemeContext";
+
+const MotivationGrid = dynamic(() => import("@/components/sections/MotivationGrid"), {
+  loading: () => <div className="min-h-[50vh] flex items-center justify-center">Loading Grid...</div>
+});
 
 export default function MotivationPage() {
   const { theme } = useTheme();

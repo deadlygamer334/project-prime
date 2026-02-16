@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import NotificationManager, { NotificationPayload } from "@/lib/NotificationManager";
 import { useSettings } from "@/lib/SettingsContext";
+import { formatDuration } from "@/lib/dateUtils";
 
 export function useNotifications() {
     const [isInitialized, setIsInitialized] = useState(false);
@@ -86,7 +87,7 @@ export function useNotifications() {
             type: isFocus ? "timer_complete" : "break_complete",
             title: isFocus ? "🎯 Session Complete!" : isStopwatch ? "⏱️ Stopwatch Stopped" : "☕ Break Over!",
             body: isFocus || isStopwatch
-                ? `Great job! You completed ${duration.toFixed(0)} minutes${subject ? ` of ${subject}` : ""}.`
+                ? `Great job! You completed ${formatDuration(duration)}${subject ? ` of ${subject}` : ""}.`
                 : "Ready to get back to work?",
             icon: "/icon.svg",
             badge: "/icon.svg",

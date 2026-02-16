@@ -10,16 +10,12 @@ interface CompletionOverlayProps {
 }
 
 import { useTheme } from "@/lib/ThemeContext";
+import { formatDuration } from "@/lib/dateUtils";
 
 export const CompletionOverlay = ({ show, duration, mode }: CompletionOverlayProps) => {
     const { theme } = useTheme();
     const isDark = theme === "dark";
-    const isUnderMinute = duration < 1;
-    const displayTime = isUnderMinute
-        ? `${Math.round(duration * 60)} seconds`
-        : duration % 1 === 0
-            ? `${duration} minutes`
-            : `${duration.toFixed(2)} minutes`;
+    const displayTime = formatDuration(duration);
 
     return (
         <AnimatePresence>

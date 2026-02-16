@@ -16,3 +16,21 @@ export const parseLocalDate = (dateStr: string): Date => {
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day);
 };
+
+/**
+ * Formats a duration in minutes into a human-readable string (e.g., "1h 30m" or "45m").
+ */
+export const formatDuration = (minutes: number): string => {
+    if (minutes < 1) {
+        const seconds = Math.round(minutes * 60);
+        return `${seconds}s`;
+    }
+
+    if (minutes >= 60) {
+        const hours = Math.floor(minutes / 60);
+        const mins = Math.round(minutes % 60);
+        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+
+    return `${Math.round(minutes)}m`;
+};

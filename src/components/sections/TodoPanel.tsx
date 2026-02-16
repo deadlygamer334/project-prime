@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useSettings } from "@/lib/SettingsContext";
 import { DatePicker } from "@/components/ui/date-picker";
+import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
 
 interface PriorityDropdownProps {
   currentPriority: Priority;
@@ -270,7 +271,28 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
     reorderTasks(updatedTasks);
   };
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return (
+    <section
+      className={`todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] ${isDark
+        ? "bg-[rgba(10,10,10,0.6)] border-white/5"
+        : "bg-[rgba(255,255,255,0.6)] border-white"
+        }`}
+    >
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <PremiumSkeleton height="32px" width="120px" borderRadius="8px" />
+        <div className="flex gap-2">
+          <PremiumSkeleton height="40px" width="100px" borderRadius="12px" />
+          <PremiumSkeleton height="40px" width="140px" borderRadius="12px" />
+        </div>
+      </div>
+      <PremiumSkeleton height="12px" width="100%" borderRadius="6px" className="mb-8" />
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map(i => (
+          <PremiumSkeleton key={i} height="72px" width="100%" borderRadius="16px" />
+        ))}
+      </div>
+    </section>
+  );
 
   return (
     <section

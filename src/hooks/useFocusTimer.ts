@@ -50,6 +50,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const endTimeRef = useRef<number | null>(null);
     const startTimeRef = useRef<number | null>(null); // For Stopwatch
     const sessionStartBaselineRef = useRef<number | null>(null);
+    const accumulatedTimeSecondsRef = useRef<number>(0);
 
     // Load state from localStorage on mount
     const [isLoaded, setIsLoaded] = useState(false);
@@ -238,6 +239,10 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
         // Use the baseline captured at the START of the session for logging
         const loggedBaseline = sessionStartBaselineRef.current ?? currentBaseline;
+
+        // Calculate final duration: accumulated time + current interval's elapsed time
+        const sessionElapsedSeconds = accumulatedTimeSecondsRef.current + loggedBaseline;
+        accumulatedTimeSecondsRef.current = 0;
         sessionStartBaselineRef.current = null;
 
         // Reset the mode that just finished
@@ -247,7 +252,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
         if (onComplete) {
             // Pass actual duration in minutes (float)
-            const durationMinutes = mode === "STOPWATCH" ? 0 : (loggedBaseline / 60);
+            const durationMinutes = mode === "STOPWATCH" ? 0 : (sessionElapsedSeconds / 60);
 
             if (mode !== "STOPWATCH") {
                 onComplete(mode, durationMinutes, selectedSubject);
@@ -264,9 +269,15 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
 
         // Use the baseline captured at the START of the session for logging accuracy
         const loggedBaseline = sessionStartBaselineRef.current ?? currentBaseline;
+
+        const sessionElapsedSeconds = mode === "STOPWATCH"
+            ? stopwatchElapsed
+            : (accumulatedTimeSecondsRef.current + (loggedBaseline - timeLeft));
+
+        accumulatedTimeSecondsRef.current = 0;
         sessionStartBaselineRef.current = null;
 
-        const durationMinutes = mode === "STOPWATCH" ? (stopwatchElapsed / 60) : (loggedBaseline - timeLeft) / 60;
+        const durationMinutes = sessionElapsedSeconds / 60;
 
         if (onComplete) {
             onComplete(mode, durationMinutes, selectedSubject);
@@ -324,6 +335,14 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const toggleTimer = useCallback(() => {
         if (isActive) {
             setIsActive(false);
+
+            // On pause, add current interval's elapsed time to accumulator
+            if (mode !== "STOPWATCH") {
+                const loggedBaseline = sessionStartBaselineRef.current ?? currentBaseline;
+                const intervalElapsed = loggedBaseline - timeLeft;
+                accumulatedTimeSecondsRef.current += Math.max(0, intervalElapsed);
+            }
+
             endTimeRef.current = null;
             startTimeRef.current = null;
             lastLocalStopRef.current = Date.now();
@@ -372,6 +391,8 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         if (mode === "BREAK") setIsBreakStarted(false);
         endTimeRef.current = null;
         startTimeRef.current = null;
+        accumulatedTimeSecondsRef.current = 0;
+        sessionStartBaselineRef.current = null;
         if (user) {
             deleteDoc(doc(db, "users", user.uid, "activeTimer", "current"))
                 .catch(e => console.error(e));

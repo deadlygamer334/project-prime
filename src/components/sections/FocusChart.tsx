@@ -3,6 +3,7 @@
 import React from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useTheme } from "@/lib/ThemeContext";
+import { formatDuration } from "@/lib/dateUtils";
 
 interface ChartDataPoint {
     name: string; // Time label (e.g., "Mon", "12 PM")
@@ -22,9 +23,8 @@ const CustomTooltip = ({ active, payload, label, isDark }: any) => {
                 <p className="text-sm font-medium opacity-60 mb-1">{payload[0].payload.date}</p>
                 <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-bold tabular-nums">
-                        {payload[0].value.toFixed(2)}
+                        {formatDuration(payload[0].value)}
                     </span>
-                    <span className="text-xs font-bold uppercase tracking-wider opacity-60">mins</span>
                 </div>
             </div>
         );
@@ -64,7 +64,7 @@ export default function FocusChart({ data, timeframe }: FocusChartProps) {
                         Total
                     </p>
                     <p className="text-2xl font-bold tabular-nums text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-                        {data.reduce((acc, curr) => acc + curr.value, 0).toFixed(2)} <span className="text-sm text-foreground opacity-50">min</span>
+                        {formatDuration(data.reduce((acc, curr) => acc + curr.value, 0))}
                     </p>
                 </div>
             </div>

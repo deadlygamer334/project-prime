@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Play, Link as LinkIcon, ExternalLink } from 'lucide-react';
 
 // Reels are now fetched from API
@@ -187,10 +188,12 @@ const VideoCard = ({ videoUrl, index, onClick, isDirect, thumbnail }: VideoCardP
       ) : (
         <div className="w-full h-full relative">
           {thumbnail ? (
-            <img
+            <Image
               src={thumbnail}
               alt={`Reel ${index + 1}`}
-              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+              className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
             />
           ) : (
             <div className={`w-full h-full flex items-center justify-center bg-muted ${isHovered ? 'bg-muted/80' : ''}`}>

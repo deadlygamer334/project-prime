@@ -15,7 +15,8 @@ import SecurityGatekeeper from "@/components/security/SecurityGatekeeper";
 import DynamicBackground from "@/components/sections/DynamicBackground";
 import LayoutHandlers from "@/components/LayoutHandlers";
 import { KeyboardShortcutsProvider } from "@/lib/KeyboardShortcutsContext";
-import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
+import Link from "next/link";
+import ClientKeyboardShortcuts from "@/components/ClientKeyboardShortcuts";
 import QueryProvider from "@/components/QueryProvider";
 import OfflineStatus from "@/components/OfflineStatus";
 import { GoalProvider } from "@/lib/GoalContext";
@@ -24,8 +25,8 @@ import { NotificationProvider } from "@/components/providers/NotificationProvide
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
-const merriweather = Merriweather({ weight: ["300", "400", "700", "900"], subsets: ["latin"], variable: "--font-merriweather", display: "swap" });
-const robotoFont = Roboto({ weight: ["300", "400", "500", "700"], subsets: ["latin"], variable: "--font-roboto", display: "swap" });
+const merriweather = Merriweather({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-merriweather", display: "swap" });
+const robotoFont = Roboto({ weight: ["400", "500", "700"], subsets: ["latin"], variable: "--font-roboto", display: "swap" });
 
 import { Viewport } from "next";
 
@@ -113,13 +114,13 @@ export default function RootLayout({
                           <Script
                             id="prime-browser-logs"
                             src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
-                            strategy="afterInteractive"
+                            strategy="lazyOnload"
                             data-visual-project-id="af7ac36f-acf0-497f-baa0-ffab1e811bf8"
                           />
                           <ErrorReporter />
                           <Script
                             src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
-                            strategy="afterInteractive"
+                            strategy="lazyOnload"
                             data-target-origin="*"
                             data-message-type="ROUTE_CHANGE"
                             data-include-search-params="true"
@@ -139,7 +140,7 @@ export default function RootLayout({
                             </ProtectedRoute>
                             <FloatingMusicPlayer />
                           </AmbienceProvider>
-                          <KeyboardShortcutsModal />
+                          <ClientKeyboardShortcuts />
                           <VisualEditsMessenger />
                           <OfflineStatus />
                           <SpeedInsights />
