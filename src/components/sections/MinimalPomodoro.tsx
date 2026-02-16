@@ -368,20 +368,7 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
 
     const fontClass = getFontClass(timerFont || "inter");
 
-    if (!mounted) {
-        return (
-            <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto py-6 px-6 gap-6">
-                <div className="flex gap-1 mb-6 order-1">
-                    {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="32px" width="80px" borderRadius="999px" />)}
-                </div>
-                <PremiumSkeleton height="40px" width="200px" borderRadius="12px" className="mb-6 order-2" />
-                <PremiumSkeleton height="150px" width="100%" borderRadius="3rem" className="order-3" />
-                <div className="flex gap-6 order-4">
-                    {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="64px" width="64px" borderRadius="999px" />)}
-                </div>
-            </div>
-        );
-    }
+    const fontClass = getFontClass(timerFont || "inter");
 
     // The content that goes into either the main window OR the PiP window
     const timerContent = (isPiP: boolean) => (
@@ -556,6 +543,21 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
             )}
         </div>
     );
+
+    if (!mounted) {
+        return (
+            <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto py-6 px-6 gap-6">
+                <div className="flex gap-1 mb-6 order-1">
+                    {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="32px" width="80px" borderRadius="999px" />)}
+                </div>
+                <PremiumSkeleton height="40px" width="200px" borderRadius="12px" className="mb-6 order-2" />
+                <PremiumSkeleton height="150px" width="100%" borderRadius="3rem" className="order-3" />
+                <div className="flex gap-6 order-4">
+                    {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="64px" width="64px" borderRadius="999px" />)}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="grid grid-cols-1 max-md:landscape:grid-cols-2 items-center justify-center w-full max-w-2xl max-md:landscape:max-w-4xl mx-auto py-6 max-md:landscape:py-2 px-6 gap-6 max-md:landscape:gap-4 relative">
