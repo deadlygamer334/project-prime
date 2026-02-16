@@ -368,8 +368,6 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
 
     const fontClass = getFontClass(timerFont || "inter");
 
-    const fontClass = getFontClass(timerFont || "inter");
-
     // The content that goes into either the main window OR the PiP window
     const timerContent = (isPiP: boolean) => (
         <div className={`flex flex-col items-center justify-center ${isPiP ? "w-full h-full p-4 overflow-hidden" : ""}`}>
