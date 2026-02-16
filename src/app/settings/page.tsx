@@ -346,6 +346,12 @@ export default function SettingsPage() {
                                         onChange={(v) => settings.updateSetting("showSeconds", v)}
                                     />
                                     <ToggleRow
+                                        label="Zen Mode Seconds"
+                                        desc="Show seconds while in Zen Mode"
+                                        value={settings.showZenSeconds}
+                                        onChange={(v) => settings.updateSetting("showZenSeconds", v)}
+                                    />
+                                    <ToggleRow
                                         label="24-Hour Clock"
                                         desc="Use military time format"
                                         value={settings.clockFormat === "24h"}

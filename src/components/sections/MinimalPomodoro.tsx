@@ -769,8 +769,12 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
                             <FlipDigit value={hours} label="Hours" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
                             <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
                             <FlipDigit value={minutes} label="Minutes" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
-                            <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
-                            <FlipDigit value={seconds} label="Seconds" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
+                            {settings.showZenSeconds && (
+                                <>
+                                    <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
+                                    <FlipDigit value={seconds} label="Seconds" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
+                                </>
+                            )}
                         </div>
                     </div>
 
