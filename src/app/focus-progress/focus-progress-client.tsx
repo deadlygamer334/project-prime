@@ -85,24 +85,33 @@ export default function FocusProgressPage() {
         }
     }, [timeframe, isLoaded, getSessionsInRange]);
 
+    const [showBreakdown, setShowBreakdown] = useState(false);
+
     // Process Data for Chart
     const chartData = useMemo(() => {
         if (!sessions.length) return [];
 
         const now = new Date();
-        const dataMap = new Map<string, number>();
+        const dataMap = new Map<string, any>();
+
+        const initEntry = () => ({ value: 0 });
 
         if (timeframe === "day") {
             // Group by Hour (0-23)
             for (let i = 0; i < 24; i++) {
                 const label = format(new Date().setHours(i, 0, 0, 0), "h a");
-                dataMap.set(label, 0);
+                dataMap.set(label, initEntry());
             }
             sessions.forEach(s => {
-                // Assuming s.timestamp is ISO
                 const date = new Date(s.timestamp);
                 const label = format(date, "h a");
-                dataMap.set(label, (dataMap.get(label) || 0) + s.duration);
+                const entry = dataMap.get(label) || initEntry();
+
+                entry.value += s.duration;
+                const subj = s.subject || "Uncategorized";
+                entry[subj] = ((entry[subj] as number) || 0) + s.duration;
+
+                dataMap.set(label, entry);
             });
         } else if (timeframe === "week" || timeframe === "month") {
             // Group by Day
@@ -111,32 +120,44 @@ export default function FocusProgressPage() {
 
             const days = eachDayOfInterval({ start, end });
             days.forEach(day => {
-                const label = format(day, timeframe === "week" ? "EEE" : "d"); // Mon or 1
-                dataMap.set(label, 0);
+                const label = format(day, timeframe === "week" ? "EEE" : "d");
+                dataMap.set(label, initEntry());
             });
 
             sessions.forEach(s => {
                 const date = new Date(s.timestamp);
                 const label = format(date, timeframe === "week" ? "EEE" : "d");
-                dataMap.set(label, (dataMap.get(label) || 0) + s.duration);
+                const entry = dataMap.get(label) || initEntry();
+
+                entry.value += s.duration;
+                const subj = s.subject || "Uncategorized";
+                entry[subj] = ((entry[subj] as number) || 0) + s.duration;
+
+                dataMap.set(label, entry);
             });
         } else if (timeframe === "year") {
             // Group by Month
             for (let i = 0; i < 12; i++) {
                 const label = format(new Date().setMonth(i), "MMM");
-                dataMap.set(label, 0);
+                dataMap.set(label, initEntry());
             }
             sessions.forEach(s => {
                 const date = new Date(s.timestamp);
                 const label = format(date, "MMM");
-                dataMap.set(label, (dataMap.get(label) || 0) + s.duration);
+                const entry = dataMap.get(label) || initEntry();
+
+                entry.value += s.duration;
+                const subj = s.subject || "Uncategorized";
+                entry[subj] = ((entry[subj] as number) || 0) + s.duration;
+
+                dataMap.set(label, entry);
             });
         }
 
-        return Array.from(dataMap.entries()).map(([name, value]) => ({
+        return Array.from(dataMap.entries()).map(([name, data]) => ({
             name,
-            value,
-            date: name // Simplify for now, could be full date
+            date: name,
+            ...data
         }));
     }, [sessions, timeframe]);
 
@@ -224,14 +245,32 @@ export default function FocusProgressPage() {
 
                     {/* Main Chart - Full Width */}
                     <section>
-                        <div className="flex items-center gap-2 mb-6">
-                            <BarChart3 className="text-blue-500" />
-                            <h2 className="text-xl font-semibold">Activity Graph</h2>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <BarChart3 className="text-blue-500" />
+                                <h2 className="text-xl font-semibold">Activity Graph</h2>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className={`text-xs uppercase tracking-widest font-bold ${showBreakdown ? "" : "opacity-40"}`}>
+                                    Breakdown
+                                </span>
+                                <button
+                                    onClick={() => setShowBreakdown(!showBreakdown)}
+                                    className={`w-10 h-6 rounded-full p-1 transition-colors duration-300 ${showBreakdown ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-800"}`}
+                                >
+                                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${showBreakdown ? "translate-x-4" : ""}`} />
+                                </button>
+                            </div>
                         </div>
                         {loading ? (
                             <PremiumSkeleton height="400px" borderRadius="1.5rem" />
                         ) : (
-                            <FocusChart data={chartData} timeframe={timeframe} />
+                            <FocusChart
+                                data={chartData}
+                                timeframe={timeframe}
+                                showBreakdown={showBreakdown}
+                                subjects={subjectStats.map(s => s.name)}
+                            />
                         )}
                     </section>
 
