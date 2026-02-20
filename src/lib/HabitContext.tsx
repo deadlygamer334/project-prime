@@ -403,13 +403,19 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
     const habitsRef = collection(db, "users", user.uid, "habits");
     const unsubscribe = onSnapshot(habitsRef, (snapshot) => {
-      const fetchedHabits = snapshot.docs.map(doc => ({
-        id: doc.id,
-        completions: {},
-        ...doc.data()
-      } as Habit));
-      fetchedHabits.sort((a, b) => a.createdAt - b.createdAt);
-      setHabits(fetchedHabits);
+      setHabits(prev => {
+        const fetchedHabits = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const existingHabit = prev.find(h => h.id === doc.id);
+          return {
+            id: doc.id,
+            completions: existingHabit ? existingHabit.completions : {},
+            ...data
+          } as Habit;
+        });
+        fetchedHabits.sort((a, b) => a.createdAt - b.createdAt);
+        return fetchedHabits;
+      });
       setIsLoaded(true);
     }, (error) => {
       console.error("Habit sync error:", error);
@@ -453,7 +459,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }));
     });
     return () => unsubscribes.forEach(u => u());
-  }, [user, currentMonth, currentYear, habits.length]);
+  }, [user, currentMonth, currentYear, habits.map(h => h.id).join(",")]);
 
   const value = useMemo(() => ({
     habits: visibleHabits,

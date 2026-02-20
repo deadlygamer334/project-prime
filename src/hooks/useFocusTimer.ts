@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSettings } from "@/lib/SettingsContext";
 import { auth, db } from "@/lib/firebase";
-import { doc, onSnapshot, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, deleteDoc, getDoc, runTransaction } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 
 export type TimerMode = "FOCUS" | "BREAK" | "STOPWATCH";
 export type Subject = string;
 
 interface UseFocusTimerProps {
-    onComplete?: (mode: TimerMode, duration: number, subject: Subject) => void;
+    onComplete?: (mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => void;
+    addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string) => Promise<void>;
 }
 
-export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
+export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTimerProps = {}) => {
     // Auth State
     const [user, setUser] = useState<User | null>(null);
 
@@ -34,12 +35,6 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
     const { timerDurations, updateSetting } = useSettings();
     const baselineFocusSecs = timerDurations.focus * 60;
     const baselineBreakSecs = timerDurations.shortBreak * 60;
-    // Note: We might need to distinguish short/long break in the future, 
-    // but current hook uses single breakTimeLeft. 
-    // For now mapping BREAK to shortBreak. 
-    // If we want long break support, we need to map modes better.
-    // However, existing hook only has "BREAK". 
-    // Let's use shortBreak for now as it's the standard "Break".
 
     // Derived
     const timeLeft = mode === "FOCUS" ? focusTimeLeft : mode === "BREAK" ? breakTimeLeft : stopwatchElapsed;
@@ -65,6 +60,84 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         modeRef.current = mode;
     }, [isActive, mode]);
 
+    const handleTimerCompleteInternal = useCallback(async (isAuto: boolean) => {
+        if (!user) return;
+
+        try {
+            let finalMode: TimerMode = "FOCUS";
+            let finalDuration = 0;
+            let finalSubject = "";
+
+            await runTransaction(db, async (transaction) => {
+                const timerDocRef = doc(db, "users", user.uid, "activeTimer", "current");
+                const docSnap = await transaction.get(timerDocRef);
+
+                if (!docSnap.exists()) {
+                    throw "Timer already completed on another device";
+                }
+
+                const data = docSnap.data();
+                const modeFromCloud = data.mode as TimerMode;
+                finalMode = modeFromCloud;
+                finalSubject = data.selectedSubject || "";
+
+                // Delete the cloud timer to prevent others from logging
+                transaction.delete(timerDocRef);
+
+                const cloudBaseline = data.originalBaseline ?? (modeFromCloud === "FOCUS" ? baselineFocusSecs : baselineBreakSecs);
+                const cloudAccumulated = data.accumulatedTime ?? 0;
+
+                if (modeFromCloud !== "STOPWATCH") {
+                    if (isAuto) {
+                        // Auto-complete (timer hit 0)
+                        finalDuration = (cloudAccumulated + cloudBaseline) / 60;
+                    } else {
+                        // Manual complete (using local timeLeft for precision)
+                        finalDuration = (cloudAccumulated + (cloudBaseline - timeLeft)) / 60;
+                    }
+
+                    if (addSessionTransaction) {
+                        await addSessionTransaction(transaction, modeFromCloud === "FOCUS" ? "focus" : "break", finalDuration, finalSubject);
+                    }
+                }
+            });
+
+            // If Transaction Succeeded
+            const resolvedMode = finalMode as TimerMode;
+            setIsActive(false);
+
+            // Use switch to avoid TS narrowing issues with successive if statements
+            switch (resolvedMode) {
+                case "FOCUS":
+                    setIsFocusStarted(false);
+                    setFocusTimeLeft(0);
+                    break;
+                case "BREAK":
+                    setIsBreakStarted(false);
+                    setBreakTimeLeft(0);
+                    break;
+                case "STOPWATCH":
+                    setStopwatchElapsed(0);
+                    break;
+            }
+
+            endTimeRef.current = null;
+            accumulatedTimeSecondsRef.current = 0;
+            sessionStartBaselineRef.current = null;
+
+            if (onComplete) {
+                onComplete(resolvedMode, finalDuration, finalSubject, true); // true = already logged to DB
+            }
+            setSelectedSubject("");
+
+        } catch (e) {
+            console.warn("Completion transaction ignored:", e);
+            // If it failed because it was already completed, we just sync our local state
+            setIsActive(false);
+            endTimeRef.current = null;
+        }
+    }, [user, db, addSessionTransaction, focusTimeLeft, breakTimeLeft, timeLeft, baselineFocusSecs, baselineBreakSecs, onComplete]);
+
     // 1. Sync FROM Cloud (Multi-device support)
     useEffect(() => {
         if (!user || !isLoaded) return;
@@ -72,8 +145,6 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         const timerRef = doc(db, "users", user.uid, "activeTimer", "current");
         const unsubscribe = onSnapshot(timerRef, (docSnap) => {
             if (!docSnap.exists()) {
-                // Remote document deleted (Stop/Reset) - Handle STOP
-                // Use REF to check current state, preventing stale closure issues
                 if (isActiveRef.current) {
                     setIsActive(false);
                     endTimeRef.current = null;
@@ -84,21 +155,26 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             const data = docSnap.data();
             const now = Date.now();
 
+            // Catch-up on mount / background change: If timer EXPIRED, trigger transaction-based completion
+            if (data.isActive && data.endTime <= now && data.mode !== "STOPWATCH") {
+                handleTimerCompleteInternal(true);
+                return;
+            }
+
             // Handle ACTIVE state update
-            if (data.isActive && data.endTime > now) {
+            if (data.isActive && (data.mode === "STOPWATCH" || data.endTime > now)) {
                 // If we stopped locally less than 2 seconds ago, ignore cloud "active" signal
-                // to prevent race conditions (Zombie Timer)
                 if (Date.now() - lastLocalStopRef.current < 2000) {
                     return;
                 }
 
-                const remaining = Math.ceil((data.endTime - now) / 1000);
+                const remaining = data.mode === "STOPWATCH" ? 0 : Math.ceil((data.endTime - now) / 1000);
 
-                // Only sync if significant drift or status change
-                // Use REF for mode check
+                // Reconstruct history Refs for accurate logging on this client
+                if (data.accumulatedTime !== undefined) accumulatedTimeSecondsRef.current = data.accumulatedTime;
+                if (data.originalBaseline !== undefined) sessionStartBaselineRef.current = data.originalBaseline;
+
                 const currentMode = modeRef.current;
-                // Note: focusTimeLeft/breakTimeLeft are stale from closure, but since snapshot only fires
-                // on significant remote events (not per second), syncing to remote time is desired behavior.
                 const currentRemaining = currentMode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
                 const drift = Math.abs(currentRemaining - remaining);
 
@@ -106,13 +182,10 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     setMode(data.mode);
                     setIsActive(true);
                     endTimeRef.current = data.endTime;
-                    startTimeRef.current = data.startTime || null; // For stopwatch sync
+                    startTimeRef.current = data.startTime || null;
                     if (data.mode === "FOCUS") setFocusTimeLeft(remaining);
                     else if (data.mode === "BREAK") setBreakTimeLeft(remaining);
                     else if (data.mode === "STOPWATCH") {
-                        // For stopwatch, calculate elapsed based on startTime if active
-                        // If we are just syncing state but not active, use data.stopwatchElapsed
-                        // But here we are in the 'active' block.
                         if (data.startTime) {
                             const elapsed = Math.floor((now - data.startTime) / 1000);
                             setStopwatchElapsed(elapsed);
@@ -126,7 +199,6 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     }
                 }
             } else if (!data.isActive) {
-                // Explicitly marked as not active
                 if (isActiveRef.current) {
                     setIsActive(false);
                     endTimeRef.current = null;
@@ -135,7 +207,8 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         });
 
         return () => unsubscribe();
-    }, [user, isLoaded]);
+    }, [user, isLoaded, handleTimerCompleteInternal]); // Added handleTimerCompleteInternal to dependencies
+
 
     useEffect(() => {
         try {
@@ -216,91 +289,14 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                 isFocusStarted,
                 isBreakStarted,
                 selectedSubject,
+                accumulatedTime: accumulatedTimeSecondsRef.current,
+                originalBaseline: sessionStartBaselineRef.current,
                 updatedAt: Date.now()
             }, { merge: true }).catch(err => console.error("Cloud sync failed:", err));
-        } else if (!isActive) {
-            // Ensure cloud knows it's stopped if it was active
-            // We use deleteDoc in toggleTimer/resetTimer for immediate effect, 
-            // but this ensures consistency.
         }
     }, [isActive, mode, selectedSubject, user, isLoaded, isFocusStarted]); // Removed per-second time-left dependencies
 
-    const handleTimerComplete = useCallback(() => {
-        setIsActive(false);
-        if (mode === "FOCUS") setIsFocusStarted(false);
-        if (mode === "BREAK") setIsBreakStarted(false);
-        endTimeRef.current = null;
 
-        // Cleanup Cloud activeTimer immediately
-        if (user) {
-            deleteDoc(doc(db, "users", user.uid, "activeTimer", "current"))
-                .catch(err => console.error("Cloud cleanup failed:", err));
-        }
-
-        // Use the baseline captured at the START of the session for logging
-        const loggedBaseline = sessionStartBaselineRef.current ?? currentBaseline;
-
-        // Calculate final duration: accumulated time + current interval's elapsed time
-        const sessionElapsedSeconds = accumulatedTimeSecondsRef.current + loggedBaseline;
-        accumulatedTimeSecondsRef.current = 0;
-        sessionStartBaselineRef.current = null;
-
-        // Reset the mode that just finished
-        if (mode === "FOCUS") setFocusTimeLeft(0);
-        else if (mode === "BREAK") setBreakTimeLeft(0);
-        else if (mode === "STOPWATCH") setStopwatchElapsed(0);
-
-        if (onComplete) {
-            // Pass actual duration in minutes (float)
-            const durationMinutes = mode === "STOPWATCH" ? 0 : (sessionElapsedSeconds / 60);
-
-            if (mode !== "STOPWATCH") {
-                onComplete(mode, durationMinutes, selectedSubject);
-            }
-        }
-
-        // Reset subject after logging
-        setSelectedSubject("");
-    }, [currentBaseline, mode, selectedSubject, onComplete]);
-
-    const completeSession = useCallback(() => {
-        // Manual finish for Stopwatch (or premature timer finish if we allowed it, but mainly for stopwatch)
-        setIsActive(false);
-
-        // Use the baseline captured at the START of the session for logging accuracy
-        const loggedBaseline = sessionStartBaselineRef.current ?? currentBaseline;
-
-        const sessionElapsedSeconds = mode === "STOPWATCH"
-            ? stopwatchElapsed
-            : (accumulatedTimeSecondsRef.current + (loggedBaseline - timeLeft));
-
-        accumulatedTimeSecondsRef.current = 0;
-        sessionStartBaselineRef.current = null;
-
-        const durationMinutes = sessionElapsedSeconds / 60;
-
-        if (onComplete) {
-            onComplete(mode, durationMinutes, selectedSubject);
-        }
-
-        if (mode === "STOPWATCH") setStopwatchElapsed(0);
-        else if (mode === "FOCUS") setIsFocusStarted(false);
-        else setIsBreakStarted(false);
-
-        if (mode === "STOPWATCH") setStopwatchElapsed(0);
-        else if (mode === "FOCUS") setFocusTimeLeft(0);
-        else setBreakTimeLeft(0);
-
-        endTimeRef.current = null;
-        startTimeRef.current = null;
-
-        if (user) {
-            deleteDoc(doc(db, "users", user.uid, "activeTimer", "current")).catch(console.error);
-        }
-
-        // Reset subject after completion
-        setSelectedSubject("");
-    }, [mode, stopwatchElapsed, currentBaseline, timeLeft, onComplete, selectedSubject, user]);
 
     // Timer Interval
     useEffect(() => {
@@ -319,7 +315,7 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     if (remaining <= 0) {
                         if (mode === "FOCUS") setFocusTimeLeft(0);
                         else setBreakTimeLeft(0);
-                        handleTimerComplete();
+                        handleTimerCompleteInternal(true);
                     } else {
                         if (mode === "FOCUS") setFocusTimeLeft(remaining);
                         else setBreakTimeLeft(remaining);
@@ -330,7 +326,26 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [isActive, mode, handleTimerComplete]);
+    }, [isActive, mode, handleTimerCompleteInternal]);
+
+    const completeSession = useCallback(() => {
+        // Manual finish for Stopwatch or Timer
+        if (mode === "STOPWATCH") {
+            // Stopwatch is still simple manual finish for now as it doesn't use countdown/endTime
+            setIsActive(false);
+            const sessionElapsedSeconds = stopwatchElapsed;
+            const durationMinutes = sessionElapsedSeconds / 60;
+            if (onComplete) onComplete(mode, durationMinutes, selectedSubject);
+            setStopwatchElapsed(0);
+            endTimeRef.current = null;
+            startTimeRef.current = null;
+            if (user) deleteDoc(doc(db, "users", user.uid, "activeTimer", "current")).catch(console.error);
+            setSelectedSubject("");
+        } else {
+            // Timer completion now uses the atomic transaction
+            handleTimerCompleteInternal(false);
+        }
+    }, [mode, stopwatchElapsed, onComplete, selectedSubject, handleTimerCompleteInternal, user]);
 
     const toggleTimer = useCallback(() => {
         if (isActive) {
@@ -346,10 +361,18 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             endTimeRef.current = null;
             startTimeRef.current = null;
             lastLocalStopRef.current = Date.now();
-            // Immediate cloud stop
+
+            // Immediate cloud pause/stop
             if (user) {
-                deleteDoc(doc(db, "users", user.uid, "activeTimer", "current"))
-                    .catch(e => console.error(e));
+                // To support true pause/resume across devices, we could update isActive: false
+                // and save accumulatedTime. For now, delete works but loses pause state on other devices
+                // if they are not already open. 
+                // Let's UPDATE instead of DELETE for better pause support.
+                setDoc(doc(db, "users", user.uid, "activeTimer", "current"), {
+                    isActive: false,
+                    accumulatedTime: accumulatedTimeSecondsRef.current,
+                    updatedAt: Date.now()
+                }, { merge: true }).catch(e => console.error(e));
             }
         } else {
             // Validate subject before starting focus or stopwatch
@@ -358,17 +381,13 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
             }
 
             if (mode === "STOPWATCH") {
-                // Start Stopwatch
-                // elapsed = (now - start) / 1000 => start = now - (elapsed * 1000)
                 startTimeRef.current = Date.now() - (stopwatchElapsed * 1000);
                 endTimeRef.current = null;
             } else {
-                // Countdown Logic
                 const currentLeft = mode === "FOCUS" ? focusTimeLeft : breakTimeLeft;
                 if (mode === "FOCUS") setIsFocusStarted(true);
                 if (mode === "BREAK") setIsBreakStarted(true);
 
-                // If currentLeft is 0 (completed), explicitly reset to baseline
                 if (currentLeft <= 0) {
                     const newTime = mode === "FOCUS" ? baselineFocusSecs : baselineBreakSecs;
                     if (mode === "FOCUS") setFocusTimeLeft(newTime);
@@ -377,12 +396,16 @@ export const useFocusTimer = ({ onComplete }: UseFocusTimerProps = {}) => {
                     sessionStartBaselineRef.current = newTime;
                 } else {
                     endTimeRef.current = Date.now() + currentLeft * 1000;
-                    sessionStartBaselineRef.current = currentLeft;
+                    // If we are resuming, DON'T overwrite sessionStartBaselineRef.current
+                    // as it should represent the VERY START of the session.
+                    if (!sessionStartBaselineRef.current) {
+                        sessionStartBaselineRef.current = currentLeft;
+                    }
                 }
             }
             setIsActive(true);
         }
-    }, [isActive, focusTimeLeft, breakTimeLeft, stopwatchElapsed, mode, baselineFocusSecs, baselineBreakSecs, user, selectedSubject]);
+    }, [isActive, focusTimeLeft, breakTimeLeft, stopwatchElapsed, mode, baselineFocusSecs, baselineBreakSecs, user, selectedSubject, timeLeft, currentBaseline]);
 
     const resetTimer = useCallback(() => {
         setIsActive(false);

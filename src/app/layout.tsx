@@ -22,6 +22,7 @@ import OfflineStatus from "@/components/OfflineStatus";
 import { GoalProvider } from "@/lib/GoalContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
+import PomodoroLayoutWrapper from "@/components/PomodoroLayoutWrapper";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -131,6 +132,7 @@ export default function RootLayout({
                           <AmbienceProvider>
                             <SecurityGatekeeper />
                             <DynamicBackground />
+                            <PomodoroLayoutWrapper />
                             <ProtectedRoute>
                               <div className="max-md:landscape:pl-28 transition-all duration-500">
                                 {children}

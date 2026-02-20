@@ -34,24 +34,6 @@ const TodoPanel = dynamic(() => import("@/components/sections/TodoPanel"), {
   )
 });
 
-const PomodoroPanel = dynamic(() => import("@/components/sections/PomodoroPanel"), {
-  ssr: false,
-  loading: () => (
-    <section className="relative overflow-hidden rounded-3xl min-h-[450px] flex flex-col items-center justify-between py-6 border bg-white/5 border-white/10">
-      <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto py-6 px-6 gap-6">
-        <div className="flex gap-1 mb-6 order-1">
-          {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="32px" width="80px" borderRadius="999px" />)}
-        </div>
-        <PremiumSkeleton height="40px" width="200px" borderRadius="12px" className="mb-6 order-2" />
-        <PremiumSkeleton height="150px" width="100%" borderRadius="3rem" className="order-3" />
-        <div className="flex gap-6 order-4">
-          {[1, 2, 3].map(i => <PremiumSkeleton key={i} height="64px" width="64px" borderRadius="999px" />)}
-        </div>
-      </div>
-    </section>
-  )
-});
-
 export default function HomePage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -72,7 +54,8 @@ export default function HomePage() {
           {/* Timer: First on Mobile, Left in Landscape */}
           <div className={`flex flex-col gap-6 ${settings.dashboardLayout === "reversed" ? "" : "md:order-2"}`}>
             <GlobalErrorBoundary moduleName="Focus Engine">
-              <PomodoroPanel />
+              {/* PomodoroPanel is now hoisted to layout.tsx and portaled into this div */}
+              <div id="pomodoro-panel-portal-target" className="min-h-[450px]"></div>
             </GlobalErrorBoundary>
           </div>
 

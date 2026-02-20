@@ -179,16 +179,18 @@ export const useFocusProgress = () => {
                     const userData = userSnap.data();
                     const weekStartDate = userData.weekStartDate ? new Date(userData.weekStartDate) : null;
                     const now = new Date();
-                    const currentMonday = new Date(now);
-                    currentMonday.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
-                    currentMonday.setHours(0, 0, 0, 0);
+                    const currentSunday = new Date(now);
+
+                    // Set to the most recent Sunday
+                    currentSunday.setDate(now.getDate() - now.getDay());
+                    currentSunday.setHours(0, 0, 0, 0);
 
                     // Check if we've crossed into a new week
-                    if (!weekStartDate || weekStartDate.getTime() < currentMonday.getTime()) {
+                    if (!weekStartDate || weekStartDate.getTime() < currentSunday.getTime()) {
                         // New week started, reset counter to current session duration
                         batch.set(userRef, {
                             stats: { totalFocusMinutes: increment(duration) },
-                            weekStartDate: currentMonday.toISOString(),
+                            weekStartDate: currentSunday.toISOString(),
                             weeklyFocusMinutes: duration
                         }, { merge: true });
                     } else {
@@ -201,14 +203,14 @@ export const useFocusProgress = () => {
                 } else {
                     // User doc doesn't exist, create with initial values
                     const now = new Date();
-                    const currentMonday = new Date(now);
-                    currentMonday.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
-                    currentMonday.setHours(0, 0, 0, 0);
+                    const currentSunday = new Date(now);
+                    currentSunday.setDate(now.getDate() - now.getDay());
+                    currentSunday.setHours(0, 0, 0, 0);
 
-                    // console.log(`Updating user stats: User doc not found, initializing. weekStartDate: ${currentMonday.toISOString()}, weeklyFocusMinutes: ${duration}`);
+                    // console.log(`Updating user stats: User doc not found, initializing. weekStartDate: ${currentSunday.toISOString()}, weeklyFocusMinutes: ${duration}`);
                     batch.set(userRef, {
                         stats: { totalFocusMinutes: increment(duration) },
-                        weekStartDate: currentMonday.toISOString(),
+                        weekStartDate: currentSunday.toISOString(),
                         weeklyFocusMinutes: duration
                     }, { merge: true });
                 }
@@ -319,10 +321,69 @@ export const useFocusProgress = () => {
         }
     }, [user]);
 
+    const addSessionTransaction = useCallback(async (
+        transaction: any, // Using any for Transaction type to avoid import complexity in this snippet
+        type: "focus" | "break",
+        duration: number,
+        subject?: string
+    ) => {
+        if (!user) return;
+
+        const sessionRef = doc(collection(db, "users", user.uid, "focusSessions"));
+        const userRef = doc(db, "users", user.uid);
+
+        const newSession: any = {
+            type,
+            duration,
+            timestamp: new Date().toISOString(),
+        };
+        if (subject) newSession.subject = subject;
+
+        // Perform Writes via transaction
+        transaction.set(sessionRef, newSession);
+
+        if (type === "focus") {
+            const userSnap = await transaction.get(userRef);
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                const weekStartDate = userData.weekStartDate ? new Date(userData.weekStartDate) : null;
+                const now = new Date();
+                const currentSunday = new Date(now);
+                currentSunday.setDate(now.getDate() - now.getDay());
+                currentSunday.setHours(0, 0, 0, 0);
+
+                if (!weekStartDate || weekStartDate.getTime() < currentSunday.getTime()) {
+                    transaction.set(userRef, {
+                        stats: { totalFocusMinutes: increment(duration) },
+                        weekStartDate: currentSunday.toISOString(),
+                        weeklyFocusMinutes: duration
+                    }, { merge: true });
+                } else {
+                    transaction.set(userRef, {
+                        stats: { totalFocusMinutes: increment(duration) },
+                        weeklyFocusMinutes: increment(duration)
+                    }, { merge: true });
+                }
+            } else {
+                const now = new Date();
+                const currentSunday = new Date(now);
+                currentSunday.setDate(now.getDate() - now.getDay());
+                currentSunday.setHours(0, 0, 0, 0);
+
+                transaction.set(userRef, {
+                    stats: { totalFocusMinutes: increment(duration) },
+                    weekStartDate: currentSunday.toISOString(),
+                    weeklyFocusMinutes: duration
+                }, { merge: true });
+            }
+        }
+    }, [user]);
+
     return useMemo(() => ({
         sessions,
         totalMinutes,
         addSession,
+        addSessionTransaction,
         deleteSession,
         clearSessions,
         isLoaded,
@@ -330,7 +391,7 @@ export const useFocusProgress = () => {
         loadingHistory,
         getSessionsInRange
     }), [
-        sessions, totalMinutes, addSession, deleteSession, clearSessions,
+        sessions, totalMinutes, addSession, addSessionTransaction, deleteSession, clearSessions,
         isLoaded, loadMoreHistory, loadingHistory, getSessionsInRange
     ]);
 };

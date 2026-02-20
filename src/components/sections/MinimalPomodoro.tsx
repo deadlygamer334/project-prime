@@ -33,10 +33,11 @@ function ZenModeClock({ isDark }: { isDark: boolean }) {
 }
 
 interface MinimalPomodoroProps {
-    onComplete?: (mode: TimerMode, duration: number, subject: Subject) => void;
+    onComplete?: (mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => void;
+    addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string) => Promise<void>;
 }
 
-function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
+function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroProps) {
     const { theme } = useTheme();
     const { showAlert, showToast } = useNotification();
     const isDark = theme === "dark";
@@ -49,7 +50,7 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
     const [lastSessionDuration, setLastSessionDuration] = useState(0);
     const { playTick, playAlarm } = useSoundEffects();
 
-    const handleTimerCompleteWrapper = useCallback((m: TimerMode, duration: number, subject: Subject) => {
+    const handleTimerCompleteWrapper = useCallback((m: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => {
         playAlarm();
         setLastSessionDuration(duration);
         setCompletionMode(m);
@@ -62,7 +63,7 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
         }
 
         if (onComplete) {
-            onComplete(m, duration, subject);
+            onComplete(m, duration, subject, isLogged);
         }
     }, [playAlarm, sendTimerNotification, settings.notificationsEnabled, onComplete]);
 
@@ -72,7 +73,7 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
         toggleTimer, resetTimer, completeSession,
         selectedSubject, setSelectedSubject,
         setTimeLeft, setBaseline, adjustTime
-    } = useFocusTimer({ onComplete: handleTimerCompleteWrapper });
+    } = useFocusTimer({ onComplete: handleTimerCompleteWrapper, addSessionTransaction });
 
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [scale, setScale] = useState(0.8);
@@ -234,9 +235,21 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
             }
         };
 
+        // Attach listener to main window
         window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isFullScreen, editingUnit, toggleTimer, togglePiP]);
+
+        // Also attach to PiP window if it exists, so shortcuts work when PiP is focused
+        if (pipWindow) {
+            pipWindow.addEventListener("keydown", handleKeyDown);
+        }
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            if (pipWindow) {
+                pipWindow.removeEventListener("keydown", handleKeyDown);
+            }
+        };
+    }, [isFullScreen, editingUnit, toggleTimer, togglePiP, pipWindow]);
 
     // Sound Effects (Tick only)
     useEffect(() => {
@@ -288,21 +301,24 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
     const handleTouchStart = (e: React.TouchEvent) => {
         if (!isFullScreen) return;
 
-        // Double Tap detection
-        const now = Date.now();
-        const DOUBLE_TAP_DELAY = 300;
-        if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
-            handleStart();
-            lastTapTime.current = 0; // Reset to prevent triple-tap triggering again
-            return;
-        }
-        lastTapTime.current = now;
-
+        // Double Tap detection - ONLY for single finger to avoid intercepting pinch-zoom
         if (e.touches.length === 1) {
+            const now = Date.now();
+            const DOUBLE_TAP_DELAY = 400; // Increased to 400ms for better mobile reliability
+            if (now - lastTapTime.current < DOUBLE_TAP_DELAY) {
+                handleStart();
+                lastTapTime.current = 0; // Reset to prevent triple-tap triggering again
+                return;
+            }
+            lastTapTime.current = now;
+
             touchStartY.current = e.touches[0].clientY;
             initialBrightness.current = brightness;
             initialPinchDist.current = null;
         } else if (e.touches.length === 2) {
+            // Cancel any pending double tap if second finger touches
+            lastTapTime.current = 0;
+
             // Pinch-to-zoom initial distance
             const dist = Math.hypot(
                 e.touches[0].clientX - e.touches[1].clientX,
@@ -370,7 +386,8 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
 
     // The content that goes into either the main window OR the PiP window
     const timerContent = (isPiP: boolean) => (
-        <div className={`flex flex-col items-center justify-center ${isPiP ? "w-full h-full p-4 overflow-hidden" : ""}`}>
+        <div className={`flex flex-col items-center justify-center ${isPiP ? "w-full h-full p-4 overflow-hidden relative" : ""}`}>
+            <CompletionOverlay show={showCompletion} duration={lastSessionDuration} mode={completionMode} />
             {/* Legend for PiP (Subject & Mode) */}
             {isPiP && (
                 <div className="flex flex-col items-center mb-6 gap-1">
@@ -593,7 +610,6 @@ function MinimalPomodoro({ onComplete }: MinimalPomodoroProps) {
             )}
 
             <div className={`relative mb-8 max-md:landscape:mb-0 group w-full flex justify-center order-3 max-md:landscape:order-1 max-md:landscape:row-span-3 justify-self-center max-md:landscape:justify-self-end ${mode === "BREAK" ? "max-md:landscape:row-span-2" : ""}`}>
-                <CompletionOverlay show={showCompletion} duration={lastSessionDuration} mode={completionMode} />
 
                 {/* Render Timer: Either in DOM or Placeholder if in PiP */}
                 {!pipWindow ? (

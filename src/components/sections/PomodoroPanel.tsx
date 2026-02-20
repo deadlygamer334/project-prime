@@ -12,10 +12,12 @@ import { TimerMode, Subject } from "@/hooks/useFocusTimer";
 export default function PomodoroPanel() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { addSession } = useFocusProgress();
+  const { addSession, addSessionTransaction } = useFocusProgress();
   const settings = useSettings();
 
-  const handleComplete = useCallback((mode: TimerMode, duration: number, subject: Subject) => {
+  const handleComplete = useCallback((mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => {
+    if (isLogged) return; // Already logged by useFocusTimer transaction
+
     if (mode === "FOCUS" || mode === "STOPWATCH") {
       addSession("focus", duration, subject || "");
     }
@@ -33,7 +35,7 @@ export default function PomodoroPanel() {
       )}
 
       {settings.showQuotes && <QuoteBlock />}
-      <MinimalPomodoro onComplete={handleComplete} />
+      <MinimalPomodoro onComplete={handleComplete} addSessionTransaction={addSessionTransaction} />
       <div /> {/* Spacer for balance */}
     </section>
   );
