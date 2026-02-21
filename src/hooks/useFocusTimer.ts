@@ -272,7 +272,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
             startTime: isActive ? startTimeRef.current : null
         };
         localStorage.setItem("focusTimerStateV2", JSON.stringify(stateToSave));
-    }, [mode, focusTimeLeft, breakTimeLeft, selectedSubject, isActive, isFocusStarted, isLoaded]);
+    }, [mode, focusTimeLeft, breakTimeLeft, stopwatchElapsed, selectedSubject, isActive, isFocusStarted, isBreakStarted, isLoaded]);
 
     // Sync to Cloud ONLY when critical state changes (NOT per-second)
     useEffect(() => {
@@ -423,6 +423,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
         if (mode === "FOCUS") setFocusTimeLeft(baselineFocusSecs);
         else if (mode === "BREAK") setBreakTimeLeft(baselineBreakSecs);
         else if (mode === "STOPWATCH") setStopwatchElapsed(0);
+        setSelectedSubject("");
     }, [mode, baselineFocusSecs, baselineBreakSecs, user]);
 
     const adjustTime = useCallback((secondsDelta: number) => {

@@ -18,13 +18,33 @@ export default function PomodoroLayoutWrapper() {
     const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
     useEffect(() => {
-        if (isDashboard) {
-            // Find the portal target defined in page.tsx
-            const target = document.getElementById("pomodoro-panel-portal-target");
-            setPortalTarget(target);
-        } else {
+        if (!isDashboard) {
             setPortalTarget(null);
+            return;
         }
+
+        // 1. Initial check
+        const target = document.getElementById("pomodoro-panel-portal-target");
+        if (target) {
+            setPortalTarget(target);
+            return;
+        }
+
+        // 2. If not found, observe mutations (e.g., when ProtectedRoute finishes loading)
+        const observer = new MutationObserver(() => {
+            const foundTarget = document.getElementById("pomodoro-panel-portal-target");
+            if (foundTarget) {
+                setPortalTarget(foundTarget);
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        return () => observer.disconnect();
     }, [isDashboard, pathname]);
 
     const content = (
