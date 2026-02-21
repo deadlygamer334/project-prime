@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Chrome, ArrowRight, Loader2, ShieldCheck, Zap } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true);
@@ -116,12 +117,8 @@ export default function LoginPage() {
                 {/* Visual Anchor / Logo */}
                 <div className="mb-10 relative group">
                     <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                    <div className="w-16 h-16 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl flex items-center justify-center relative overflow-hidden shadow-2xl">
-                        <svg viewBox="0 0 512 512" className="w-10 h-10">
-                            <path d="M160 140 h120 c60 0 100 40 100 100 s-40 100 -100 100 h-70 v132 h-50 z m50 50 v100 h70 c30 0 50 -20 50 -50 s-20 -50 -50 -50 z" fill="white" />
-                            <circle cx="360" cy="380" r="25" fill="#3b82f6" className="animate-pulse" />
-                        </svg>
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
+                    <div className="w-24 h-24 rounded-full border border-white/20 bg-[#0a0a0c] shadow-[0_0_40px_rgba(0,0,0,0.8),0_0_20px_rgba(147,51,234,0.2)] flex items-center justify-center relative overflow-hidden">
+                        <Logo size={64} className="relative z-10" priority />
                     </div>
                 </div>
 

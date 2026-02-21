@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/Logo";
 
 /**
  * Navigation Component
@@ -17,9 +18,10 @@ const Navigation = () => {
   return (
     <header className="sticky top-0 z-50 flex h-[64px] w-full items-center justify-between border-b border-[#2a2a2e] bg-[#0a0a0c]/80 px-6 backdrop-blur-md">
       {/* Left Section: Logo */}
-      <div className="flex items-center">
-        <Link href="/" className="text-[1.25rem] font-bold tracking-tight text-white transition-opacity hover:opacity-80">
-          Paaranagat System
+      <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+          <Logo size={24} />
+          <span className="text-[1.25rem] font-bold tracking-tight text-white">PRIME</span>
         </Link>
       </div>
 
