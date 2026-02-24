@@ -17,7 +17,33 @@ export default function QuoteBlock() {
                 const data = await response.json();
                 if (Array.isArray(data) && data.length > 0) {
                     setQuotesList(data);
-                    setQuote(data[Math.floor(Math.random() * data.length)]);
+
+                    // Get pool from localStorage
+                    let pool: string[] = [];
+                    const storedPool = localStorage.getItem('quotes_pool');
+
+                    if (storedPool) {
+                        try {
+                            pool = JSON.parse(storedPool);
+                        } catch (e) {
+                            pool = [];
+                        }
+                    }
+
+                    // If pool is empty or invalid, re-initialize and shuffle
+                    if (pool.length === 0) {
+                        pool = [...data].sort(() => Math.random() - 0.5);
+                    }
+
+                    const nextQuote = pool.pop();
+                    localStorage.setItem('quotes_pool', JSON.stringify(pool));
+
+                    if (nextQuote) {
+                        setQuote(nextQuote);
+                    } else {
+                        // Fallback logic if pop fails somehow
+                        setQuote(data[Math.floor(Math.random() * data.length)]);
+                    }
                     return;
                 }
             }
@@ -27,11 +53,11 @@ export default function QuoteBlock() {
 
         // Fallback quotes if API fails
         const fallbacks = [
-            "🔋 Your energy is your currency. Invest it wisely today.",
-            "🚀 Focus is the bridge between goals and accomplishment.",
-            "💎 Progress over perfection, every single day.",
-            "🌊 Stay calm, stay focused, stay productive.",
-            "✨ Your future self will thank you for the work you do today."
+            "Your energy is your currency. Invest it wisely today.",
+            "Focus is the bridge between goals and accomplishment.",
+            "Progress over perfection, every single day.",
+            "Stay calm, stay focused, stay productive.",
+            "Your future self will thank you for the work you do today."
         ];
         setQuotesList(fallbacks);
         setQuote(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
@@ -43,11 +69,29 @@ export default function QuoteBlock() {
 
     const refreshQuote = () => {
         if (quotesList.length === 0) return;
-        let nextQuote = quote;
-        while (nextQuote === quote && quotesList.length > 1) {
-            nextQuote = quotesList[Math.floor(Math.random() * quotesList.length)];
+
+        let pool: string[] = [];
+        const storedPool = localStorage.getItem('quotes_pool');
+
+        if (storedPool) {
+            try {
+                pool = JSON.parse(storedPool);
+            } catch (e) {
+                pool = [];
+            }
         }
-        setQuote(nextQuote);
+
+        // If pool is empty, re-refill from quotesList and shuffle
+        if (pool.length === 0) {
+            pool = [...quotesList].sort(() => Math.random() - 0.5);
+        }
+
+        const nextQuote = pool.pop();
+        localStorage.setItem('quotes_pool', JSON.stringify(pool));
+
+        if (nextQuote) {
+            setQuote(nextQuote);
+        }
     };
 
     return (

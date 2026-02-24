@@ -27,23 +27,30 @@ export async function seedDatabase() {
       UPDATE quotes SET text = RTRIM(text, '.')
     `);
 
-        // Check if quotes table is empty
+        // Check if quotes table is empty or needs sync
         const quotesCount = await db.select({ value: count() }).from(quotes);
-        if (quotesCount[0].value === 0) {
-            const quotesPath = path.join(process.cwd(), 'backend', 'data', 'quotes.json');
-            if (fs.existsSync(quotesPath)) {
-                const quotesData = JSON.parse(fs.readFileSync(quotesPath, 'utf8'));
+        const quotesPath = path.join(process.cwd(), 'backend', 'data', 'quotes.json');
+
+        if (fs.existsSync(quotesPath)) {
+            const quotesData = JSON.parse(fs.readFileSync(quotesPath, 'utf8'));
+
+            // Re-seed if count is different (indicates update) or table is empty
+            if (quotesCount[0].value !== quotesData.length) {
+                console.log('Syncing quotes database with JSON file...');
+                // Clear existing quotes for a clean re-seed
+                await (db as any).$client.execute('DELETE FROM quotes');
+
                 const formattedQuotes = quotesData.map((q: string) => {
-                    // Parse "Emoji Text - Author" format
+                    // Parse "Quote — Author" format (our new emojis-free format)
                     const match = q.match(/^(.*)\s*—\s*(.*)$/);
                     if (match) {
-                        const contentWithEmoji = match[1].trim();
+                        const content = match[1].trim();
                         const author = match[2].trim();
-                        const emojiMatch = contentWithEmoji.match(/^(\ud83c[\udf00-\uffff]|\ud83d[\udc00-\ude4f\ude80-\udeff]|[\u2600-\u26FF\u2700-\u27BF])\s*(.*)$/);
+                        // No need for emojiMatch as we removed them, but handle gently
                         return {
-                            text: (emojiMatch ? emojiMatch[2] : contentWithEmoji).replace(/\.+$/, ''),
+                            text: content.replace(/\.+$/, ''),
                             author: author,
-                            emoji: emojiMatch ? emojiMatch[1] : null
+                            emoji: null
                         };
                     }
                     return { text: q, author: 'Unknown', emoji: null };
@@ -51,7 +58,7 @@ export async function seedDatabase() {
 
                 if (formattedQuotes.length > 0) {
                     await db.insert(quotes).values(formattedQuotes);
-                    console.log('Seeded quotes table');
+                    console.log(`Seeded ${formattedQuotes.length} quotes`);
                 }
             }
         }
