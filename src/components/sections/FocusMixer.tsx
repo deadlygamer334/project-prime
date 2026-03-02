@@ -159,7 +159,7 @@ export default function FocusMixer() {
                     Focus Mixer
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                    Layer 21 scientifically-curated sounds for optimal focus
+                    Layer {sounds.length} scientifically-curated sounds for optimal focus
                 </p>
             </div>
 

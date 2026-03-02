@@ -9,29 +9,29 @@ export const FOCUS_PRESETS: Record<string, PresetConfig> = {
     "deep-focus": {
         name: "Deep Focus",
         icon: "🎯",
-        description: "Minimal distraction for intense concentration",
+        description: "Intense concentration range",
         levels: {
-            "brown-noise": 50,
-            "library": 20
+            "gamma-waves-40": 50,
+            "library-whisper": 20
         }
     },
     "cozy-rain": {
         name: "Cozy Rain",
         icon: "☔",
-        description: "Warm and comforting rainy day vibes",
+        description: "Warm rainy day vibes",
         levels: {
-            "heavy-rain": 60,
+            "heavy-rain": 55,
             "coffee-shop": 30
         }
     },
     "nature-escape": {
         name: "Nature Escape",
         icon: "🌲",
-        description: "Immersive forest environment",
+        description: "Immersive mountain forest",
         levels: {
-            "forest-birds": 45,
-            "soft-wind": 35,
-            "heavy-rain": 25
+            "forest-birds": 40,
+            "soft-wind": 30,
+            "campfire-crackle": 25
         }
     },
     "urban-calm": {
@@ -39,17 +39,18 @@ export const FOCUS_PRESETS: Record<string, PresetConfig> = {
         icon: "🏙️",
         description: "Productive city atmosphere",
         levels: {
-            "coffee-shop": 50,
+            "coffee-shop": 45,
             "distant-traffic": 20,
-            "pink-noise": 15
+            "rainy-city": 25
         }
     },
-    "white-noise-max": {
-        name: "Pure Focus",
-        icon: "⚪",
-        description: "Classic white noise isolation",
+    "healing-state": {
+        name: "Healing State",
+        icon: "✨",
+        description: "Recovery and mindfulness",
         levels: {
-            "white-noise": 70
+            "inner-peace-528": 60,
+            "relaxing-water": 35
         }
     }
 };

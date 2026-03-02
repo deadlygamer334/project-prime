@@ -1,192 +1,201 @@
 {
     "engineered": [
         {
-            "id": "white-noise",
-            "name": "White Noise",
-            "icon": "📻",
-            "audioSrc": "/sounds/white-noise.mp3",
-            "description": "Full spectrum static",
-            "focusType": "masking",
-            "tooltip": "Masks distractions with balanced frequencies across the spectrum"
-        },
-        {
-            "id": "pink-noise",
-            "name": "Pink Noise",
-            "icon": "🌸",
-            "audioSrc": "/sounds/pink-noise.mp3",
-            "description": "Balanced frequency",
-            "focusType": "masking",
-            "tooltip": "Softer than white noise, ideal for sustained concentration"
-        },
-        {
-            "id": "brown-noise",
-            "name": "Brown Noise",
-            "icon": "🟤",
-            "audioSrc": "/sounds/brown-noise.mp3",
-            "description": "Deep rumble",
+            "id": "green-noise-river",
+            "name": "Rolling River (Green Noise)",
+            "icon": "🌊",
+            "audioSrc": "/sounds/Green Noise Rolling River - Gentle Nature.mp3",
+            "description": "Natural white-noise hybrid",
             "focusType": "grounding",
-            "tooltip": "Best for ADHD focus & grounding with deep, calming frequencies"
+            "tooltip": "Consistent water flow with green noise frequencies"
         }
     ],
     "nature": [
         {
             "id": "heavy-rain",
-            "name": "Heavy Rain",
+            "name": "Heavy Rain & Thunder",
             "icon": "🌧️",
-            "audioSrc": "/sounds/heavy-rain.mp3",
+            "audioSrc": "/sounds/Strong Thunder And Heavy Rain - Edy Boman.mp3",
             "description": "Steady downpour",
             "focusType": "masking",
-            "tooltip": "Consistent rain patterns mask environmental noise"
-        },
-        {
-            "id": "soft-wind",
-            "name": "Soft Wind",
-            "icon": "🍃",
-            "audioSrc": "/sounds/soft-wind.mp3",
-            "description": "Gentle breeze",
-            "focusType": "grounding",
-            "tooltip": "Natural, organic movement for calm focus"
+            "tooltip": "Heavy rain and thunder for deep isolation"
         },
         {
             "id": "forest-birds",
             "name": "Forest Birds",
             "icon": "🐦",
-            "audioSrc": "/sounds/forest-birds.mp3",
-            "description": "Morning songbirds",
+            "audioSrc": "/sounds/Forest Birds Calling and Singing - Path to the Wild.mp3",
+            "description": "Wild birdsong",
             "focusType": "stimulating",
-            "tooltip": "Natural sounds boost mood and creativity"
-        },
-        {
-            "id": "babbling-brook",
-            "name": "Babbling Brook",
-            "icon": "🌊",
-            "audioSrc": "/sounds/babbling-brook.mp3",
-            "description": "Flowing water",
-            "focusType": "grounding",
-            "tooltip": "Gentle water flow promotes relaxed concentration"
+            "tooltip": "Natural bird calls for creative focus"
         },
         {
             "id": "campfire-crackle",
-            "name": "Campfire Crackle",
+            "name": "Gentle Campfire",
             "icon": "🔥",
-            "audioSrc": "/sounds/campfire-crackle.mp3",
-            "description": "Wood burning",
+            "audioSrc": "/sounds/Gentle Campfire Crackling Sounds, Pt.1 - Fire Creator.mp3",
+            "description": "Wood crackling",
             "focusType": "grounding",
-            "tooltip": "Primal, comforting sound for deep work"
+            "tooltip": "Cozy fire sounds for meditative focus"
         },
         {
-            "id": "rain-tin-roof",
-            "name": "Rain on Tin Roof",
-            "icon": "🏠",
-            "audioSrc": "/sounds/rain-tin-roof.mp3",
-            "description": "Rhythmic patter",
-            "focusType": "masking",
-            "tooltip": "Cozy, rhythmic masking for indoor focus"
+            "id": "relaxing-water",
+            "name": "Relaxing Water",
+            "icon": "💧",
+            "audioSrc": "/sounds/Relaxing Water - Joyce Long, Reiki Raj.mp3",
+            "description": "Gentle flow",
+            "focusType": "grounding",
+            "tooltip": "Calm water movements for stress reduction"
         },
         {
-            "id": "summer-crickets",
-            "name": "Summer Night Crickets",
+            "id": "summer-night",
+            "name": "Summer Night",
             "icon": "🦗",
-            "audioSrc": "/sounds/summer-crickets.mp3",
-            "description": "Evening chorus",
+            "audioSrc": "/sounds/Summer Night - Mother Earth Sounds.mp3",
+            "description": "Crickets and night sounds",
             "focusType": "grounding",
-            "tooltip": "Natural rhythm promotes calm, sustained focus"
+            "tooltip": "Peaceful evening atmosphere"
+        },
+        {
+            "id": "soft-wind",
+            "name": "Siberian Wind",
+            "icon": "🍃",
+            "audioSrc": "/sounds/Wind - Deep Siberian Wind Sounds - Nature Sounds.mp3",
+            "description": "Deep cold wind",
+            "focusType": "grounding",
+            "tooltip": "Powerful air movement for focus"
         }
     ],
     "ambient": [
         {
+            "id": "rainy-city",
+            "name": "City Street (Rainy)",
+            "icon": "🌆",
+            "audioSrc": "/sounds/City Street - Rainy Mood.mp3",
+            "description": "Urban rain",
+            "focusType": "masking",
+            "tooltip": "City atmosphere mixed with rainfall"
+        },
+        {
             "id": "coffee-shop",
             "name": "Coffee Shop",
             "icon": "☕",
-            "audioSrc": "/sounds/coffee-shop.mp3",
-            "description": "Gentle chatter",
+            "audioSrc": "/sounds/Coffee Shop - Janik Dvorak.mp3",
+            "description": "Cafe ambience",
             "focusType": "stimulating",
-            "tooltip": "Social ambience boosts productivity for some learners"
-        },
-        {
-            "id": "library",
-            "name": "Library Atmosphere",
-            "icon": "📚",
-            "audioSrc": "/sounds/library.mp3",
-            "description": "Quiet atmosphere",
-            "focusType": "grounding",
-            "tooltip": "Minimal activity creates studious environment"
+            "tooltip": "Productive social background noise"
         },
         {
             "id": "distant-traffic",
             "name": "Distant Traffic",
             "icon": "🚗",
-            "audioSrc": "/sounds/distant-traffic.mp3",
-            "description": "Muffled city sounds",
+            "audioSrc": "/sounds/Distant traffic - Wonderful Escape.mp3",
+            "description": "Muffled urban drone",
             "focusType": "masking",
-            "tooltip": "Low-level urban noise masks sudden distractions"
-        },
-        {
-            "id": "rainy-city",
-            "name": "Rainy City Street",
-            "icon": "🌆",
-            "audioSrc": "/sounds/rainy-city.mp3",
-            "description": "Rain + traffic",
-            "focusType": "masking",
-            "tooltip": "Combines natural and urban for complex masking"
+            "tooltip": "Steady low-frequency urban masking"
         },
         {
             "id": "library-whisper",
-            "name": "Library Whisper",
+            "name": "Library Whispers",
             "icon": "📖",
-            "audioSrc": "/sounds/library-whisper.mp3",
-            "description": "Soft footsteps",
+            "audioSrc": "/sounds/Library Whispering - Sleep Sounds.mp3",
+            "description": "Quiet study space",
             "focusType": "grounding",
-            "tooltip": "Subtle human presence without distraction"
+            "tooltip": "Studious human presence"
         }
     ],
     "industrial": [
         {
-            "id": "box-fan",
-            "name": "Box Fan",
-            "icon": "🌀",
-            "audioSrc": "/sounds/box-fan.mp3",
-            "description": "Steady hum",
+            "id": "air-conditioner",
+            "name": "Air Conditioner",
+            "icon": "❄️",
+            "audioSrc": "/sounds/Air Conditioner - Sleep Sounds HD.mp3",
+            "description": "Steady cooling hum",
             "focusType": "masking",
-            "tooltip": "Consistent mechanical noise excellent for masking"
+            "tooltip": "Mechanical hum for consistent masking"
         },
         {
             "id": "airplane-cabin",
             "name": "Airplane Cabin",
             "icon": "✈️",
-            "audioSrc": "/sounds/airplane-cabin.mp3",
-            "description": "Neutral cocooning",
+            "audioSrc": "/sounds/Airplane Cabin Relaxing Noise for Studying (Loopable no fade) - Dream Supplier.mp3",
+            "description": "Flight drone",
             "focusType": "masking",
-            "tooltip": "Creates isolated focus bubble with steady drone"
+            "tooltip": "Immersive drone for long-term concentration"
         },
         {
-            "id": "air-conditioner",
-            "name": "Air Conditioner",
-            "icon": "❄️",
-            "audioSrc": "/sounds/air-conditioner.mp3",
-            "description": "HVAC hum",
+            "id": "box-fan",
+            "name": "Box Fan",
+            "icon": "🌀",
+            "audioSrc": "/sounds/Box Fan Sound - Tmsoft's White Noise Sleep Sounds.mp3",
+            "description": "Rhythmic fan hum",
             "focusType": "masking",
-            "tooltip": "Familiar background noise for comfort and masking"
+            "tooltip": "Reliable fan noise for focus"
         }
     ],
     "scientific": [
         {
-            "id": "gamma-40hz",
-            "name": "40 Hz Gamma Waves",
-            "icon": "🧠",
-            "audioSrc": "/sounds/gamma-40hz.mp3",
-            "description": "Enhanced learning",
-            "focusType": "stimulating",
-            "tooltip": "Linked to improved memory and cognitive performance"
+            "id": "alpha-binaural-10",
+            "name": "10Hz Alpha Waves",
+            "icon": "🎧",
+            "audioSrc": "/sounds/10 Hz Binaural Beats(Alpha Waves) - Miracle Healing Tones TP, Solfeggio Frequencies TP.mp3",
+            "description": "Relaxed focus",
+            "focusType": "grounding",
+            "tooltip": "Synchronizes brainwaves for alert relaxation"
         },
         {
-            "id": "alpha-binaural",
-            "name": "Alpha Binaural Beats",
-            "icon": "🎧",
-            "audioSrc": "/sounds/alpha-binaural.mp3",
-            "description": "10 Hz relaxed focus",
+            "id": "gamma-waves-40",
+            "name": "40Hz Gamma Waves",
+            "icon": "🧠",
+            "audioSrc": "/sounds/40 Hz Gamma Waves - Miracle Tones.mp3",
+            "description": "High cognitive focus",
+            "focusType": "stimulating",
+            "tooltip": "Promotes information processing and memory"
+        },
+        {
+            "id": "inner-peace-528",
+            "name": "528Hz Inner Peace",
+            "icon": "✨",
+            "audioSrc": "/sounds/528 Hz Inner Peace - Solfeggio Healing Frequencies.mp3",
+            "description": "Emotional balance",
             "focusType": "grounding",
-            "tooltip": "Promotes relaxed alertness and creative flow"
+            "tooltip": "Solfeggio frequency for transformation and miracles"
+        },
+        {
+            "id": "frequency-639",
+            "name": "639Hz Solfeggio",
+            "icon": "💫",
+            "audioSrc": "/sounds/639 Hz Solfeggio Frequency - Miracle Tones.mp3",
+            "description": "Connecting/Harmonizing",
+            "focusType": "stimulating",
+            "tooltip": "Fosters relationships and communication"
+        },
+        {
+            "id": "alpha-waves-8-14",
+            "name": "8-14Hz Alpha Range",
+            "icon": "🌊",
+            "audioSrc": "/sounds/Alpha Waves 8 - 14 Hz - RELAX88.mp3",
+            "description": "Flow state",
+            "focusType": "grounding",
+            "tooltip": "Broad alpha range for calm creativity"
+        },
+        {
+            "id": "healing-528-mt",
+            "name": "528Hz Healing MT",
+            "icon": "🧘",
+            "audioSrc": "/sounds/Solfeggio Frequencies 528 Hz - Miracle Tones, Solfeggio Healing Frequencies MT.mp3",
+            "description": "DNA repair/Love",
+            "focusType": "grounding",
+            "tooltip": "Optimized healing frequency tones"
+        },
+        {
+            "id": "awakening-741-mt",
+            "name": "741Hz Awakening",
+            "icon": "🕯️",
+            "audioSrc": "/sounds/Solfeggio Frequencies 741 Hz - Miracle Tones, Solfeggio Healing Frequencies MT.mp3",
+            "description": "Intuition/Cleaning",
+            "focusType": "stimulating",
+            "tooltip": "Cleansing the cell from toxins"
         }
     ]
 }
