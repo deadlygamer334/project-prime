@@ -424,42 +424,53 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => unsubscribe();
   }, [user]);
 
+  // Fetch history for current month and previous month using getDoc (lazy, on-demand)
+  // REPLACES: N×2 onSnapshot fan-out that opened 2 Firestore WebSocket streams per habit.
+  // Previously: 10 habits × 2 months = 20 simultaneous listeners, torn down + recreated on month change.
+  // Now: single getDoc fetch per month transition \u2014 eliminates the O(N) listener INP spike.
   useEffect(() => {
     if (!user || habits.length === 0) return;
+
     const monthKey = `${currentYear}-${currentMonth}`;
     const prevDate = new Date(currentYear, currentMonth - 1);
     const prevMonthKey = `${prevDate.getFullYear()}-${prevDate.getMonth()}`;
-    const unsubscribes: (() => void)[] = [];
 
-    habits.forEach(h => {
-      const historyRef = doc(db, "users", user.uid, "habits", h.id, "history", monthKey);
-      unsubscribes.push(onSnapshot(historyRef, (snap) => {
-        if (snap.exists()) {
-          setHabits(prev => prev.map(habit => {
-            if (habit.id === h.id) {
-              const newCompletions = { ...habit.completions, [monthKey]: snap.data() };
-              return { ...habit, completions: newCompletions };
-            }
-            return habit;
-          }));
-        }
-      }));
+    let cancelled = false;
 
-      const prevHistoryRef = doc(db, "users", user.uid, "habits", h.id, "history", prevMonthKey);
-      unsubscribes.push(onSnapshot(prevHistoryRef, (snap) => {
-        if (snap.exists()) {
-          setHabits(prev => prev.map(habit => {
-            if (habit.id === h.id) {
-              const newCompletions = { ...habit.completions, [prevMonthKey]: snap.data() };
-              return { ...habit, completions: newCompletions };
-            }
-            return habit;
-          }));
-        }
+    const fetchHistory = async () => {
+      const { getDocs, collection: fsCollection, getDoc } = await import('firebase/firestore');
+
+      const updates: Record<string, Record<string, Record<number, boolean>>> = {};
+
+      await Promise.all(
+        habits.map(async (h) => {
+          const [curSnap, prevSnap] = await Promise.all([
+            getDoc(doc(db, "users", user.uid, "habits", h.id, "history", monthKey)),
+            getDoc(doc(db, "users", user.uid, "habits", h.id, "history", prevMonthKey)),
+          ]);
+          updates[h.id] = {};
+          if (curSnap.exists()) updates[h.id][monthKey] = curSnap.data() as Record<number, boolean>;
+          if (prevSnap.exists()) updates[h.id][prevMonthKey] = prevSnap.data() as Record<number, boolean>;
+        })
+      );
+
+      if (cancelled) return;
+
+      setHabits(prev => prev.map(habit => {
+        const habitUpdates = updates[habit.id];
+        if (!habitUpdates) return habit;
+        return {
+          ...habit,
+          completions: { ...habit.completions, ...habitUpdates }
+        };
       }));
-    });
-    return () => unsubscribes.forEach(u => u());
+    };
+
+    fetchHistory().catch(e => console.error("Habit history fetch error:", e));
+
+    return () => { cancelled = true; };
   }, [user, currentMonth, currentYear, habits.map(h => h.id).join(",")]);
+
 
   const value = useMemo(() => ({
     habits: visibleHabits,

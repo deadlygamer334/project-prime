@@ -24,10 +24,12 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import PomodoroLayoutWrapper from "@/components/PomodoroLayoutWrapper";
 
+// Inter is the primary UI font — always preloaded
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
-const merriweather = Merriweather({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-merriweather", display: "swap" });
-const robotoFont = Roboto({ weight: ["400", "500", "700"], subsets: ["latin"], variable: "--font-roboto", display: "swap" });
+// Non-primary fonts: preload:false → lazy-loaded after page paint, saving 200-400ms on 4G
+const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
+const merriweather = Merriweather({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-merriweather", display: "swap", preload: false });
+const robotoFont = Roboto({ weight: ["400", "500", "700"], subsets: ["latin"], variable: "--font-roboto", display: "swap", preload: false });
 
 import { Viewport } from "next";
 
@@ -112,23 +114,28 @@ export default function RootLayout({
                           >
                             Skip to main content
                           </a>
-                          <Script
-                            id="prime-browser-logs"
-                            src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
-                            strategy="lazyOnload"
-                            data-visual-project-id="af7ac36f-acf0-497f-baa0-ffab1e811bf8"
-                          />
+                          {/* Dev-only scripts: never load in production — these are visual editor / logging tools */}
+                          {process.env.NODE_ENV !== 'production' && (
+                            <>
+                              <Script
+                                id="prime-browser-logs"
+                                src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
+                                strategy="lazyOnload"
+                                data-visual-project-id="af7ac36f-acf0-497f-baa0-ffab1e811bf8"
+                              />
+                              <Script
+                                src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
+                                strategy="lazyOnload"
+                                data-target-origin="*"
+                                data-message-type="ROUTE_CHANGE"
+                                data-include-search-params="true"
+                                data-only-in-iframe="true"
+                                data-debug="true"
+                                data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
+                              />
+                            </>
+                          )}
                           <ErrorReporter />
-                          <Script
-                            src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
-                            strategy="lazyOnload"
-                            data-target-origin="*"
-                            data-message-type="ROUTE_CHANGE"
-                            data-include-search-params="true"
-                            data-only-in-iframe="true"
-                            data-debug="true"
-                            data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
-                          />
                           <AmbienceProvider>
                             <SecurityGatekeeper />
                             <DynamicBackground />
@@ -143,9 +150,11 @@ export default function RootLayout({
                             <FloatingMusicPlayer />
                           </AmbienceProvider>
                           <ClientKeyboardShortcuts />
-                          <VisualEditsMessenger />
+                          {/* VisualEditsMessenger is a dev-only tool — never run in production */}
+                          {process.env.NODE_ENV !== 'production' && <VisualEditsMessenger />}
                           <OfflineStatus />
-                          <SpeedInsights />
+                          {/* Speed Insights: production only — no-op in dev */}
+                          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
                         </GoalProvider>
                       </HabitProvider>
                     </KeyboardShortcutsProvider>

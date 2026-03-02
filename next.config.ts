@@ -18,7 +18,21 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 
 const nextConfig: NextConfig = {
   // ... existing config
+  // Performance: tree-shake heavy icon/animation packages to only import what's used
+  // Without this, lucide-react and @tabler/icons-react bundle EVERY icon into the JS chunk
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@tabler/icons-react',
+      'framer-motion',
+      'recharts',
+    ],
+  },
   images: {
+    // AVIF + WebP: 50-75% smaller than JPEG/PNG, auto-negotiated by Next.js Image
+    formats: ['image/avif', 'image/webp'],
+    // Cache optimized images for 1 hour minimum to avoid repeated re-optimization
+    minimumCacheTTL: 3600,
     remotePatterns: [
       {
         protocol: 'https',

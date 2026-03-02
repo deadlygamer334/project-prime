@@ -390,4 +390,38 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-}@layer utilities { .select-text { user-select: text !important; -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; } }
+
+  /* ===== PREFERS-REDUCED-MOTION =====
+   * Stops all continuous animations for users with OS reduce-motion enabled.
+   * Diagnosed bottleneck: aurora-shift (20s), float (6s), particles-move (60s)
+   * consume continuous GPU frame budget, increasing INP on low-end mobile.
+   * This is separate from the in-app reducedMotion setting — covers OS-level prefs. */
+  @media (prefers-reduced-motion: reduce) {
+    /* Stop all CSS animations and transitions globally */
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Specifically stop the heavy background animations */
+    .bg-aurora {
+      animation: none !important;
+    }
+
+    .bg-particles {
+      animation: none !important;
+    }
+
+    /* Keep the DynamicBackground orbs visible but static */
+    .animate-float {
+      animation: none !important;
+    }
+
+    /* Disable Framer Motion animations via CSS custom property */
+    :root {
+      --animate-duration: 0.01ms;
+    }
+  }
+}

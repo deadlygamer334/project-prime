@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { auth, db } from "@/lib/firebase";
 import { doc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -130,6 +130,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
     const [isZenMode, setIsZenMode] = useState(false);
+    // Debounce ref: prevents 20+ DOM mutations on every rapid settings change (INP fix)
+    const applyThemeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 
     // Listen for Auth Changes
@@ -176,9 +178,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         return () => unsubscribe();
     }, [user]);
 
-    // Apply Theme Side Effect
+    // Apply Theme Side Effect — debounced + RAF-batched to prevent INP spikes
+    // applyTheme runs 20+ DOM setProperty() calls; debouncing prevents cascades on rapid setting changes
     useEffect(() => {
-        applyTheme(settings);
+        if (applyThemeDebounceRef.current) clearTimeout(applyThemeDebounceRef.current);
+        applyThemeDebounceRef.current = setTimeout(() => {
+            requestAnimationFrame(() => applyTheme(settings));
+        }, 50);
+        return () => {
+            if (applyThemeDebounceRef.current) clearTimeout(applyThemeDebounceRef.current);
+        };
     }, [settings]);
 
     const applyTheme = (s: Settings) => {

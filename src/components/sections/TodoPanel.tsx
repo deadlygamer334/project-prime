@@ -6,7 +6,8 @@ import { useHomeTodo, HomeTask, Priority } from "@/hooks/useHomeTodo";
 import { useTheme } from "@/lib/ThemeContext";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { useEffect } from "react";
-import confetti from "canvas-confetti";
+// confetti is dynamically imported on demand — removed from initial bundle (~20KB savings)
+
 import { useSettings } from "@/lib/SettingsContext";
 import { DatePicker } from "@/components/ui/date-picker";
 import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
@@ -474,10 +475,13 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
                 onClick={() => {
                   toggleTask(task.id);
                   if (!task.completed && settings.confettiEnabled) {
-                    confetti({
-                      particleCount: 100,
-                      spread: 70,
-                      origin: { y: 0.6 }
+                    // Dynamic import: defers ~20KB canvas-confetti from initial bundle
+                    import('canvas-confetti').then((mod) => {
+                      mod.default({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                      });
                     });
                   }
                 }}

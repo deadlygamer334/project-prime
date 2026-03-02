@@ -15,7 +15,15 @@ export default function DynamicBackground() {
     }
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div
+            className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+            style={{
+                // Paint containment: isolates background blur animations from page content,
+                // reducing composite layer jank on low-end mobile devices
+                contain: "strict",
+                isolation: "isolate",
+            }}
+        >
             {settings.backgroundStyle === "aurora" && (
                 <>
                     <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-aurora blur-[60px] opacity-40 animate-float will-change-transform" />

@@ -16,8 +16,13 @@ interface ClockProps {
     time: Date;
 }
 
+// All clock sub-components are memoized:
+// DigitalClock calls setTime() every second, which re-renders the parent.
+// Without memo, every sub-component re-renders even when hours/minutes haven't changed.
+// React.memo prevents these no-op re-renders, reducing 1Hz garbage collection pressure.
+
 // 1. Standard (Glassmorphism Box)
-const StandardClock = ({ hours, minutes, seconds, ampm, dateStr, isDark, showSeconds }: ClockProps) => (
+const StandardClock = React.memo(({ hours, minutes, seconds, ampm, dateStr, isDark, showSeconds }: ClockProps) => (
     <div className={cn(
         "flex flex-col items-center justify-center p-8 rounded-[32px] backdrop-blur-xl border shadow-sm text-center",
         isDark ? "bg-white/5 border-white/10" : "bg-white/60 border-white"
@@ -32,10 +37,11 @@ const StandardClock = ({ hours, minutes, seconds, ampm, dateStr, isDark, showSec
             {dateStr}
         </div>
     </div>
-);
+));
+StandardClock.displayName = 'StandardClock';
 
 // 2. Minimal (Clean, No Box)
-const MinimalClock = ({ hours, minutes, seconds, dateStr, isDark, showSeconds }: ClockProps) => (
+const MinimalClock = React.memo(({ hours, minutes, seconds, dateStr, isDark, showSeconds }: ClockProps) => (
     <div className="flex flex-col items-center justify-center p-4 text-center">
         <div className={cn("text-6xl sm:text-8xl font-light tracking-tight tabular-nums", isDark ? "text-white" : "text-neutral-900")}>
             {hours}:{minutes}
@@ -45,10 +51,11 @@ const MinimalClock = ({ hours, minutes, seconds, dateStr, isDark, showSeconds }:
             {showSeconds && <span className="opacity-60 tabular-nums">{seconds}s</span>}
         </div>
     </div>
-);
+));
+MinimalClock.displayName = 'MinimalClock';
 
 // 3. Bold (Heavy Font, Solid)
-const BoldClock = ({ hours, minutes, ampm, dateStr, isDark }: ClockProps) => (
+const BoldClock = React.memo(({ hours, minutes, ampm, dateStr, isDark }: ClockProps) => (
     <div className="flex flex-col items-center p-6 text-center">
         <h1 className={cn("text-7xl sm:text-9xl font-black tracking-tighter leading-none tabular-nums", isDark ? "text-white" : "text-black")}>
             {hours}:{minutes}
@@ -58,10 +65,11 @@ const BoldClock = ({ hours, minutes, ampm, dateStr, isDark }: ClockProps) => (
             <span className={cn("text-lg sm:text-xl font-bold", isDark ? "text-white/50" : "text-black/50")}>{dateStr}</span>
         </div>
     </div>
-);
+));
+BoldClock.displayName = 'BoldClock';
 
-// 6. Neon (Glowing)
-const NeonClock = ({ hours, minutes, dateStr, isDark }: ClockProps) => (
+// 4. Neon (Glowing)
+const NeonClock = React.memo(({ hours, minutes, dateStr, isDark }: ClockProps) => (
     <div className="flex flex-col items-center justify-center p-8 text-center">
         <div className={cn("text-6xl sm:text-8xl font-bold tabular-nums",
             isDark
@@ -75,10 +83,11 @@ const NeonClock = ({ hours, minutes, dateStr, isDark }: ClockProps) => (
             {dateStr}
         </div>
     </div>
-);
+));
+NeonClock.displayName = 'NeonClock';
 
-// 7. Elegant (Serif)
-const ElegantClock = ({ hours, minutes, dateStr, isDark }: ClockProps) => (
+// 5. Elegant (Serif)
+const ElegantClock = React.memo(({ hours, minutes, dateStr, isDark }: ClockProps) => (
     <div className="flex flex-col items-center justify-center p-6 text-center">
         <div className={cn("text-6xl sm:text-8xl font-[family-name:var(--font-merriweather)] italic tracking-tight tabular-nums", isDark ? "text-white" : "text-neutral-900")}>
             {hours}:{minutes}
@@ -87,10 +96,11 @@ const ElegantClock = ({ hours, minutes, dateStr, isDark }: ClockProps) => (
             {dateStr}
         </div>
     </div>
-);
+));
+ElegantClock.displayName = 'ElegantClock';
 
-// 9. Outline (Stroked Text)
-const OutlineClock = ({ hours, minutes, isDark }: ClockProps) => (
+// 6. Outline (Stroked Text)
+const OutlineClock = React.memo(({ hours, minutes, isDark }: ClockProps) => (
     <div className="flex flex-col items-center justify-center p-6 text-center">
         <div className={cn("text-7xl sm:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b tabular-nums",
             isDark ? "from-white/10 to-transparent stroke-white" : "from-black/10 to-transparent",
@@ -99,10 +109,11 @@ const OutlineClock = ({ hours, minutes, isDark }: ClockProps) => (
             {hours}:{minutes}
         </div>
     </div>
-);
+));
+OutlineClock.displayName = 'OutlineClock';
 
-// 10. Pill (Contained)
-const PillClock = ({ hours, minutes, seconds, ampm, isDark, showSeconds, time }: ClockProps) => (
+// 7. Pill (Contained)
+const PillClock = React.memo(({ hours, minutes, seconds, ampm, isDark, showSeconds, time }: ClockProps) => (
     <div className={cn("flex items-center gap-4 px-6 sm:px-8 py-3 sm:py-4 rounded-full border shadow-lg text-center",
         isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200")}>
         <span className={cn("text-4xl sm:text-6xl font-bold tabular-nums", isDark ? "text-white" : "text-neutral-900")}>
@@ -113,26 +124,41 @@ const PillClock = ({ hours, minutes, seconds, ampm, isDark, showSeconds, time }:
             <span>{showSeconds ? seconds : time.getFullYear()}</span>
         </div>
     </div>
-);
+));
+PillClock.displayName = 'PillClock';
 
-// 12. Glitch (Simulated with shift)
-const GlitchClock = ({ hours, minutes, isDark }: ClockProps) => (
+// 8. Glitch — FIXED: replaced mix-blend-difference + animate-pulse (forces per-pixel GPU compositing)
+// with translate-based chromatic aberration (fully GPU-compositable, no blend mode needed)
+const GlitchClock = React.memo(({ hours, minutes, isDark }: ClockProps) => (
     <div className="relative flex items-center justify-center p-8 text-center">
-        <div className={cn("text-6xl sm:text-8xl font-black tracking-tighter mix-blend-difference relative tabular-nums", isDark ? "text-white" : "text-black")}>
-            <span className="absolute top-0 left-[-2px] text-red-500 opacity-70 animate-pulse">{hours}:{minutes}</span>
-            <span className="absolute top-0 left-[2px] text-cyan-500 opacity-70 animate-pulse delay-75">{hours}:{minutes}</span>
+        <div className={cn("text-6xl sm:text-8xl font-black tracking-tighter relative tabular-nums select-none", isDark ? "text-white" : "text-black")}>
+            {/* Chromatic aberration via translate \u2014 GPU-compositable, no blend mode required */}
+            <span
+                className="absolute inset-0 text-red-500 opacity-50"
+                style={{ transform: 'translate(-2px, 0)', willChange: 'transform' }}
+                aria-hidden="true"
+            >{hours}:{minutes}</span>
+            <span
+                className="absolute inset-0 text-cyan-500 opacity-50"
+                style={{ transform: 'translate(2px, 0)', willChange: 'transform' }}
+                aria-hidden="true"
+            >{hours}:{minutes}</span>
             <span className="relative z-10">{hours}:{minutes}</span>
         </div>
     </div>
-);
+));
+GlitchClock.displayName = 'GlitchClock';
 
-// 13. Vertical (Stacked)
-const VerticalClock = ({ hours, minutes, isDark }: ClockProps) => (
+// 9. Vertical (Stacked)
+const VerticalClock = React.memo(({ hours, minutes, isDark }: ClockProps) => (
     <div className="flex flex-col items-center justify-center gap-0 leading-none tabular-nums text-center">
         <span className={cn("text-6xl sm:text-8xl font-bold", isDark ? "text-white/80" : "text-black/80")}>{hours}</span>
         <span className={cn("text-6xl sm:text-8xl font-bold", isDark ? "text-white/40" : "text-black/40")}>{minutes}</span>
     </div>
-);
+));
+VerticalClock.displayName = 'VerticalClock';
+
+
 
 export default function DigitalClock() {
     const [mounted, setMounted] = useState(false);

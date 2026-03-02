@@ -3,21 +3,29 @@ import { db } from '@/lib/db';
 import { quotes } from '@/lib/db/schema';
 import { seedDatabase } from '@/lib/db/seed';
 
+// Module-level singleton: only seed once per serverless function instance.
+// Previously, seedDatabase() ran on every GET, adding a DB read to every request's TTFB.
+let isSeeded = false;
+
 export async function GET() {
     try {
-        // Ensure tables exist and are seeded (simplified for local SQLite)
-        // In a real app we'd use migrations, but for this "portable" request
-        // we'll try to seed if empty
-        await seedDatabase();
+        if (!isSeeded) {
+            await seedDatabase();
+            isSeeded = true;
+        }
 
         const allQuotes = await db.select().from(quotes);
-        // Format back to "Emoji Text — Author" for the frontend if needed,
-        // or just return the objects. The current frontend expects string[]
         const formattedQuotes = allQuotes.map(q => `${q.emoji || ''} ${q.text} — ${q.author}`);
 
-        return NextResponse.json(formattedQuotes);
+        return NextResponse.json(formattedQuotes, {
+            headers: {
+                // Edge cache: serve stale for up to 24hr while revalidating in background
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            }
+        });
     } catch (error) {
         console.error('Error fetching quotes from SQLite:', error);
         return NextResponse.json({ error: 'Failed to load quotes' }, { status: 500 });
     }
 }
+
