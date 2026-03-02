@@ -23,6 +23,8 @@ import { GoalProvider } from "@/lib/GoalContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import PomodoroLayoutWrapper from "@/components/PomodoroLayoutWrapper";
+import { WallpaperProvider } from "@/lib/WallpaperContext";
+
 
 // Inter is the primary UI font — always preloaded
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -137,17 +139,19 @@ export default function RootLayout({
                           )}
                           <ErrorReporter />
                           <AmbienceProvider>
-                            <SecurityGatekeeper />
-                            <DynamicBackground />
-                            <PomodoroLayoutWrapper />
-                            <ProtectedRoute>
-                              <div className="max-md:landscape:pl-28 transition-all duration-500">
-                                {children}
-                                {/* Mobile Bottom Dock Spacer */}
-                                <div className="lg:hidden h-32" aria-hidden="true" />
-                              </div>
-                            </ProtectedRoute>
-                            <FloatingMusicPlayer />
+                            <WallpaperProvider>
+                              <SecurityGatekeeper />
+                              <DynamicBackground />
+                              <PomodoroLayoutWrapper />
+                              <ProtectedRoute>
+                                <div className="max-md:landscape:pl-28 transition-all duration-500">
+                                  {children}
+                                  {/* Mobile Bottom Dock Spacer */}
+                                  <div className="lg:hidden h-32" aria-hidden="true" />
+                                </div>
+                              </ProtectedRoute>
+                              <FloatingMusicPlayer />
+                            </WallpaperProvider>
                           </AmbienceProvider>
                           <ClientKeyboardShortcuts />
                           {/* VisualEditsMessenger is a dev-only tool — never run in production */}

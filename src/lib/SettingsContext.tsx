@@ -62,11 +62,11 @@ interface Settings {
     borderRadius: BorderRadius;
     surfaceTexture: SurfaceTexture;
     themeVibe: ThemeVibe;
-    // Cloud Sync Additions
     themeMode: "dark" | "light";
     soundMix: Record<string, number>;
     masterVolume: number;
     showZenSeconds: boolean;
+    autoDimWallpaper: boolean;
 }
 
 interface SettingsContextType extends Settings {
@@ -120,7 +120,8 @@ const defaultSettings: Settings = {
     themeMode: "dark",
     soundMix: {},
     masterVolume: 100,
-    showZenSeconds: true
+    showZenSeconds: true,
+    autoDimWallpaper: true
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

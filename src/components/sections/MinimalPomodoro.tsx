@@ -12,8 +12,9 @@ import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
 import { CompletionOverlay } from "@/components/ui/completion-overlay";
 import { FlipDigit } from "@/components/ui/flip-digit";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useWallpaper } from "@/lib/WallpaperContext";
 
-function ZenModeClock({ isDark }: { isDark: boolean }) {
+function ZenModeClock({ isDark, hasWallpaper }: { isDark: boolean, hasWallpaper: boolean }) {
     const [currentTime, setCurrentTime] = useState("");
 
     useEffect(() => {
@@ -26,7 +27,7 @@ function ZenModeClock({ isDark }: { isDark: boolean }) {
     }, []);
 
     return (
-        <div className={`absolute top-8 max-md:landscape:top-4 left-1/2 -translate-x-1/2 font-mono text-xs tracking-[0.2em] z-40 ${isDark ? "text-white/40" : "text-foreground/40"}`}>
+        <div className={`absolute top-8 max-md:landscape:top-4 left-1/2 -translate-x-1/2 font-mono text-xs tracking-[0.2em] z-40 ${hasWallpaper ? (isDark ? "text-white/80 text-shadow-contrast font-bold" : "text-black/80 text-shadow-light font-bold") : isDark ? "text-white/40" : "text-foreground/40"}`}>
             {currentTime}
         </div>
     );
@@ -44,6 +45,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
     const settings = useSettings();
     const { timerFont } = settings;
     const { sendTimerNotification } = useNotifications();
+    const { wallpaper: currentWallpaper } = useWallpaper();
 
     const [showCompletion, setShowCompletion] = useState(false);
     const [completionMode, setCompletionMode] = useState<TimerMode>("FOCUS");
@@ -396,7 +398,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                         {mode === "FOCUS" ? "Timer" : mode === "BREAK" ? "Break" : "Stopwatch"}
                     </div>
                     {(mode === "FOCUS" || mode === "STOPWATCH") && selectedSubject && (
-                        <div className={`text-xs font-bold tracking-widest uppercase opacity-40`}>
+                        <div className={`text-xs font-bold tracking-widest uppercase opacity-40 ${currentWallpaper ? (isDark ? "text-shadow-contrast opacity-80" : "text-shadow-light opacity-80 text-black") : ""}`}>
                             {selectedSubject}
                         </div>
                     )}
@@ -461,7 +463,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                                         className={`text-5xl max-md:landscape:text-3xl md:text-8xl ${fontClass} font-bold leading-none tabular-nums transition-colors ${((isFocusStarted && mode === "FOCUS") || mode === "STOPWATCH" || isPiP) ? "cursor-default" : "cursor-pointer"} ${isActive
                                             ? "text-transparent bg-clip-text bg-gradient-to-b from-[var(--color-button)] to-[var(--color-ring)]"
                                             : isDark ? "text-white hover:text-[var(--color-button)]" : "text-black hover:text-[var(--color-button)]"
-                                            }`}
+                                            } ${currentWallpaper ? (isDark ? "text-shadow-contrast" : "text-shadow-light") : ""}`}
                                     >
                                         {formatTimeDigit(item.val)}
                                     </motion.span>
@@ -480,7 +482,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                                     )}
                                 </div>
                             )}
-                            <span className={`text-[10px] md:text-xs font-bold tracking-[0.3em] mt-1 md:mt-2 opacity-40 ${isPiP ? "" : "max-md:landscape:hidden"}`}>
+                            <span className={`text-[10px] md:text-xs font-bold tracking-[0.3em] mt-1 md:mt-2 opacity-40 ${isPiP ? "" : "max-md:landscape:hidden"} ${currentWallpaper ? (isDark ? "text-shadow-contrast opacity-80 text-white" : "text-shadow-light opacity-80 text-black") : ""}`}>
                                 {item.unit === 'H' ? 'HRS' : item.unit === 'M' ? 'MIN' : 'SEC'}
                             </span>
                         </div>
@@ -578,15 +580,15 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
         <div className="grid grid-cols-1 max-md:landscape:grid-cols-2 items-center justify-center w-full max-w-2xl max-md:landscape:max-w-4xl mx-auto py-6 max-md:landscape:py-2 px-6 gap-6 max-md:landscape:gap-4 relative">
 
             {/* Mode Switcher */}
-            <div className={`flex gap-1 p-1 mb-6 max-md:landscape:mb-0 rounded-full border backdrop-blur-sm order-1 max-md:landscape:order-2 justify-self-center max-md:landscape:justify-self-start ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"}`}>
+            <div className={`flex gap-1 p-1 mb-6 max-md:landscape:mb-0 rounded-full border backdrop-blur-sm order-1 max-md:landscape:order-2 justify-self-center max-md:landscape:justify-self-start ${currentWallpaper ? (isDark ? "bg-black/40 border-white/20 shadow-lg" : "bg-white/40 border-black/10 shadow-lg") : isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"}`}>
                 {(["FOCUS", "BREAK", "STOPWATCH"] as TimerMode[]).map((m) => (
                     <button
                         key={m}
                         onClick={() => setMode(m)}
                         disabled={isActive && mode !== m}
                         className={`px-4 sm:px-6 py-2 max-md:landscape:px-2 max-md:landscape:py-1 rounded-full text-xs sm:text-sm max-md:landscape:text-[10px] font-medium transition-all duration-300 ${mode === m
-                            ? (isDark ? "bg-white/10 text-white shadow-lg" : "bg-white text-black shadow-md")
-                            : (isDark ? "text-white/40 hover:text-white/70" : "text-black/40 hover:text-black/70")
+                            ? (currentWallpaper ? (isDark ? "bg-white/90 text-black shadow-lg" : "bg-black/90 text-white shadow-lg") : isDark ? "bg-white/10 text-white shadow-lg" : "bg-white text-black shadow-md")
+                            : (currentWallpaper ? (isDark ? "text-white/80 hover:text-white text-shadow-contrast font-bold" : "text-black/80 hover:text-black text-shadow-light font-bold") : isDark ? "text-white/40 hover:text-white/70" : "text-black/40 hover:text-black/70")
                             }`}
                     >
                         {m === "FOCUS" ? "Timer" : m === "BREAK" ? "Break" : "Stopwatch"}
@@ -605,6 +607,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                         placeholder="Select Subject"
                         onAdd={addSubject}
                         onRemove={removeSubject}
+                        hasWallpaper={!!currentWallpaper}
                     />
                 </div>
             )}
@@ -615,9 +618,9 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                 {!pipWindow ? (
                     timerContent(false)
                 ) : (
-                    <div className={`flex flex-col items-center justify-center p-8 rounded-[3rem] border border-dashed w-full max-w-lg aspect-video ${isDark ? "border-white/10 bg-white/5" : "border-black/10 bg-black/5"}`}>
-                        <PictureInPicture2 size={48} className={`mb-4 ${isDark ? "text-white/20" : "text-black/20"}`} />
-                        <p className={`font-bold ${isDark ? "text-white/60" : "text-black/60"}`}>Playing in Picture-in-Picture</p>
+                    <div className={`flex flex-col items-center justify-center p-8 rounded-[3rem] border border-dashed w-full max-w-lg aspect-video ${currentWallpaper ? (isDark ? "border-white/30 bg-black/40 backdrop-blur-md" : "border-black/20 bg-white/40 backdrop-blur-md") : isDark ? "border-white/10 bg-white/5" : "border-black/10 bg-black/5"}`}>
+                        <PictureInPicture2 size={48} className={`mb-4 ${currentWallpaper ? (isDark ? "text-white/80" : "text-black/80") : isDark ? "text-white/20" : "text-black/20"}`} />
+                        <p className={`font-bold ${currentWallpaper ? (isDark ? "text-white text-shadow-contrast" : "text-black text-shadow-light") : isDark ? "text-white/60" : "text-black/60"}`}>Playing in Picture-in-Picture</p>
                         <button
                             onClick={() => pipWindow.close()}
                             className="mt-4 text-sm underline opacity-50 hover:opacity-100"
@@ -637,9 +640,11 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     {mode === "STOPWATCH" && timeLeft > 0 && (
                         <button
                             onClick={completeSession}
-                            className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isDark
-                                ? "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
-                                : "bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
+                            className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${currentWallpaper
+                                ? (isDark ? "bg-green-500/20 border-green-400 text-green-400 hover:bg-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "bg-green-500/20 border-green-600 text-green-600 hover:bg-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]")
+                                : isDark
+                                    ? "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
+                                    : "bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
                                 }`}
                             title="Finish Session"
                         >
@@ -667,9 +672,11 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
 
                     <button
                         onClick={resetTimer}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:rotate-180 duration-500 ${isDark
-                            ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                            : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
+                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:rotate-180 duration-500 ${currentWallpaper
+                            ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
+                            : isDark
+                                ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
+                                : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
                             }`}
                     >
                         <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -677,20 +684,25 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
 
                     <button
                         onClick={toggleFullScreen}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isDark
-                            ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                            : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
+                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${currentWallpaper
+                            ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
+                            : isDark
+                                ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
+                                : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
                             }`}
                         title="Zen Mode"
                     >
                         <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
 
+
                     <button
                         onClick={togglePiP}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isDark
-                            ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                            : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
+                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${currentWallpaper
+                            ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
+                            : isDark
+                                ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
+                                : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
                             }`}
                         title="Picture-in-Picture"
                     >
@@ -700,9 +712,11 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
                         <button
                             onClick={completeSession}
-                            className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isDark
-                                ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
-                                : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20"
+                            className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${currentWallpaper
+                                ? (isDark ? "bg-red-500/20 border-red-400 text-red-400 hover:bg-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]" : "bg-red-500/20 border-red-600 text-red-600 hover:bg-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]")
+                                : isDark
+                                    ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
+                                    : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20"
                                 }`}
                             title="Stop and Log Session"
                         >
@@ -724,7 +738,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className={`fixed inset-0 bg-background flex flex-col items-center justify-center overflow-hidden touch-none cursor-pointer select-none`}
+                    className={`fixed inset-0 ${currentWallpaper ? "bg-transparent" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none cursor-pointer select-none`}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
@@ -733,12 +747,14 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
 
                 >
                     {/* Themed Background Layer */}
-                    <div className="absolute inset-0 z-0 pointer-events-none opacity-50 overflow-hidden">
-                        <div className="absolute inset-0 bg-mesh opacity-40" />
-                        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-purple)] blur-[100px] opacity-20 animate-pulse" />
-                        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-green)] blur-[100px] opacity-20 animate-pulse" />
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-[var(--color-orb-pink)] blur-[120px] opacity-10" />
-                    </div>
+                    {!currentWallpaper && (
+                        <div className="absolute inset-0 z-0 pointer-events-none opacity-50 overflow-hidden">
+                            <div className="absolute inset-0 bg-mesh opacity-40" />
+                            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-purple)] blur-[100px] opacity-20 animate-pulse" />
+                            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-green)] blur-[100px] opacity-20 animate-pulse" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-[var(--color-orb-pink)] blur-[120px] opacity-10" />
+                        </div>
+                    )}
 
                     {/* Progress Bar */}
                     <div className="absolute top-0 left-0 w-full h-2 bg-white/5 z-10">
@@ -763,7 +779,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     </button>
 
                     {/* Real-Time Clock - Dedicated component to prevent frequent full-component re-renders */}
-                    <ZenModeClock isDark={isDark} />
+                    <ZenModeClock isDark={isDark} hasWallpaper={!!currentWallpaper} />
 
                     {/* Main Content Container with Scale */}
                     <div style={{ transform: `scale(${scale})` }} className="flex flex-col items-center">
@@ -771,10 +787,10 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                             {/* Hide Title in Fullscreen for minimalism */}
                             {!isFullScreen && (
                                 <>
-                                    <h2 className={`text-4xl md:text-6xl font-bold mb-4 tracking-tight ${isDark ? "text-white" : "text-foreground"}`}>
+                                    <h2 className={`text-4xl md:text-6xl font-bold mb-4 tracking-tight ${isDark ? "text-white" : "text-foreground"} ${currentWallpaper ? (isDark ? "text-shadow-contrast" : "text-shadow-light") : ""}`}>
                                         {selectedSubject || "Deep Work"}
                                     </h2>
-                                    <p className={`text-xl tracking-widest uppercase ${isDark ? "text-white/40" : "text-foreground/40"}`}>
+                                    <p className={`text-xl tracking-widest uppercase ${isDark ? "text-white/40" : "text-foreground/40"} ${currentWallpaper ? (isDark ? "text-shadow-contrast text-white/90" : "text-shadow-light text-black/90 font-bold") : ""}`}>
                                         {isActive ? "Stay Focused" : "Ready?"}
                                     </p>
                                 </>
@@ -797,45 +813,73 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     {/* Bottom Controls Container - Absolute Bottom Right for better accessibility */}
                     <div className="absolute bottom-8 right-8 max-md:landscape:bottom-4 max-md:landscape:right-4 z-50 flex flex-col gap-2">
                         {/* Size Controls - Hidden on mobile as gestures are preferred */}
-                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full backdrop-blur-md ${isDark ? "bg-white/5" : "bg-black/5"}`}>
+                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
+                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
+                            : isDark
+                                ? "bg-white/5 border-transparent"
+                                : "bg-black/5 border-transparent"
+                            }`}>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setScale(s => Math.max(0.5, s - 0.1));
                                 }}
-                                className={`px-2 font-mono text-xl ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                    }`}
                             >
                                 -
                             </button>
-                            <span className={`text-[10px] font-mono tracking-widest ${isDark ? "text-white/40" : "text-black/40"}`}>SIZE</span>
+                            <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
+                                ? (isDark ? "text-white/80" : "text-black/80")
+                                : isDark ? "text-white/40" : "text-black/40"
+                                }`}>SIZE</span>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setScale(s => Math.min(2, s + 0.1));
                                 }}
-                                className={`px-2 font-mono text-xl ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                    }`}
                             >
                                 +
                             </button>
                         </div>
                         {/* Brightness Controls - Hidden on mobile as gestures are preferred */}
-                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full backdrop-blur-md ${isDark ? "bg-white/5" : "bg-black/5"}`}>
+                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
+                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
+                            : isDark
+                                ? "bg-white/5 border-transparent"
+                                : "bg-black/5 border-transparent"
+                            }`}>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setBrightness(b => Math.max(0.3, b - 0.1));
                                 }}
-                                className={`px-2 font-mono text-xl ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                    }`}
                             >
                                 -
                             </button>
-                            <span className={`text-[10px] font-mono tracking-widest ${isDark ? "text-white/40" : "text-black/40"}`}>BRIGHTNESS</span>
+                            <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
+                                ? (isDark ? "text-white/80" : "text-black/80")
+                                : isDark ? "text-white/40" : "text-black/40"
+                                }`}>BRIGHTNESS</span>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setBrightness(b => Math.min(1.5, b + 0.1));
                                 }}
-                                className={`px-2 font-mono text-xl ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                    }`}
                             >
                                 +
                             </button>

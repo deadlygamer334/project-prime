@@ -9,18 +9,15 @@ let isSeeded = false;
 
 export async function GET() {
     try {
-        if (!isSeeded) {
-            await seedDatabase();
-            isSeeded = true;
-        }
+        await seedDatabase();
 
         const allQuotes = await db.select().from(quotes);
         const formattedQuotes = allQuotes.map(q => `${q.emoji || ''} ${q.text} — ${q.author}`);
 
         return NextResponse.json(formattedQuotes, {
             headers: {
-                // Edge cache: serve stale for up to 24hr while revalidating in background
-                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                // Serve stale for up to 1hr while revalidating, but allow background sync
+                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=3600',
             }
         });
     } catch (error) {

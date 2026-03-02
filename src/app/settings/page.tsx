@@ -11,7 +11,8 @@ import { useNotifications } from "@/hooks/useNotifications";
 import {
     Moon, Sun, Layout, Palette, ArrowLeft, Music, PartyPopper,
     Clock, Shield, Download, LogOut, Keyboard, Command,
-    Lock, ArrowRight, X, CheckCircle2, AlertCircle, Loader2, Bell
+    Lock, ArrowRight, X, CheckCircle2, AlertCircle, Loader2, Bell,
+    Sparkles, Image as ImageIcon, Trash2
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,12 +22,15 @@ import { collection, doc, deleteDoc, writeBatch, getDocs } from "firebase/firest
 import useSoundEffects from "@/hooks/useSoundEffects";
 import { useHabitContext } from "@/lib/HabitContext";
 import VibeGallery from "@/components/sections/VibeGallery";
+import { WallpaperManagerBtn } from "@/components/wallpaper/WallpaperManagerModal";
+import { useWallpaper } from "@/lib/WallpaperContext";
 
 export default function SettingsPage() {
     const { theme, toggleTheme } = useTheme();
     const { showToast, showConfirm } = useNotification();
     const isDark = theme === "dark";
     const settings = useSettings();
+    const { wallpaper, setWallpaper } = useWallpaper();
     const { playTick, playAlarm } = useSoundEffects();
     const router = useRouter();
     const { habits } = useHabitContext();
@@ -119,11 +123,47 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    {/* Vibe Gallery (Full Width) */}
                     <div className="mb-12">
                         <SectionHeading icon={Palette} title="Visual Theme" color="text-purple-400" />
                         <VibeGallery />
                     </div>
+
+                    {/* Immersive Background Section */}
+                    <section className="mb-12 p-8 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+                        {/* Background Decoration */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+
+                        <div className="relative z-10 flex-grow">
+                            <SectionHeading icon={ImageIcon} title="Immersive Background" color="text-emerald-400" />
+                            <p className="text-muted-foreground dark:text-neutral-400 max-w-xl">
+                                Transform your focus workspace with 4K cinematic loop videos and high-resolution stills.
+                                Custom wallpapers help reduce digital eye strain and maintain focus deep into your sessions.
+                            </p>
+
+                            <div className="mt-4 flex flex-wrap gap-4 items-center">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
+                                    <Sparkles size={12} /> Live Wallpapers
+                                </div>
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-[11px] font-bold uppercase tracking-wider">
+                                    <Clock size={12} /> Auto-Dimming Enabled
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="relative z-10 flex flex-col items-center gap-3 min-w-[200px]">
+                            <WallpaperManagerBtn className="w-full h-14 !rounded-2xl !bg-primary !text-primary-foreground !shadow-lg !shadow-primary/20 hover:!scale-[1.02] active:!scale-[0.98] transition-all !text-base !font-bold" />
+                            <p className="text-[10px] text-muted-foreground/60 font-medium">Browse 1000+ premium assets</p>
+
+                            {wallpaper && (
+                                <button
+                                    onClick={() => setWallpaper(null)}
+                                    className="mt-2 w-full h-10 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" /> Remove Wallpaper
+                                </button>
+                            )}
+                        </div>
+                    </section>
 
                     {/* Main Settings Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -141,6 +181,13 @@ export default function SettingsPage() {
                                         desc="Swap Timer and Todo columns"
                                         value={settings.dashboardLayout === "reversed"}
                                         onChange={(v) => settings.updateSetting("dashboardLayout", v ? "reversed" : "standard")}
+                                    />
+
+                                    <ToggleRow
+                                        label="Auto-Dim Background"
+                                        desc="Darken wallpaper during Focus sessions"
+                                        value={settings.autoDimWallpaper}
+                                        onChange={(v) => settings.updateSetting("autoDimWallpaper", v)}
                                     />
 
                                     {/* Typography */}

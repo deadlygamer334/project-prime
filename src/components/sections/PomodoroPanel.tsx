@@ -6,6 +6,8 @@ import { useFocusProgress } from "@/hooks/useFocusProgress";
 import { useSettings } from "@/lib/SettingsContext";
 import MinimalPomodoro from "./MinimalPomodoro";
 import QuoteBlock from "./QuoteBlock";
+import { VideoWallpaperController } from "@/components/wallpaper/VideoWallpaperController";
+import { ImageWallpaperRenderer } from "@/components/wallpaper/ImageWallpaperRenderer";
 
 import { TimerMode, Subject } from "@/hooks/useFocusTimer";
 
@@ -33,6 +35,10 @@ export default function PomodoroPanel() {
       {isDark && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-white/5 rounded-full blur-[100px] pointer-events-none" />
       )}
+
+      {/* Scoped Wallpapers */}
+      <VideoWallpaperController />
+      <ImageWallpaperRenderer />
 
       {settings.showQuotes && <QuoteBlock />}
       <MinimalPomodoro onComplete={handleComplete} addSessionTransaction={addSessionTransaction} />

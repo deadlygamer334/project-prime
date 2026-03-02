@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import { useSettings } from "@/lib/SettingsContext";
 
 /**
  * Navigation Component
@@ -15,8 +16,10 @@ import { Logo } from "@/components/ui/Logo";
  * - Glassmorphism effect as per high-level design
  */
 const Navigation = () => {
+  const { isZenMode } = useSettings();
+
   return (
-    <header className="sticky top-0 z-50 flex h-[64px] w-full items-center justify-between border-b border-[#2a2a2e] bg-[#0a0a0c]/80 px-6 backdrop-blur-md">
+    <header className={`sticky top-0 z-50 flex h-[64px] w-full items-center justify-between border-b border-[#2a2a2e] bg-[#0a0a0c]/80 px-6 backdrop-blur-md transition-all duration-500 overflow-hidden ${isZenMode ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
       {/* Left Section: Logo */}
       <div className="flex items-center gap-2">
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">

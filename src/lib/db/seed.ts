@@ -4,52 +4,60 @@ import fs from 'fs';
 import path from 'path';
 import { count } from 'drizzle-orm';
 
+let initialSetupDone = false;
+let isSeeding = false; // Prevent concurrent seeding
+
 export async function seedDatabase() {
+    if (isSeeding) return;
+
     try {
-        // Ensure tables exist
-        await (db as any).$client.execute(`
-      CREATE TABLE IF NOT EXISTS quotes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        text TEXT NOT NULL,
-        author TEXT,
-        emoji TEXT
-      )
-    `);
-        await (db as any).$client.execute(`
-      CREATE TABLE IF NOT EXISTS reels (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        url TEXT NOT NULL
-      )
-    `);
+        isSeeding = true;
 
-        // Clean up existing quotes (remove trailing periods as requested)
-        await (db as any).$client.execute(`
-      UPDATE quotes SET text = RTRIM(text, '.')
-    `);
+        // Ensure tables exist and run migrations ONLY ONCE per server instance
+        if (!initialSetupDone) {
+            await (db as any).$client.execute(`
+                CREATE TABLE IF NOT EXISTS quotes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    text TEXT NOT NULL,
+                    author TEXT,
+                    emoji TEXT
+                )
+            `);
+            await (db as any).$client.execute(`
+                CREATE TABLE IF NOT EXISTS reels (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    url TEXT NOT NULL
+                )
+            `);
 
-        // Check if quotes table is empty or needs sync
-        const quotesCount = await db.select({ value: count() }).from(quotes);
+            // Clean up existing quotes (remove trailing periods as requested)
+            await (db as any).$client.execute(`
+                UPDATE quotes SET text = RTRIM(text, '.')
+            `);
+            initialSetupDone = true;
+        }
+
         const quotesPath = path.join(process.cwd(), 'backend', 'data', 'quotes.json');
-
         if (fs.existsSync(quotesPath)) {
             const quotesData = JSON.parse(fs.readFileSync(quotesPath, 'utf8'));
 
-            // Re-seed if count is different (indicates update) or table is empty
-            if (quotesCount[0].value !== quotesData.length) {
-                console.log('Syncing quotes database with JSON file...');
+            // Check if quotes table count matches JSON count
+            const quotesCountResult = await db.select({ value: count() }).from(quotes);
+            const quotesCount = quotesCountResult[0].value;
+
+            // Re-seed if count is different (indicates update)
+            if (quotesCount !== quotesData.length) {
+                console.log(`Syncing quotes database: DB (${quotesCount}) vs JSON (${quotesData.length})...`);
+
                 // Clear existing quotes for a clean re-seed
                 await (db as any).$client.execute('DELETE FROM quotes');
 
                 const formattedQuotes = quotesData.map((q: string) => {
-                    // Parse "Quote — Author" format (our new emojis-free format)
                     const match = q.match(/^(.*)\s*—\s*(.*)$/);
                     if (match) {
-                        const content = match[1].trim();
-                        const author = match[2].trim();
-                        // No need for emojiMatch as we removed them, but handle gently
                         return {
-                            text: content.replace(/\.+$/, ''),
-                            author: author,
+                            text: match[1].trim().replace(/\.+$/, ''),
+                            author: match[2].trim(),
                             emoji: null
                         };
                     }
@@ -58,14 +66,14 @@ export async function seedDatabase() {
 
                 if (formattedQuotes.length > 0) {
                     await db.insert(quotes).values(formattedQuotes);
-                    console.log(`Seeded ${formattedQuotes.length} quotes`);
+                    console.log(`Successfully synced ${formattedQuotes.length} quotes`);
                 }
             }
         }
 
         // Check if reels table is empty
-        const reelsCount = await db.select({ value: count() }).from(reels);
-        if (reelsCount[0].value === 0) {
+        const reelsCountResult = await db.select({ value: count() }).from(reels);
+        if (reelsCountResult[0].value === 0) {
             const reelsPath = path.join(process.cwd(), 'backend', 'data', 'reels.json');
             if (fs.existsSync(reelsPath)) {
                 const reelsData = JSON.parse(fs.readFileSync(reelsPath, 'utf8'));
@@ -78,5 +86,7 @@ export async function seedDatabase() {
         }
     } catch (error) {
         console.error('Migration/Seeding failed:', error);
+    } finally {
+        isSeeding = false;
     }
 }
