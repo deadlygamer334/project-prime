@@ -4,7 +4,7 @@
             "id": "green-noise-river",
             "name": "Rolling River (Green Noise)",
             "icon": "🌊",
-            "audioSrc": "/sounds/Green Noise Rolling River - Gentle Nature.mp3",
+            "audioSrc": "/sounds/green-noise-river.mp3",
             "description": "Natural white-noise hybrid",
             "focusType": "grounding",
             "tooltip": "Consistent water flow with green noise frequencies"
@@ -15,7 +15,7 @@
             "id": "heavy-rain",
             "name": "Heavy Rain & Thunder",
             "icon": "🌧️",
-            "audioSrc": "/sounds/Strong Thunder And Heavy Rain - Edy Boman.mp3",
+            "audioSrc": "/sounds/heavy-rain.mp3",
             "description": "Steady downpour",
             "focusType": "masking",
             "tooltip": "Heavy rain and thunder for deep isolation"
@@ -24,7 +24,7 @@
             "id": "forest-birds",
             "name": "Forest Birds",
             "icon": "🐦",
-            "audioSrc": "/sounds/Forest Birds Calling and Singing - Path to the Wild.mp3",
+            "audioSrc": "/sounds/forest-birds.mp3",
             "description": "Wild birdsong",
             "focusType": "stimulating",
             "tooltip": "Natural bird calls for creative focus"
@@ -33,7 +33,7 @@
             "id": "campfire-crackle",
             "name": "Gentle Campfire",
             "icon": "🔥",
-            "audioSrc": "/sounds/Gentle Campfire Crackling Sounds, Pt.1 - Fire Creator.mp3",
+            "audioSrc": "/sounds/campfire-crackle.mp3",
             "description": "Wood crackling",
             "focusType": "grounding",
             "tooltip": "Cozy fire sounds for meditative focus"
@@ -42,7 +42,7 @@
             "id": "relaxing-water",
             "name": "Relaxing Water",
             "icon": "💧",
-            "audioSrc": "/sounds/Relaxing Water - Joyce Long, Reiki Raj.mp3",
+            "audioSrc": "/sounds/relaxing-water.mp3",
             "description": "Gentle flow",
             "focusType": "grounding",
             "tooltip": "Calm water movements for stress reduction"
@@ -51,7 +51,7 @@
             "id": "summer-night",
             "name": "Summer Night",
             "icon": "🦗",
-            "audioSrc": "/sounds/Summer Night - Mother Earth Sounds.mp3",
+            "audioSrc": "/sounds/summer-night.mp3",
             "description": "Crickets and night sounds",
             "focusType": "grounding",
             "tooltip": "Peaceful evening atmosphere"
@@ -60,7 +60,7 @@
             "id": "soft-wind",
             "name": "Siberian Wind",
             "icon": "🍃",
-            "audioSrc": "/sounds/Wind - Deep Siberian Wind Sounds - Nature Sounds.mp3",
+            "audioSrc": "/sounds/soft-wind.mp3",
             "description": "Deep cold wind",
             "focusType": "grounding",
             "tooltip": "Powerful air movement for focus"
@@ -71,7 +71,7 @@
             "id": "rainy-city",
             "name": "City Street (Rainy)",
             "icon": "🌆",
-            "audioSrc": "/sounds/City Street - Rainy Mood.mp3",
+            "audioSrc": "/sounds/rainy-city.mp3",
             "description": "Urban rain",
             "focusType": "masking",
             "tooltip": "City atmosphere mixed with rainfall"
@@ -80,7 +80,7 @@
             "id": "coffee-shop",
             "name": "Coffee Shop",
             "icon": "☕",
-            "audioSrc": "/sounds/Coffee Shop - Janik Dvorak.mp3",
+            "audioSrc": "/sounds/coffee-shop.mp3",
             "description": "Cafe ambience",
             "focusType": "stimulating",
             "tooltip": "Productive social background noise"
@@ -89,7 +89,7 @@
             "id": "distant-traffic",
             "name": "Distant Traffic",
             "icon": "🚗",
-            "audioSrc": "/sounds/Distant traffic - Wonderful Escape.mp3",
+            "audioSrc": "/sounds/distant-traffic.mp3",
             "description": "Muffled urban drone",
             "focusType": "masking",
             "tooltip": "Steady low-frequency urban masking"
@@ -98,7 +98,7 @@
             "id": "library-whisper",
             "name": "Library Whispers",
             "icon": "📖",
-            "audioSrc": "/sounds/Library Whispering - Sleep Sounds.mp3",
+            "audioSrc": "/sounds/library-whisper.mp3",
             "description": "Quiet study space",
             "focusType": "grounding",
             "tooltip": "Studious human presence"
@@ -109,7 +109,7 @@
             "id": "air-conditioner",
             "name": "Air Conditioner",
             "icon": "❄️",
-            "audioSrc": "/sounds/Air Conditioner - Sleep Sounds HD.mp3",
+            "audioSrc": "/sounds/air-conditioner.mp3",
             "description": "Steady cooling hum",
             "focusType": "masking",
             "tooltip": "Mechanical hum for consistent masking"
@@ -118,7 +118,7 @@
             "id": "airplane-cabin",
             "name": "Airplane Cabin",
             "icon": "✈️",
-            "audioSrc": "/sounds/Airplane Cabin Relaxing Noise for Studying (Loopable no fade) - Dream Supplier.mp3",
+            "audioSrc": "/sounds/airplane-cabin.mp3",
             "description": "Flight drone",
             "focusType": "masking",
             "tooltip": "Immersive drone for long-term concentration"
@@ -138,7 +138,7 @@
             "id": "alpha-binaural-10",
             "name": "10Hz Alpha Waves",
             "icon": "🎧",
-            "audioSrc": "/sounds/10 Hz Binaural Beats(Alpha Waves) - Miracle Healing Tones TP, Solfeggio Frequencies TP.mp3",
+            "audioSrc": "/sounds/alpha-binaural-10.mp3",
             "description": "Relaxed focus",
             "focusType": "grounding",
             "tooltip": "Synchronizes brainwaves for alert relaxation"
@@ -147,7 +147,7 @@
             "id": "gamma-waves-40",
             "name": "40Hz Gamma Waves",
             "icon": "🧠",
-            "audioSrc": "/sounds/40 Hz Gamma Waves - Miracle Tones.mp3",
+            "audioSrc": "/sounds/gamma-waves-40.mp3",
             "description": "High cognitive focus",
             "focusType": "stimulating",
             "tooltip": "Promotes information processing and memory"
@@ -156,7 +156,7 @@
             "id": "inner-peace-528",
             "name": "528Hz Inner Peace",
             "icon": "✨",
-            "audioSrc": "/sounds/528 Hz Inner Peace - Solfeggio Healing Frequencies.mp3",
+            "audioSrc": "/sounds/inner-peace-528.mp3",
             "description": "Emotional balance",
             "focusType": "grounding",
             "tooltip": "Solfeggio frequency for transformation and miracles"
@@ -165,7 +165,7 @@
             "id": "frequency-639",
             "name": "639Hz Solfeggio",
             "icon": "💫",
-            "audioSrc": "/sounds/639 Hz Solfeggio Frequency - Miracle Tones.mp3",
+            "audioSrc": "/sounds/frequency-639.mp3",
             "description": "Connecting/Harmonizing",
             "focusType": "stimulating",
             "tooltip": "Fosters relationships and communication"
@@ -174,7 +174,7 @@
             "id": "alpha-waves-8-14",
             "name": "8-14Hz Alpha Range",
             "icon": "🌊",
-            "audioSrc": "/sounds/Alpha Waves 8 - 14 Hz - RELAX88.mp3",
+            "audioSrc": "/sounds/alpha-waves-8-14.mp3",
             "description": "Flow state",
             "focusType": "grounding",
             "tooltip": "Broad alpha range for calm creativity"
@@ -183,7 +183,7 @@
             "id": "healing-528-mt",
             "name": "528Hz Healing MT",
             "icon": "🧘",
-            "audioSrc": "/sounds/Solfeggio Frequencies 528 Hz - Miracle Tones, Solfeggio Healing Frequencies MT.mp3",
+            "audioSrc": "/sounds/healing-528-mt.mp3",
             "description": "DNA repair/Love",
             "focusType": "grounding",
             "tooltip": "Optimized healing frequency tones"
@@ -192,7 +192,7 @@
             "id": "awakening-741-mt",
             "name": "741Hz Awakening",
             "icon": "🕯️",
-            "audioSrc": "/sounds/Solfeggio Frequencies 741 Hz - Miracle Tones, Solfeggio Healing Frequencies MT.mp3",
+            "audioSrc": "/sounds/awakening-741-mt.mp3",
             "description": "Intuition/Cleaning",
             "focusType": "stimulating",
             "tooltip": "Cleansing the cell from toxins"
