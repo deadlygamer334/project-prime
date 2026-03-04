@@ -449,4 +449,4 @@
       --animate-duration: 0.01ms;
     }
   }
-}
+}@layer base { html.zen-mode .main-content-wrapper { padding-left: 0 !important; } html.zen-mode .mobile-bottom-dock-spacer { display: none !important; } html.zen-mode footer { display: none !important; } }

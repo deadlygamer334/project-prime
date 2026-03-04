@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription, DrawerClose } from "@/components/ui/drawer";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
+import { useSettings } from "@/lib/SettingsContext";
 
 interface AppHeaderProps {
   title: string;
@@ -22,6 +23,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { theme, toggleTheme } = useTheme();
+  const { isZenMode } = useSettings();
   const pathname = usePathname();
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -58,7 +60,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
 
   return (
     <>
-      <header className="transition-all duration-300 fixed top-0 w-full z-[1000] px-4 md:px-6 pt-4 max-md:landscape:pt-2">
+      <header className={`transition-all duration-500 fixed top-0 w-full z-[1000] px-4 md:px-6 pt-4 max-md:landscape:pt-2 ${isZenMode ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
         <div
           className={`mx-auto max-w-[1400px] flex relative items-center justify-between w-full h-[64px] max-md:landscape:h-[44px] px-4 md:px-6 max-md:landscape:pl-28 rounded-2xl border backdrop-blur-[24px] transition-all duration-500 shadow-2xl ${isDark
             ? "bg-[rgba(20,20,20,0.6)] border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
@@ -225,7 +227,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         </div>
 
         {/* Floating Bottom Dock (Visible only on Mobile/Tablet) */}
-        <div className="md:hidden fixed bottom-6 left-0 right-0 landscape:bottom-auto landscape:top-1/2 landscape:-translate-y-1/2 landscape:left-4 landscape:right-auto landscape:w-auto z-[1001] px-4 landscape:px-0 pointer-events-none">
+        <div className={`md:hidden fixed bottom-6 left-0 right-0 landscape:bottom-auto landscape:top-1/2 landscape:-translate-y-1/2 landscape:left-4 landscape:right-auto landscape:w-auto z-[1001] px-4 landscape:px-0 pointer-events-none transition-all duration-500 ${isZenMode ? "translate-y-20 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
           <div className="flex justify-center max-w-md mx-auto pointer-events-auto">
             <nav
               className={`flex items-center max-md:landscape:flex-col gap-1 p-2 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-500 ${isDark
@@ -320,7 +322,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         </div>
       </header>
       {/* Spacer to compensate for fixed header */}
-      <div className="h-[80px] max-md:landscape:h-[52px] w-full" />
+      <div className={`transition-all duration-500 w-full ${isZenMode ? "h-0" : "h-[80px] max-md:landscape:h-[52px]"}`} />
     </>
   );
 }

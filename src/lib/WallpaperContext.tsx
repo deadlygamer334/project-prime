@@ -6,46 +6,72 @@ import { get, set } from "idb-keyval";
 export type WallpaperType = "image" | "video";
 
 export interface WallpaperFilters {
-    brightness?: number; // e.g., 0.5 - 1.5
-    contrast?: number;
-    saturation?: number;
-    hueRotate?: number; // 0-360
-    rgbTint?: string; // e.g., rgba(0,0,0,0.5)
-    vignette?: number;
-    blur?: number;
+    blur: number;
+    brightness: number;
+    contrast: number;
+    grayscale: number;
+    hueRotate: number;
+    invert: number;
+    saturation: number;
+    sepia: number;
+    rgbTint?: string;
 }
 
 export interface WallpaperCrop {
-    scale: number;
     x: number;
     y: number;
+    scale: number;
     rotate?: number;
 }
 
 export interface WallpaperState {
     id: string;
     type: WallpaperType;
-    src: string; // URL
-    poster?: string; // For videos
-    thumbnail?: string; // Small preview
-    filters: WallpaperFilters;
-    crop: WallpaperCrop;
-    applyTo: Array<"zen" | "timer">;
-    focusVariant?: { filters?: WallpaperFilters };
-    breakVariant?: { filters?: WallpaperFilters };
+    src: string;
+    preview?: string;
+    poster?: string;
+    thumbnail?: string;
+
+    // Dual Preview Architecture
+    timerFilters: WallpaperFilters;
+    timerCrop: WallpaperCrop;
+    zenFilters: WallpaperFilters;
+    zenCrop: WallpaperCrop;
+
+    // Legacy support (to be migrated on load)
+    filters?: WallpaperFilters;
+    crop?: WallpaperCrop;
 }
 
 interface WallpaperContextType {
     wallpaper: WallpaperState | null;
     setWallpaper: (ws: WallpaperState | null) => void;
-    updateWallpaperFilters: (filters: Partial<WallpaperFilters>) => void;
-    updateWallpaperCrop: (crop: Partial<WallpaperCrop>) => void;
+    updateWallpaperFilters: (mode: "timer" | "zen", filters: Partial<WallpaperFilters>) => void;
+    updateWallpaperCrop: (mode: "timer" | "zen", crop: Partial<WallpaperCrop>) => void;
     isLoaded: boolean;
 }
 
 const WallpaperContext = createContext<WallpaperContextType | undefined>(undefined);
 
-const IDB_KEY = "prime_wallpaper_state";
+const IDB_KEY = "prime_wallpaper_state_v5_dual"; // Force refresh for dual preview schema
+
+const DEFAULT_FILTERS: WallpaperFilters = {
+    blur: 0,
+    brightness: 1,
+    contrast: 1,
+    grayscale: 0,
+    hueRotate: 0,
+    invert: 0,
+    saturation: 1,
+    sepia: 0,
+};
+
+const DEFAULT_CROP: WallpaperCrop = {
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotate: 0
+};
 
 export function WallpaperProvider({ children }: { children: React.ReactNode }) {
     const [wallpaper, setWallpaperState] = useState<WallpaperState | null>(null);
@@ -63,55 +89,65 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
         });
     }, []);
 
-    const setWallpaper = useCallback((ws: WallpaperState | null) => {
+    const setWallpaper = useCallback((ws: Partial<WallpaperState> | null) => {
         setWallpaperState(prev => {
-            // Avoid redundant sets
-            if (JSON.stringify(prev) === JSON.stringify(ws)) return prev;
-
-            if (ws) {
-                set(IDB_KEY, ws).catch(err => console.error("Failed to save wallpaper to IDB:", err));
-            } else {
+            if (!ws) {
                 set(IDB_KEY, null).catch(err => console.error("Failed to clear wallpaper from IDB:", err));
+                return null;
             }
-            return ws;
+
+            // Migration & Default Population for Dual Preview
+            const legacyFilters = ws.filters || { ...DEFAULT_FILTERS };
+            const legacyCrop = ws.crop || { ...DEFAULT_CROP };
+
+            const fullState: WallpaperState = {
+                id: ws.id as string,
+                type: ws.type as WallpaperType,
+                src: ws.src as string,
+                preview: ws.preview,
+                poster: ws.poster,
+                thumbnail: ws.thumbnail,
+                timerFilters: ws.timerFilters || { ...legacyFilters },
+                timerCrop: ws.timerCrop || { ...legacyCrop },
+                zenFilters: ws.zenFilters || { ...legacyFilters },
+                zenCrop: ws.zenCrop || { ...legacyCrop },
+            };
+
+            if (JSON.stringify(prev) === JSON.stringify(fullState)) return prev;
+
+            set(IDB_KEY, fullState).catch(err => console.error("Failed to save wallpaper to IDB:", err));
+            return fullState;
         });
     }, []);
 
-    const updateWallpaperFilters = useCallback((filters: Partial<WallpaperFilters>) => {
+    const updateWallpaperFilters = useCallback((mode: "timer" | "zen", filtersUpdates: Partial<WallpaperFilters>) => {
         setWallpaperState(prev => {
             if (!prev) return prev;
-            // Guard against redundant identity changes if filters are same
-            const newFilters = { ...prev.filters, ...filters };
-            if (JSON.stringify(prev.filters) === JSON.stringify(newFilters)) return prev;
-
-            const updated = { ...prev, filters: newFilters };
-            set(IDB_KEY, updated).catch(console.error);
-            return updated;
+            const targetKey = mode === "zen" ? "zenFilters" : "timerFilters";
+            const next = { ...prev, [targetKey]: { ...prev[targetKey], ...filtersUpdates } };
+            set(IDB_KEY, next).catch(console.error);
+            return next;
         });
     }, []);
 
-    const updateWallpaperCrop = useCallback((crop: Partial<WallpaperCrop>) => {
+    const updateWallpaperCrop = useCallback((mode: "timer" | "zen", cropUpdates: Partial<WallpaperCrop>) => {
         setWallpaperState(prev => {
             if (!prev) return prev;
-            const newCrop = { ...prev.crop, ...crop };
-            if (JSON.stringify(prev.crop) === JSON.stringify(newCrop)) return prev;
-
-            const updated = { ...prev, crop: newCrop };
-            set(IDB_KEY, updated).catch(console.error);
-            return updated;
+            const targetKey = mode === "zen" ? "zenCrop" : "timerCrop";
+            const next = { ...prev, [targetKey]: { ...prev[targetKey], ...cropUpdates } };
+            set(IDB_KEY, next).catch(console.error);
+            return next;
         });
     }, []);
-
-    const value = React.useMemo(() => ({
-        wallpaper,
-        setWallpaper,
-        updateWallpaperFilters,
-        updateWallpaperCrop,
-        isLoaded
-    }), [wallpaper, setWallpaper, updateWallpaperFilters, updateWallpaperCrop, isLoaded]);
 
     return (
-        <WallpaperContext.Provider value={value}>
+        <WallpaperContext.Provider value={{
+            wallpaper,
+            setWallpaper,
+            updateWallpaperFilters,
+            updateWallpaperCrop,
+            isLoaded
+        }}>
             {children}
         </WallpaperContext.Provider>
     );
@@ -119,8 +155,8 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
 
 export function useWallpaper() {
     const context = useContext(WallpaperContext);
-    if (!context) {
-        throw new Error("useWallpaper must be used within WallpaperProvider");
+    if (context === undefined) {
+        throw new Error("useWallpaper must be used within a WallpaperProvider");
     }
     return context;
 }

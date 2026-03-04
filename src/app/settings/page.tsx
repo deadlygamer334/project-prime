@@ -151,7 +151,9 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="relative z-10 flex flex-col items-center gap-3 min-w-[200px]">
-                            <WallpaperManagerBtn className="w-full h-14 !rounded-2xl !bg-primary !text-primary-foreground !shadow-lg !shadow-primary/20 hover:!scale-[1.02] active:!scale-[0.98] transition-all !text-base !font-bold" />
+                            <WallpaperManagerBtn className="w-full h-14 !rounded-2xl !bg-primary !text-primary-foreground !shadow-lg !shadow-primary/20 hover:!scale-[1.02] active:!scale-[0.98] transition-all !text-base !font-bold">
+                                Change Wallpaper
+                            </WallpaperManagerBtn>
                             <p className="text-[10px] text-muted-foreground/60 font-medium">Browse 1000+ premium assets</p>
 
                             {wallpaper && (

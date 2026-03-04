@@ -1,0 +1,29 @@
+{
+    "cloudName": "dmyibw1iq",
+    "images": [
+        {
+            "id": "ocean_breeze",
+            "category": "nature",
+            "path": "wallpapers/images/source/ocean.jpg"
+        },
+        {
+            "id": "mountain_peak",
+            "category": "nature",
+            "path": "wallpapers/images/source/mountain.jpg"
+        }
+    ],
+    "videos": [
+        {
+            "id": "lofi_rain",
+            "category": "calm",
+            "path": "wallpapers/videos/source/rain.mp4",
+            "duration": 10
+        },
+        {
+            "id": "starry_night",
+            "category": "space",
+            "path": "wallpapers/videos/source/stars.mp4",
+            "duration": 15
+        }
+    ]
+}

@@ -533,9 +533,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 setIsZenMode
             }}
         >
+            <ZenModeClassHandler />
             {children}
         </SettingsContext.Provider>
     );
+}
+
+// Effect to toggle global class for Zen Mode styling
+export function ZenModeClassHandler() {
+    const { isZenMode } = useSettings();
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        if (isZenMode) {
+            document.documentElement.classList.add("zen-mode");
+        } else {
+            document.documentElement.classList.remove("zen-mode");
+        }
+    }, [isZenMode]);
+
+    return null;
 }
 
 export function useSettings() {

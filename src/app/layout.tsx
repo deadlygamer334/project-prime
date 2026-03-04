@@ -144,10 +144,10 @@ export default function RootLayout({
                               <DynamicBackground />
                               <PomodoroLayoutWrapper />
                               <ProtectedRoute>
-                                <div className="max-md:landscape:pl-28 transition-all duration-500">
+                                <div className="main-content-wrapper max-md:landscape:pl-28 transition-all duration-500">
                                   {children}
                                   {/* Mobile Bottom Dock Spacer */}
-                                  <div className="lg:hidden h-32" aria-hidden="true" />
+                                  <div className="mobile-bottom-dock-spacer lg:hidden h-32" aria-hidden="true" />
                                 </div>
                               </ProtectedRoute>
                               <FloatingMusicPlayer />
