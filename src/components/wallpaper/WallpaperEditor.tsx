@@ -215,47 +215,18 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
 
     // -- Dynamic Aspect Ratio Logic --
     useEffect(() => {
-        const portal = document.getElementById("pomodoro-panel-portal-target");
-
         const updateTargetAspect = () => {
             if (editorMode === "zen") {
-                // Zen mode matches your browser/screen exactly
-                setTargetAspect(window.innerWidth / window.innerHeight);
+                // Zen mode is always horizontal (fullscreen landscape)
+                setTargetAspect(Math.max(window.innerWidth, window.innerHeight) / Math.min(window.innerWidth, window.innerHeight));
             } else {
-                // Dashboard mode: 
-                // 1. Try to measure portal if we're on the dashboard
-                const p = document.getElementById("pomodoro-panel-portal-target");
-                if (p) {
-                    const rect = p.getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        setTargetAspect(rect.width / rect.height);
-                        return;
-                    }
-                }
-
-                // 2. Try exact measurement from real dashboard saved in previous session
-                const savedAspect = localStorage.getItem('dashboard-aspect');
-                if (savedAspect) {
-                    setTargetAspect(parseFloat(savedAspect));
-                    return;
-                }
-
-                // 3. Fallback: Use orientation-based defaults if we have zero data
-                setTargetAspect(window.innerWidth > 768 ? 1.5 : 0.75);
+                // Dashboard mode is always vertical (mobile portrait approximation)
+                setTargetAspect(Math.min(window.innerWidth, window.innerHeight) / Math.max(window.innerWidth, window.innerHeight));
             }
         };
-
-        const resizeObserver = new ResizeObserver(() => updateTargetAspect());
-        if (portal && editorMode === "timer") {
-            resizeObserver.observe(portal);
-        }
-
         updateTargetAspect();
         window.addEventListener("resize", updateTargetAspect);
-        return () => {
-            window.removeEventListener("resize", updateTargetAspect);
-            resizeObserver.disconnect();
-        };
+        return () => window.removeEventListener("resize", updateTargetAspect);
     }, [editorMode]);
 
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -319,7 +290,7 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                 >
                     {/* 1. Media Layer: Rendered first so it sits behind the overlay's mask */}
                     <div
-                        className="pointer-events-none absolute z-10 overflow-visible"
+                        className="pointer-events-none absolute z-10 flex items-center justify-center overflow-visible"
                         style={{
                             width: renderedDimensions.width,
                             height: renderedDimensions.height,
@@ -334,11 +305,15 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                                 loop
                                 muted
                                 playsInline
+                                onLoadedMetadata={(e) => {
+                                    const video = e.target as HTMLVideoElement;
+                                    setMediaAspect(video.videoWidth / video.videoHeight);
+                                }}
                                 className="max-w-none max-h-none will-change-transform absolute"
                                 style={{
-                                    // Base sizing: Robust CSS-based cover fit
-                                    width: "auto",
-                                    height: "auto",
+                                    // Base sizing: Ensure the image "covers" the viewfinder at scale 1
+                                    width: mediaAspect > targetAspect ? "auto" : "100%",
+                                    height: mediaAspect > targetAspect ? "100%" : "auto",
                                     minWidth: "100%",
                                     minHeight: "100%",
 
@@ -346,7 +321,6 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                                     top: `calc(50% + ${localCrop.y}%)`,
                                     filter: `brightness(${(localFilters.brightness ?? 1) * 100}%) contrast(${(localFilters.contrast ?? 1) * 100}%) saturate(${(localFilters.saturation ?? 1) * 100}%) hue-rotate(${localFilters.hueRotate ?? 0}deg) ${(localFilters.blur ?? 0) > 0 ? `blur(${localFilters.blur}px)` : ''}`,
                                     transform: `translate(-50%, -50%) scale(${localCrop.scale}) rotate(${localCrop.rotate ?? 0}deg)`,
-                                    transformOrigin: "center center",
                                     transition: "filter 0.15s ease-out"
                                 }}
                             />
@@ -355,11 +329,15 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                                 ref={mediaRef as any}
                                 src={initialWallpaper.preview || initialWallpaper.src}
                                 alt="Wallpaper Preview"
+                                onLoad={(e) => {
+                                    const img = e.target as HTMLImageElement;
+                                    setMediaAspect(img.naturalWidth / img.naturalHeight);
+                                }}
                                 className="max-w-none max-h-none will-change-transform absolute"
                                 style={{
-                                    // Base sizing: Robust CSS-based cover fit
-                                    width: "auto",
-                                    height: "auto",
+                                    // Base sizing: Ensure the image "covers" the viewfinder at scale 1
+                                    width: mediaAspect > targetAspect ? "auto" : "100%",
+                                    height: mediaAspect > targetAspect ? "100%" : "auto",
                                     minWidth: "100%",
                                     minHeight: "100%",
 
@@ -367,7 +345,6 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                                     top: `calc(50% + ${localCrop.y}%)`,
                                     filter: `brightness(${(localFilters.brightness ?? 1) * 100}%) contrast(${(localFilters.contrast ?? 1) * 100}%) saturate(${(localFilters.saturation ?? 1) * 100}%) hue-rotate(${localFilters.hueRotate ?? 0}deg) ${(localFilters.blur ?? 0) > 0 ? `blur(${localFilters.blur}px)` : ''}`,
                                     transform: `translate(-50%, -50%) scale(${localCrop.scale}) rotate(${localCrop.rotate ?? 0}deg)`,
-                                    transformOrigin: "center center",
                                     transition: "filter 0.15s ease-out"
                                 }}
                             />

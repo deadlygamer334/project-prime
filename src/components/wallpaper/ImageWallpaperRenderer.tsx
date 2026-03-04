@@ -19,16 +19,12 @@ export function ImageWallpaperRenderer() {
         const observer = new ResizeObserver((entries) => {
             const entry = entries[0];
             if (entry && entry.contentRect.height > 0) {
-                const aspect = entry.contentRect.width / entry.contentRect.height;
-                setTargetAspect(aspect);
-                if (!isZenMode) {
-                    localStorage.setItem('dashboard-aspect', aspect.toString());
-                }
+                setTargetAspect(entry.contentRect.width / entry.contentRect.height);
             }
         });
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isZenMode]);
+    }, []);
 
     if (!isLoaded || !wallpaper || wallpaper.type !== "image") return null;
 
@@ -64,11 +60,17 @@ export function ImageWallpaperRenderer() {
             <img
                 src={src}
                 alt=""
+                onLoad={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    if (img.naturalHeight > 0) {
+                        setMediaAspect(img.naturalWidth / img.naturalHeight);
+                    }
+                }}
                 style={{
                     position: "absolute",
-                    // 1:1 Alignment with Editor: Robust CSS-based cover fit
-                    width: "auto",
-                    height: "auto",
+                    // 1:1 Alignment with Editor: Use natural aspect sizing to prevent percentage desync
+                    width: mediaAspect > targetAspect ? "auto" : "100%",
+                    height: mediaAspect > targetAspect ? "100%" : "auto",
                     minWidth: "100%",
                     minHeight: "100%",
                     left: `calc(50% + ${crop.x}%)`,

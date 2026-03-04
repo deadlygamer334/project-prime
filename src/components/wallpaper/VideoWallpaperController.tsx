@@ -24,16 +24,12 @@ export function VideoWallpaperController() {
         const observer = new ResizeObserver((entries) => {
             const entry = entries[0];
             if (entry && entry.contentRect.height > 0) {
-                const aspect = entry.contentRect.width / entry.contentRect.height;
-                setTargetAspect(aspect);
-                if (!isZenMode) {
-                    localStorage.setItem('dashboard-aspect', aspect.toString());
-                }
+                setTargetAspect(entry.contentRect.width / entry.contentRect.height);
             }
         });
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isZenMode]);
+    }, []);
 
     useEffect(() => {
         if (!isLoaded) return;
@@ -120,37 +116,60 @@ export function VideoWallpaperController() {
             style={{
                 position: isZenMode ? "fixed" : "absolute",
                 inset: 0,
-                zIndex: isZenMode ? 999998 : 0,
+                zIndex: isZenMode ? 999998 : 0, // Restore high z-index
                 overflow: "hidden",
                 pointerEvents: "none",
                 borderRadius: isZenMode ? "0" : "1.5rem",
             }}
         >
-            <video
-                ref={videoRef}
-                src={activeSrc || ""}
-                poster={wallpaper.poster}
-                loop
-                muted
-                playsInline
-                style={{
-                    position: "absolute",
-                    // 1:1 Alignment with Editor: Robust CSS-based cover fit
-                    width: "auto",
-                    height: "auto",
-                    minWidth: "100%",
-                    minHeight: "100%",
-                    left: `calc(50% + ${crop.x}%)`,
-                    top: `calc(50% + ${crop.y}%)`,
-                    willChange: "filter, transform",
-                    filter: filterString,
-                    transform: `translate(-50%, -50%) scale(${crop.scale}) rotate(${crop.rotate ?? 0}deg)`,
-                    transition: "filter 2s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-                    transformOrigin: "center center",
-                    opacity: status === "PLAYING" ? 1 : 0,
-                    transitionProperty: "opacity, filter, transform",
-                }}
-            />
+            <div style={{
+                position: "absolute",
+                // 1:1 Alignment with Editor: Use natural aspect sizing
+                width: mediaAspect > targetAspect ? "auto" : "100%",
+                height: mediaAspect > targetAspect ? "100%" : "auto",
+                minWidth: "100%",
+                minHeight: "100%",
+                left: `calc(50% + ${crop.x}%)`,
+                top: `calc(50% + ${crop.y}%)`,
+                willChange: "filter, transform",
+                filter: filterString,
+                transform: `translate(-50%, -50%) scale(${crop.scale}) rotate(${crop.rotate ?? 0}deg)`,
+                transition: "filter 2s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+                transformOrigin: "center center"
+            }}>
+                {/* Fallback Poster (Always behind video, visible if video is loading or paused/unloaded) */}
+                {wallpaper.poster && (
+                    <div style={{
+                        position: "absolute",
+                        inset: 0,
+                        backgroundImage: `url(${wallpaper.poster})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        opacity: (status === "PLAYING" && !reducedMotion) ? 0 : 1, // Fade out when video plays smoothly
+                        transition: "opacity 0.8s ease"
+                    }} />
+                )}
+                <video
+                    ref={videoRef}
+                    loop
+                    muted
+                    playsInline
+                    poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    onLoadedMetadata={(e) => {
+                        const video = e.target as HTMLVideoElement;
+                        if (video.videoHeight > 0) {
+                            setMediaAspect(video.videoWidth / video.videoHeight);
+                        }
+                    }}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        opacity: status === "PLAYING" ? 1 : 0,
+                        transition: "opacity 0.5s ease"
+                    }}
+                />
+            </div>
 
             {filters.rgbTint && (
                 <div style={{
@@ -158,8 +177,7 @@ export function VideoWallpaperController() {
                     inset: 0,
                     backgroundColor: filters.rgbTint,
                     pointerEvents: "none",
-                    transition: "background-color 0.8s ease",
-                    zIndex: 1
+                    transition: "background-color 0.8s ease"
                 }} />
             )}
         </div>
