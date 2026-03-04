@@ -21,6 +21,7 @@ import QueryProvider from "@/components/QueryProvider";
 import OfflineStatus from "@/components/OfflineStatus";
 import { GoalProvider } from "@/lib/GoalContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import PomodoroLayoutWrapper from "@/components/PomodoroLayoutWrapper";
 import { WallpaperProvider } from "@/lib/WallpaperContext";
@@ -159,6 +160,8 @@ export default function RootLayout({
                           <OfflineStatus />
                           {/* Speed Insights: production only — no-op in dev */}
                           {process.env.NODE_ENV === 'production' && <SpeedInsights />}
+                          {/* Analytics: production only — no-op in dev */}
+                          {process.env.NODE_ENV === 'production' && <Analytics />}
                         </GoalProvider>
                       </HabitProvider>
                     </KeyboardShortcutsProvider>
