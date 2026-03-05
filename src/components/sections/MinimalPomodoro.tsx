@@ -15,6 +15,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useWallpaper } from "@/lib/WallpaperContext";
 
 function ZenModeClock({ isDark, hasWallpaper }: { isDark: boolean, hasWallpaper: boolean }) {
+    const { showZenClock } = useSettings();
     const [currentTime, setCurrentTime] = useState("");
 
     useEffect(() => {
@@ -26,8 +27,13 @@ function ZenModeClock({ isDark, hasWallpaper }: { isDark: boolean, hasWallpaper:
         return () => clearInterval(interval);
     }, []);
 
+    if (!showZenClock) return null;
+
     return (
-        <div className={`absolute top-8 max-md:landscape:top-4 left-1/2 -translate-x-1/2 font-mono text-xs tracking-[0.2em] z-40 ${hasWallpaper ? (isDark ? "text-white/80 text-shadow-contrast font-bold" : "text-black/80 text-shadow-light font-bold") : isDark ? "text-white/40" : "text-foreground/40"}`}>
+        <div className={`absolute top-8 max-md:landscape:top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full border backdrop-blur-md shadow-lg font-mono text-xs tracking-[0.2em] z-40 transition-all ${hasWallpaper
+            ? (isDark ? "bg-black/40 border-white/20 text-white/80 text-shadow-contrast font-bold" : "bg-white/40 border-black/10 text-black/80 text-shadow-light font-bold")
+            : (isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-foreground/40")
+            }`}>
             {currentTime}
         </div>
     );
@@ -106,12 +112,47 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
     }, []);
 
 
-    // Fullscreen Toggle Logic (Windowed Zen Mode only)
+    // Fullscreen Toggle Logic (Windows Zen Mode + Native Browser Fullscreen)
     const toggleFullScreen = () => {
         const next = !isFullScreen;
         setIsFullScreen(next);
         setIsZenMode(next);
+
+        if (next) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            }
+        }
+        // Native exit is now decoupled. Browser stays in fullscreen when overlay is dismissed.
     };
+
+    // Handle Esc or native browser fullscreen exit to keep state in sync
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const isNativeFullScreen = !!document.fullscreenElement;
+            if (!isNativeFullScreen && isFullScreen) {
+                setIsFullScreen(false);
+                setIsZenMode(false);
+            }
+        };
+
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, [isFullScreen, setIsZenMode]);
+
+    // Sync Zen Brightness with Backgrounds
+    useEffect(() => {
+        if (isFullScreen && mounted) {
+            document.documentElement.style.setProperty("--zen-brightness", brightness.toString());
+        } else {
+            document.documentElement.style.removeProperty("--zen-brightness");
+        }
+        return () => {
+            document.documentElement.style.removeProperty("--zen-brightness");
+        };
+    }, [brightness, isFullScreen, mounted]);
 
     // PiP Toggle Logic
     const togglePiP = useCallback(async () => {
@@ -733,160 +774,198 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
             )}
 
             {/* Full Screen Zen Mode Portal */}
-            {mounted && isFullScreen && createPortal(
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className={`fixed inset-0 ${currentWallpaper ? "bg-transparent" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none cursor-pointer select-none`}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                    onDoubleClick={handleStart}
-                    style={{ height: '100dvh', width: '100vw', zIndex: 999999, position: 'fixed', top: 0, left: 0, filter: `brightness(${brightness})`, pointerEvents: 'auto' }}
-
-                >
-                    {/* Themed Background Layer */}
-                    {!currentWallpaper && (
-                        <div className="absolute inset-0 z-0 pointer-events-none opacity-50 overflow-hidden">
-                            <div className="absolute inset-0 bg-mesh opacity-40" />
-                            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-purple)] blur-[100px] opacity-20 animate-pulse" />
-                            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-green)] blur-[100px] opacity-20 animate-pulse" />
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-[var(--color-orb-pink)] blur-[120px] opacity-10" />
-                        </div>
-                    )}
-
-                    {/* Progress Bar */}
-                    <div className="absolute top-0 left-0 w-full h-2 bg-white/5 z-10">
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {isFullScreen && (
                         <motion.div
-                            className="h-full bg-[var(--color-button)] shadow-[0_0_20px_var(--color-button)]"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 1, ease: "linear" }}
-                        />
-                    </div>
-
-                    <CompletionOverlay show={showCompletion} duration={lastSessionDuration} mode={completionMode} />
-
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFullScreen();
-                        }}
-                        className="absolute top-8 right-8 max-md:landscape:top-4 max-md:landscape:right-4 p-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-50 hover:rotate-90"
-                    >
-                        <Minimize2 size={20} />
-                    </button>
-
-                    {/* Real-Time Clock - Dedicated component to prevent frequent full-component re-renders */}
-                    <ZenModeClock isDark={isDark} hasWallpaper={!!currentWallpaper} />
-
-                    {/* Main Content Container with Scale */}
-                    <div style={{ transform: `scale(${scale})` }} className="flex flex-col items-center">
-                        <div className="mb-12 max-md:landscape:mb-4 text-center">
-                            {/* Hide Title in Fullscreen for minimalism */}
-                            {!isFullScreen && (
-                                <>
-                                    <h2 className={`text-4xl md:text-6xl font-bold mb-4 tracking-tight ${isDark ? "text-white" : "text-foreground"} ${currentWallpaper ? (isDark ? "text-shadow-contrast" : "text-shadow-light") : ""}`}>
-                                        {selectedSubject || "Deep Work"}
-                                    </h2>
-                                    <p className={`text-xl tracking-widest uppercase ${isDark ? "text-white/40" : "text-foreground/40"} ${currentWallpaper ? (isDark ? "text-shadow-contrast text-white/90" : "text-shadow-light text-black/90 font-bold") : ""}`}>
-                                        {isActive ? "Stay Focused" : "Ready?"}
-                                    </p>
-                                </>
+                            initial={{ opacity: 0, scale: 1.05 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{
+                                duration: 0.4,
+                                ease: [0.23, 1, 0.32, 1] // Apple-style premium easing
+                            }}
+                            className={`fixed inset-0 ${currentWallpaper ? "bg-transparent" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none cursor-pointer select-none`}
+                            onTouchStart={handleTouchStart}
+                            onTouchMove={handleTouchMove}
+                            onTouchEnd={handleTouchEnd}
+                            onDoubleClick={handleStart}
+                            style={{
+                                height: '100dvh',
+                                width: '100vw',
+                                zIndex: 999999,
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                filter: `brightness(${brightness})`,
+                                pointerEvents: 'auto',
+                                willChange: 'transform, opacity'
+                            }}
+                        >
+                            {/* Themed Background Layer */}
+                            {!currentWallpaper && (
+                                <div className="absolute inset-0 z-0 pointer-events-none opacity-50 overflow-hidden">
+                                    <div className="absolute inset-0 bg-mesh opacity-40" />
+                                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-purple)] blur-[100px] opacity-20 animate-pulse" />
+                                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-green)] blur-[100px] opacity-20 animate-pulse" />
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-[var(--color-orb-pink)] blur-[120px] opacity-10" />
+                                </div>
                             )}
-                        </div>
 
-                        <div className="flex items-center gap-4 mb-16 max-md:landscape:mb-8">
-                            <FlipDigit value={hours} label="Hours" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
-                            <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
-                            <FlipDigit value={minutes} label="Minutes" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
-                            {settings.showZenSeconds && (
-                                <>
+                            {/* Progress Bar */}
+                            <div className="absolute top-0 left-0 w-full h-2 bg-white/5 z-10">
+                                <motion.div
+                                    className="h-full bg-[var(--color-button)] shadow-[0_0_20px_var(--color-button)]"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${progress}%` }}
+                                    transition={{ duration: 1, ease: "linear" }}
+                                />
+                            </div>
+
+                            <CompletionOverlay show={showCompletion} duration={lastSessionDuration} mode={completionMode} />
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFullScreen();
+                                }}
+                                className="absolute top-8 right-8 max-md:landscape:top-4 max-md:landscape:right-4 p-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-50 hover:rotate-90"
+                            >
+                                <Minimize2 size={20} />
+                            </button>
+
+                            {/* Real-Time Clock - Dedicated component to prevent frequent full-component re-renders */}
+                            <ZenModeClock isDark={isDark} hasWallpaper={!!currentWallpaper} />
+
+                            {/* Main Content Container with Scale */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.4 }}
+                                style={{ transform: `scale(${scale})`, willChange: 'transform, opacity' }}
+                                className="flex flex-col items-center"
+                            >
+                                <div className="mb-12 max-md:landscape:mb-4 text-center">
+                                    {/* Hide Title in Fullscreen for minimalism */}
+                                    {!isFullScreen && (
+                                        <>
+                                            <h2 className={`text-4xl md:text-6xl font-bold mb-4 tracking-tight ${isDark ? "text-white" : "text-foreground"} ${currentWallpaper ? (isDark ? "text-shadow-contrast" : "text-shadow-light") : ""}`}>
+                                                {selectedSubject || "Deep Work"}
+                                            </h2>
+                                            <p className={`text-xl tracking-widest uppercase ${isDark ? "text-white/40" : "text-foreground/40"} ${currentWallpaper ? (isDark ? "text-shadow-contrast text-white/90" : "text-shadow-light text-black/90 font-bold") : ""}`}>
+                                                {isActive ? "Stay Focused" : "Ready?"}
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className={`relative flex items-center gap-4 mb-16 max-md:landscape:mb-8 p-8 md:p-12 rounded-[4rem] border backdrop-blur-3xl shadow-2xl transition-all ${isDark
+                                    ? "bg-black/20 border-white/5 shadow-white/5"
+                                    : "bg-white/40 border-black/5 shadow-black/5"
+                                    }`}>
+                                    <FlipDigit value={hours} label="Hours" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
                                     <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
-                                    <FlipDigit value={seconds} label="Seconds" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
-                                </>
-                            )}
-                        </div>
-                    </div>
+                                    <FlipDigit value={minutes} label="Minutes" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
+                                    {settings.showZenSeconds && (
+                                        <>
+                                            <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
+                                            <FlipDigit value={seconds} label="Seconds" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
+                                        </>
+                                    )}
+                                </div>
+                            </motion.div>
 
-                    {/* Bottom Controls Container - Absolute Bottom Right for better accessibility */}
-                    <div className="absolute bottom-8 right-8 max-md:landscape:bottom-4 max-md:landscape:right-4 z-50 flex flex-col gap-2">
-                        {/* Size Controls - Hidden on mobile as gestures are preferred */}
-                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
-                            : isDark
-                                ? "bg-white/5 border-transparent"
-                                : "bg-black/5 border-transparent"
-                            }`}>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setScale(s => Math.max(0.5, s - 0.1));
-                                }}
-                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                            {/* Bottom Controls Container - Absolute Bottom Right for better accessibility */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.4 }}
+                                style={{ willChange: 'opacity' }}
+                                className={`absolute z-50 flex flex-col gap-2 ${settings.zenControlsAlignment === "top-left" ? "top-8 left-8 max-md:landscape:top-4 max-md:landscape:left-4" :
+                                    settings.zenControlsAlignment === "top-right" ? "top-20 right-8 max-md:landscape:top-16 max-md:landscape:right-4" :
+                                        settings.zenControlsAlignment === "bottom-left" ? "bottom-8 left-8 max-md:landscape:bottom-4 max-md:landscape:left-4" :
+                                            "bottom-8 right-8 max-md:landscape:bottom-4 max-md:landscape:right-4"
                                     }`}
                             >
-                                -
-                            </button>
-                            <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
-                                ? (isDark ? "text-white/80" : "text-black/80")
-                                : isDark ? "text-white/40" : "text-black/40"
-                                }`}>SIZE</span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setScale(s => Math.min(2, s + 0.1));
-                                }}
-                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
-                                    }`}
-                            >
-                                +
-                            </button>
-                        </div>
-                        {/* Brightness Controls - Hidden on mobile as gestures are preferred */}
-                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
-                            : isDark
-                                ? "bg-white/5 border-transparent"
-                                : "bg-black/5 border-transparent"
-                            }`}>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setBrightness(b => Math.max(0.3, b - 0.1));
-                                }}
-                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
-                                    }`}
-                            >
-                                -
-                            </button>
-                            <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
-                                ? (isDark ? "text-white/80" : "text-black/80")
-                                : isDark ? "text-white/40" : "text-black/40"
-                                }`}>BRIGHTNESS</span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setBrightness(b => Math.min(1.5, b + 0.1));
-                                }}
-                                className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                    ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                    : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
-                                    }`}
-                            >
-                                +
-                            </button>
-                        </div>
+                                {/* Size Controls - Hidden on mobile as gestures are preferred */}
+                                <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
+                                    ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
+                                    : isDark
+                                        ? "bg-white/5 border-transparent"
+                                        : "bg-black/5 border-transparent"
+                                    }`}>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setScale(s => Math.max(0.5, s - 0.1));
+                                        }}
+                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                            }`}
+                                    >
+                                        -
+                                    </button>
+                                    <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
+                                        ? (isDark ? "text-white/80" : "text-black/80")
+                                        : isDark ? "text-white/40" : "text-black/40"
+                                        }`}>SIZE</span>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setScale(s => Math.min(2, s + 0.1));
+                                        }}
+                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                            }`}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                                {/* Brightness Controls - Hidden on mobile as gestures are preferred */}
+                                <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
+                                    ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
+                                    : isDark
+                                        ? "bg-white/5 border-transparent"
+                                        : "bg-black/5 border-transparent"
+                                    }`}>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setBrightness(b => Math.max(0.3, b - 0.1));
+                                        }}
+                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                            }`}
+                                    >
+                                        -
+                                    </button>
+                                    <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
+                                        ? (isDark ? "text-white/80" : "text-black/80")
+                                        : isDark ? "text-white/40" : "text-black/40"
+                                        }`}>BRIGHTNESS</span>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setBrightness(b => Math.min(1.5, b + 0.1));
+                                        }}
+                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
+                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
+                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
+                                            }`}
+                                    >
+                                        +
+                                    </button>
+                                </div>
 
-                    </div>
-                </motion.div>,
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
                 document.body
             )}
         </div>

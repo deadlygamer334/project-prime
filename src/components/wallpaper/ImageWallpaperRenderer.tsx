@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useWallpaper } from "@/lib/WallpaperContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { useFocusTimer } from "@/hooks/useFocusTimer";
@@ -41,20 +42,23 @@ export function ImageWallpaperRenderer() {
 
     let filterString = `brightness(${baseBrightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg) ${blur > 0 ? `blur(${blur}px)` : ''}`;
 
+    // Sync with Zen Mode Brightness Control
+    filterString += ` brightness(var(--zen-brightness, 1))`;
+
     if (isFocusActive && autoDimWallpaper) {
         filterString += ' brightness(60%)'; // Stack brightness reduction for dimming
     }
 
-    return (
+    const content = (
         <div
             ref={containerRef}
             style={{
                 position: isZenMode ? "fixed" : "absolute",
                 inset: 0,
-                zIndex: isZenMode ? 999998 : 0, // Restore high z-index to act as a curtain over dashboard in Zen Mode
+                zIndex: isZenMode ? 999998 : 0,
                 overflow: "hidden",
                 pointerEvents: "none",
-                borderRadius: isZenMode ? "0" : "1.5rem", // Match PomodoroPanel rounding
+                borderRadius: isZenMode ? "0" : "1.5rem",
             }}
         >
             <img
@@ -68,7 +72,6 @@ export function ImageWallpaperRenderer() {
                 }}
                 style={{
                     position: "absolute",
-                    // 1:1 Alignment with Editor: Use natural aspect sizing to prevent percentage desync
                     width: mediaAspect > targetAspect ? "auto" : "100%",
                     height: mediaAspect > targetAspect ? "100%" : "auto",
                     minWidth: "100%",
@@ -94,4 +97,10 @@ export function ImageWallpaperRenderer() {
             )}
         </div>
     );
+
+    if (isZenMode && typeof document !== 'undefined') {
+        return createPortal(content, document.body);
+    }
+
+    return content;
 }

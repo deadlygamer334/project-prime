@@ -449,4 +449,16 @@
       --animate-duration: 0.01ms;
     }
   }
-}@layer base { html.zen-mode .main-content-wrapper { padding-left: 0 !important; } html.zen-mode .mobile-bottom-dock-spacer { display: none !important; } html.zen-mode footer { display: none !important; } }
+}
+
+/* Immersion Fix: Completely hide all page content and global overlays when Zen Mode is active */
+.zen-mode .main-content-wrapper,
+.zen-mode .mobile-bottom-dock-spacer,
+.zen-mode footer,
+.zen-mode #floating-music-player {
+  display: none !important;
+}
+
+.zen-mode {
+  overflow: hidden !important;
+}

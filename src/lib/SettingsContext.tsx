@@ -14,6 +14,7 @@ export type TickSound = "mechanical" | "digital" | "none";
 export type AlarmSound = "bell" | "chime" | "digital";
 export type ThemeVibe = "midnight" | "oceanic" | "evergreen" | "solar" | "rose" | "minimal";
 export type ClockStyle = "minimal" | "standard" | "bold" | "neon" | "elegant" | "outline" | "pill" | "glitch" | "vertical";
+export type ZenControlsAlignment = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 // New Aesthetic Types
 export type LineHeight = "compact" | "comfort" | "loose";
@@ -67,6 +68,8 @@ interface Settings {
     masterVolume: number;
     showZenSeconds: boolean;
     autoDimWallpaper: boolean;
+    zenControlsAlignment: ZenControlsAlignment;
+    showZenClock: boolean;
 }
 
 interface SettingsContextType extends Settings {
@@ -121,7 +124,9 @@ const defaultSettings: Settings = {
     soundMix: {},
     masterVolume: 100,
     showZenSeconds: true,
-    autoDimWallpaper: true
+    autoDimWallpaper: true,
+    zenControlsAlignment: "bottom-right",
+    showZenClock: true
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

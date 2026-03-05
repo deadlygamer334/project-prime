@@ -401,6 +401,12 @@ export default function SettingsPage() {
                                         onChange={(v) => settings.updateSetting("showZenSeconds", v)}
                                     />
                                     <ToggleRow
+                                        label="Show Zen Mode Clock"
+                                        desc="Display a small clock in Zen Mode"
+                                        value={settings.showZenClock}
+                                        onChange={(v) => settings.updateSetting("showZenClock", v)}
+                                    />
+                                    <ToggleRow
                                         label="24-Hour Clock"
                                         desc="Use military time format"
                                         value={settings.clockFormat === "24h"}
@@ -418,6 +424,30 @@ export default function SettingsPage() {
                                         value={settings.showQuotes}
                                         onChange={(v) => settings.updateSetting("showQuotes", v)}
                                     />
+
+                                    <div className="pt-4 border-t border-border mt-4">
+                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Zen Controls Alignment</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                { id: "top-left", label: "Top Left" },
+                                                { id: "top-right", label: "Top Right" },
+                                                { id: "bottom-left", label: "Bottom Left" },
+                                                { id: "bottom-right", label: "Bottom Right" },
+                                            ].map((pos) => (
+                                                <button
+                                                    key={pos.id}
+                                                    // @ts-ignore
+                                                    onClick={() => settings.updateSetting("zenControlsAlignment", pos.id)}
+                                                    className={`px-3 py-2 text-xs rounded-xl border transition-all ${settings.zenControlsAlignment === pos.id
+                                                        ? "bg-primary/20 border-primary/50 text-foreground"
+                                                        : "border-transparent bg-muted/50 hover:bg-muted text-muted-foreground"
+                                                        }`}
+                                                >
+                                                    {pos.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
 

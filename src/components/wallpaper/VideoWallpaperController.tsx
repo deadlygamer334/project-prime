@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useWallpaper } from "@/lib/WallpaperContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { useFocusTimer } from "@/hooks/useFocusTimer";
@@ -106,17 +107,20 @@ export function VideoWallpaperController() {
 
     let filterString = `brightness(${baseBrightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg) ${blur > 0 ? `blur(${blur}px)` : ''}`;
 
+    // Sync with Zen Mode Brightness Control
+    filterString += ` brightness(var(--zen-brightness, 1))`;
+
     if (isFocusActive && autoDimWallpaper) {
         filterString += ' brightness(60%)';
     }
 
-    return (
+    const content = (
         <div
             ref={containerRef}
             style={{
                 position: isZenMode ? "fixed" : "absolute",
                 inset: 0,
-                zIndex: isZenMode ? 999998 : 0, // Restore high z-index
+                zIndex: isZenMode ? 999998 : 0,
                 overflow: "hidden",
                 pointerEvents: "none",
                 borderRadius: isZenMode ? "0" : "1.5rem",
@@ -124,7 +128,6 @@ export function VideoWallpaperController() {
         >
             <div style={{
                 position: "absolute",
-                // 1:1 Alignment with Editor: Use natural aspect sizing
                 width: mediaAspect > targetAspect ? "auto" : "100%",
                 height: mediaAspect > targetAspect ? "100%" : "auto",
                 minWidth: "100%",
@@ -137,7 +140,6 @@ export function VideoWallpaperController() {
                 transition: "filter 2s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
                 transformOrigin: "center center"
             }}>
-                {/* Fallback Poster (Always behind video, visible if video is loading or paused/unloaded) */}
                 {wallpaper.poster && (
                     <div style={{
                         position: "absolute",
@@ -145,7 +147,7 @@ export function VideoWallpaperController() {
                         backgroundImage: `url(${wallpaper.poster})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        opacity: (status === "PLAYING" && !reducedMotion) ? 0 : 1, // Fade out when video plays smoothly
+                        opacity: (status === "PLAYING" && !reducedMotion) ? 0 : 1,
                         transition: "opacity 0.8s ease"
                     }} />
                 )}
@@ -182,4 +184,10 @@ export function VideoWallpaperController() {
             )}
         </div>
     );
+
+    if (isZenMode && typeof document !== 'undefined') {
+        return createPortal(content, document.body);
+    }
+
+    return content;
 }
