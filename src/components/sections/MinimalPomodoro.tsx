@@ -56,9 +56,11 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
     const [showCompletion, setShowCompletion] = useState(false);
     const [completionMode, setCompletionMode] = useState<TimerMode>("FOCUS");
     const [lastSessionDuration, setLastSessionDuration] = useState(0);
+    const [isCompletingSession, setIsCompletingSession] = useState(false);
+    const [isStarting, setIsStarting] = useState(false);
     const { playTick, playAlarm } = useSoundEffects();
 
-    const handleTimerCompleteWrapper = useCallback((m: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => {
+    const handleTimerCompleteWrapper = useCallback(async (m: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => {
         playAlarm();
         setLastSessionDuration(duration);
         setCompletionMode(m);
@@ -78,10 +80,42 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
     const {
         mode, setMode,
         timeLeft, isActive, isFocusStarted, isBreakStarted, progress,
-        toggleTimer, resetTimer, completeSession,
+        toggleTimer, resetTimer, completeSession: internalCompleteSession,
         selectedSubject, setSelectedSubject,
         setTimeLeft, setBaseline, adjustTime
-    } = useFocusTimer({ onComplete: handleTimerCompleteWrapper, addSessionTransaction });
+    } = useFocusTimer({
+        onComplete: handleTimerCompleteWrapper,
+        addSessionTransaction,
+        isCompleting: isCompletingSession
+    });
+
+    const completeSession = useCallback(async () => {
+        if (isCompletingSession) return;
+        setIsCompletingSession(true);
+        try {
+            await internalCompleteSession();
+        } finally {
+            setIsCompletingSession(false);
+        }
+    }, [internalCompleteSession, isCompletingSession]);
+
+    const handleStart = useCallback(async () => {
+        if (isStarting || isCompletingSession) return;
+
+        // Subject validation
+        if ((mode === "FOCUS" || mode === "STOPWATCH") && !isActive && !selectedSubject) {
+            showToast("Please select a subject first", "warning");
+            return;
+        }
+
+        setIsStarting(true);
+        try {
+            await toggleTimer();
+        } finally {
+            // Short delay to allow cloud state to stabilize
+            setTimeout(() => setIsStarting(false), 800);
+        }
+    }, [toggleTimer, isStarting, isCompletingSession, mode, isActive, selectedSubject, showToast]);
 
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [scale, setScale] = useState(0.8);
@@ -113,7 +147,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
 
 
     // Fullscreen Toggle Logic (Windows Zen Mode + Native Browser Fullscreen)
-    const toggleFullScreen = () => {
+    const toggleFullScreen = useCallback(() => {
         const next = !isFullScreen;
         setIsFullScreen(next);
         setIsZenMode(next);
@@ -126,7 +160,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
             }
         }
         // Native exit is now decoupled. Browser stays in fullscreen when overlay is dismissed.
-    };
+    }, [isFullScreen, setIsZenMode]);
 
     // Handle Esc or native browser fullscreen exit to keep state in sync
     useEffect(() => {
@@ -141,6 +175,27 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
         document.addEventListener("fullscreenchange", handleFullscreenChange);
         return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, [isFullScreen, setIsZenMode]);
+
+    // Auto-exit Zen Mode/PiP only when a RUNNING timer is stopped/cleared externally
+    const wasActiveRef = useRef(isActive);
+    useEffect(() => {
+        // If it was active and now it's not, and we are in Zen mode, exit.
+        // This handles completion/cancellation but allows opening Zen Mode while paused.
+        if (wasActiveRef.current && !isActive && isFullScreen) {
+            setIsFullScreen(false);
+            setIsZenMode(false);
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
+        }
+
+        if (wasActiveRef.current && !isActive && pipWindow) {
+            pipWindow.close();
+            setPipWindow(null);
+        }
+
+        wasActiveRef.current = isActive;
+    }, [isActive, isFullScreen, setIsZenMode, pipWindow]);
 
     // Sync Zen Brightness with Backgrounds
     useEffect(() => {
@@ -264,7 +319,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
             // Spacebar to toggle timer
             if (e.key === " ") {
                 e.preventDefault();
-                toggleTimer();
+                handleStart();
             }
             // F key for Zen Mode
             if (e.key.toLowerCase() === "f") {
@@ -292,7 +347,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                 pipWindow.removeEventListener("keydown", handleKeyDown);
             }
         };
-    }, [isFullScreen, editingUnit, toggleTimer, togglePiP, pipWindow]);
+    }, [isFullScreen, editingUnit, handleStart, toggleFullScreen, togglePiP, pipWindow]);
 
     // Sound Effects (Tick only)
     useEffect(() => {
@@ -402,14 +457,6 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
     const handleTouchEnd = () => {
         touchStartY.current = null;
         initialPinchDist.current = null;
-    };
-
-    const handleStart = async () => {
-        if ((mode === "FOCUS" || mode === "STOPWATCH") && !selectedSubject) {
-            showToast("Please select a subject first", "warning");
-            return;
-        }
-        toggleTimer();
     };
 
     const formatTimeDigit = (val: number) => val.toString().padStart(2, "0");
@@ -574,27 +621,37 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
                         <button
                             onClick={completeSession}
-                            className={`flex items-center justify-center w-10 h-10 rounded-full border transition-all hover:scale-105 duration-300 ${isDark
+                            disabled={isCompletingSession}
+                            className={`flex items-center justify-center w-10 h-10 rounded-full border transition-all hover:scale-105 duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${isDark
                                 ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
                                 : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20"
                                 }`}
                             title="Stop and Log Session"
                         >
-                            <Square size={16} fill="currentColor" />
+                            {isCompletingSession ? (
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Square size={16} fill="currentColor" />
+                            )}
                         </button>
                     )}
 
                     {mode === "STOPWATCH" && timeLeft > 0 && (
                         <button
                             onClick={completeSession}
-                            className={`group flex items-center justify-center w-10 h-10 rounded-full border transition-all hover:scale-105 duration-300 ${isDark
+                            disabled={isCompletingSession}
+                            className={`group flex items-center justify-center w-10 h-10 rounded-full border transition-all hover:scale-105 duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${isDark
                                 ? "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
                                 : "bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
                                 }`}
                         >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                            {isCompletingSession ? (
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            )}
                         </button>
                     )}
                 </div>
@@ -681,7 +738,8 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     {mode === "STOPWATCH" && timeLeft > 0 && (
                         <button
                             onClick={completeSession}
-                            className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${currentWallpaper
+                            disabled={isCompletingSession}
+                            className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
                                 ? (isDark ? "bg-green-500/20 border-green-400 text-green-400 hover:bg-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "bg-green-500/20 border-green-600 text-green-600 hover:bg-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]")
                                 : isDark
                                     ? "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
@@ -689,15 +747,20 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                                 }`}
                             title="Finish Session"
                         >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-6 sm:h-6">
-                                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                            {isCompletingSession ? (
+                                <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-6 sm:h-6">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            )}
                         </button>
                     )}
 
                     <button
                         onClick={handleStart}
-                        className={`group relative flex items-center justify-center w-16 h-16 max-md:landscape:w-12 max-md:landscape:h-12 sm:w-20 sm:h-20 rounded-full border transition-all ${isActive
+                        disabled={isCompletingSession || isStarting}
+                        className={`group relative flex items-center justify-center w-16 h-16 max-md:landscape:w-12 max-md:landscape:h-12 sm:w-20 sm:h-20 rounded-full border transition-all ${isCompletingSession || isStarting ? "opacity-50 cursor-not-allowed" : ""} ${isActive
                             ? "bg-[var(--color-button)]/10 border-[var(--color-button)] text-[var(--color-button)] hover:scale-105"
                             : "hover:scale-105 hover:brightness-110 shadow-xl"
                             }`}
@@ -713,7 +776,8 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
 
                     <button
                         onClick={resetTimer}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:rotate-180 duration-500 ${currentWallpaper
+                        disabled={isCompletingSession}
+                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:rotate-180 duration-500 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
                             ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
                             : isDark
                                 ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
@@ -725,7 +789,8 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
 
                     <button
                         onClick={toggleFullScreen}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${currentWallpaper
+                        disabled={isCompletingSession}
+                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
                             ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
                             : isDark
                                 ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
@@ -739,7 +804,8 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
 
                     <button
                         onClick={togglePiP}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${currentWallpaper
+                        disabled={isCompletingSession}
+                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
                             ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
                             : isDark
                                 ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
@@ -753,7 +819,8 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                     {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
                         <button
                             onClick={completeSession}
-                            className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${currentWallpaper
+                            disabled={isCompletingSession}
+                            className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
                                 ? (isDark ? "bg-red-500/20 border-red-400 text-red-400 hover:bg-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]" : "bg-red-500/20 border-red-600 text-red-600 hover:bg-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]")
                                 : isDark
                                     ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
@@ -761,7 +828,11 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                                 }`}
                             title="Stop and Log Session"
                         >
-                            <Square className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" />
+                            {isCompletingSession ? (
+                                <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Square className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" />
+                            )}
                         </button>
                     )}
                 </div>
@@ -785,7 +856,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                                 duration: 0.4,
                                 ease: [0.23, 1, 0.32, 1] // Apple-style premium easing
                             }}
-                            className={`fixed inset-0 ${currentWallpaper ? "bg-transparent" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none cursor-pointer select-none`}
+                            className={`fixed inset-0 ${currentWallpaper ? "bg-transparent backdrop-blur-none" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none cursor-pointer select-none`}
                             onTouchStart={handleTouchStart}
                             onTouchMove={handleTouchMove}
                             onTouchEnd={handleTouchEnd}
@@ -798,8 +869,8 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                                 top: 0,
                                 left: 0,
                                 filter: `brightness(${brightness})`,
+                                transition: "background-color 0.8s ease, backdrop-filter 0.8s ease",
                                 pointerEvents: 'auto',
-                                willChange: 'transform, opacity'
                             }}
                         >
                             {/* Themed Background Layer */}

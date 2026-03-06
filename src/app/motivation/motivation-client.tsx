@@ -6,8 +6,8 @@ import Footer from "@/components/sections/Footer";
 import dynamic from "next/dynamic";
 import { useTheme } from "@/lib/ThemeContext";
 
-const MotivationGrid = dynamic(() => import("@/components/sections/MotivationGrid"), {
-  loading: () => <div className="min-h-[50vh] flex items-center justify-center">Loading Grid...</div>
+const MotivationReelsGrid = dynamic(() => import("@/components/sections/MotivationReelsGrid"), {
+  loading: () => <div className="min-h-[50vh] flex items-center justify-center text-muted-foreground animate-pulse">Loading Reels...</div>
 });
 
 export default function MotivationPage() {
@@ -19,7 +19,7 @@ export default function MotivationPage() {
       <AppHeader title="Motivation Hub" activePath="/motivation" />
       <main className="flex-grow">
         <MotivationHero />
-        <MotivationGrid />
+        <MotivationReelsGrid />
       </main>
       <Footer />
     </div>

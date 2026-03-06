@@ -25,7 +25,7 @@ export function ImageWallpaperRenderer() {
         });
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, []);
+    }, [isZenMode]);
 
     if (!isLoaded || !wallpaper || wallpaper.type !== "image") return null;
 
@@ -82,7 +82,8 @@ export function ImageWallpaperRenderer() {
                     filter: filterString,
                     transform: `translate(-50%, -50%) scale(${crop.scale}) rotate(${crop.rotate ?? 0}deg)`,
                     transition: "filter 2s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-                    transformOrigin: "center center"
+                    transformOrigin: "center center",
+                    objectFit: "cover",
                 }}
             />
 

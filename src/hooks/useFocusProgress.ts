@@ -226,6 +226,11 @@ export const useFocusProgress = () => {
     const deleteSession = useCallback(async (session: FocusSession) => {
         if (!user) return;
 
+        // Date-based guard: Only decrement weeklyFocusMinutes if the session is from the current week
+        const currentWeekStart = getWeekStartUTC();
+        const sessionDate = new Date(session.timestamp);
+        const isCurrentWeek = sessionDate.getTime() >= currentWeekStart.getTime();
+
         // Optimistic Update
         setRecentSessions(prev => prev.filter(s => s.id !== session.id));
         setHistorySessions(prev => prev.filter(s => s.id !== session.id));
@@ -240,19 +245,24 @@ export const useFocusProgress = () => {
 
             if (session.type === "focus") {
                 const userRef = doc(db, "users", user.uid);
-                // Use increment with negative value to decrement
-                batch.set(userRef, {
-                    stats: { totalFocusMinutes: increment(-session.duration) },
-                    weeklyFocusMinutes: increment(-session.duration)
-                }, { merge: true });
+
+                const updates: any = {
+                    "stats.totalFocusMinutes": increment(-session.duration)
+                };
+
+                // Only decrement weekly score if it's the current week
+                if (isCurrentWeek) {
+                    updates.weeklyFocusMinutes = increment(-session.duration);
+                }
+
+                batch.set(userRef, updates, { merge: true });
             }
 
             await batch.commit();
         } catch (e) {
             console.error("Error deleting session:", e);
-            // Revert on error? For now, we'll keep it simple as Firestore is usually reliable.
         }
-    }, [user]);
+    }, [user, db]);
 
     const clearSessions = useCallback(async () => {
         if (!user) return;
@@ -338,9 +348,7 @@ export const useFocusProgress = () => {
         };
         if (subject) newSession.subject = subject;
 
-        // Perform Writes via transaction
-        transaction.set(sessionRef, newSession);
-
+        // Perform Reads first
         if (type === "focus") {
             const userSnap = await transaction.get(userRef);
             if (userSnap.exists()) {
@@ -362,7 +370,6 @@ export const useFocusProgress = () => {
                 }
             } else {
                 const currentWeekStart = getWeekStartUTC();
-
                 transaction.set(userRef, {
                     stats: { totalFocusMinutes: increment(duration) },
                     weekStartDate: currentWeekStart.toISOString(),
@@ -370,6 +377,9 @@ export const useFocusProgress = () => {
                 }, { merge: true });
             }
         }
+
+        // Perform Writes after all reads
+        transaction.set(sessionRef, newSession);
     }, [user]);
 
     return useMemo(() => ({

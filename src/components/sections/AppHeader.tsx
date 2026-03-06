@@ -9,6 +9,9 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, Drawer
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { useSettings } from "@/lib/SettingsContext";
+import { auth, db } from "@/lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 interface AppHeaderProps {
   title: string;
@@ -23,9 +26,33 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { theme, toggleTheme } = useTheme();
-  const { isZenMode } = useSettings();
+  const { isZenMode, userName } = useSettings();
   const pathname = usePathname();
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+
+  // Global Timer Watcher for Header Pulse
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setIsTimerActive(false);
+        return;
+      }
+
+      const timerDocRef = doc(db, "users", user.uid, "activeTimer", "current");
+      const unsubTimer = onSnapshot(timerDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setIsTimerActive(docSnap.data().isActive === true);
+        } else {
+          setIsTimerActive(false);
+        }
+      });
+
+      return () => unsubTimer();
+    });
+
+    return () => unsubAuth();
+  }, []);
 
   const handleMoreMouseEnter = () => {
     if (closeTimeoutRef.current) {
@@ -85,8 +112,19 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                   lineHeight: "1.2"
                 }}
               >
-                PRIME
+                {title || "PRIME"}
               </h1>
+              {isTimerActive && (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <span className="text-[10px] font-bold text-primary tracking-wider uppercase">Live</span>
+                </motion.div>
+              )}
             </Link>
           </div>
 
@@ -101,7 +139,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                   <Link
                     key={item.label}
                     href={item.href}
-                    className={`relative flex items-center justify-center px-4 h-[36px] text-[13.5px] font-medium rounded-xl transition-colors duration-300 whitespace-nowrap ${isActive
+                    className={`relative flex items-center justify-center px-4 h-[36px] text-[13.5px] font-medium rounded-xl transition-colors duration-300 whitespace-nowrap ${pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
                       ? isDark ? "text-white shadow-sm" : "text-[#1d1d1f] font-semibold"
                       : isDark ? "text-white/60 hover:text-white" : "text-black/60 hover:text-black"
                       }`}
@@ -217,6 +255,16 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
               >
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
               </button>
+
+              {/* Profile Identity Pill */}
+              {userName && (
+                <div className={`hidden sm:flex items-center gap-2 px-3 h-9 rounded-full border transition-all ${isDark ? "bg-white/5 border-white/10 text-white/80" : "bg-black/5 border-black/10 text-black/80"}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${isDark ? "bg-primary text-white" : "bg-primary text-white"}`}>
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-[12px] font-medium max-w-[80px] truncate">{userName}</span>
+                </div>
+              )}
 
               {/* Mobile Menu Toggle (DEPRECATED - Removed in favor of Bottom Dock) */}
               <div className="lg:hidden flex items-center justify-center w-9 h-9">

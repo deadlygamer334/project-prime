@@ -30,7 +30,21 @@ export function VideoWallpaperController() {
         });
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, []);
+    }, [isZenMode]);
+
+    // Safe playback utility to handle AbortError during portal/visibility transitions
+    const safePlay = async (video: HTMLVideoElement) => {
+        try {
+            await video.play();
+            setStatus("PLAYING");
+        } catch (err: any) {
+            // AbortError (code 20) is expected when the DOM moves or the request is interrupted
+            if (err.name !== "AbortError") {
+                console.error("Video playback error:", err);
+                setStatus("PAUSED");
+            }
+        }
+    };
 
     useEffect(() => {
         if (!isLoaded) return;
@@ -52,7 +66,7 @@ export function VideoWallpaperController() {
 
             const handleCanPlay = () => {
                 if (!document.hidden && !reducedMotion) {
-                    video.play().then(() => setStatus("PLAYING")).catch(() => setStatus("PAUSED"));
+                    safePlay(video);
                 } else {
                     setStatus("PAUSED");
                 }
@@ -73,7 +87,7 @@ export function VideoWallpaperController() {
                 video.pause();
                 setStatus("PAUSED");
             } else if (activeSrc && !reducedMotion) {
-                video.play().then(() => setStatus("PLAYING")).catch(console.error);
+                safePlay(video);
             }
         };
 
@@ -93,6 +107,16 @@ export function VideoWallpaperController() {
         };
     }, [activeSrc, reducedMotion]);
 
+    // Force playback trigger when entering Zen Mode or starting Focus
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || !activeSrc || reducedMotion) return;
+
+        if (isZenMode || isActive) {
+            safePlay(video);
+        }
+    }, [isZenMode, isActive, activeSrc, reducedMotion]);
+
     if (!isLoaded || !wallpaper || wallpaper.type !== "video") return null;
 
     const filters = isZenMode ? wallpaper.zenFilters : wallpaper.timerFilters;
@@ -105,6 +129,7 @@ export function VideoWallpaperController() {
     const hueRotate = filters.hueRotate ?? 0;
     const blur = filters.blur ?? 0;
 
+    // Base filter string
     let filterString = `brightness(${baseBrightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg) ${blur > 0 ? `blur(${blur}px)` : ''}`;
 
     // Sync with Zen Mode Brightness Control
@@ -113,6 +138,8 @@ export function VideoWallpaperController() {
     if (isFocusActive && autoDimWallpaper) {
         filterString += ' brightness(60%)';
     }
+
+    const poster = wallpaper.poster || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
     const content = (
         <div
@@ -124,39 +151,19 @@ export function VideoWallpaperController() {
                 overflow: "hidden",
                 pointerEvents: "none",
                 borderRadius: isZenMode ? "0" : "1.5rem",
+                opacity: isZenMode ? 1 : (isActive ? 1 : 0),
+                transition: "opacity 1s ease",
             }}
         >
-            <div style={{
-                position: "absolute",
-                width: mediaAspect > targetAspect ? "auto" : "100%",
-                height: mediaAspect > targetAspect ? "100%" : "auto",
-                minWidth: "100%",
-                minHeight: "100%",
-                left: `calc(50% + ${crop.x}%)`,
-                top: `calc(50% + ${crop.y}%)`,
-                willChange: "filter, transform",
-                filter: filterString,
-                transform: `translate(-50%, -50%) scale(${crop.scale}) rotate(${crop.rotate ?? 0}deg)`,
-                transition: "filter 2s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-                transformOrigin: "center center"
-            }}>
-                {wallpaper.poster && (
-                    <div style={{
-                        position: "absolute",
-                        inset: 0,
-                        backgroundImage: `url(${wallpaper.poster})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        opacity: (status === "PLAYING" && !reducedMotion) ? 0 : 1,
-                        transition: "opacity 0.8s ease"
-                    }} />
-                )}
+            {activeSrc && (
                 <video
                     ref={videoRef}
-                    loop
-                    muted
+                    key={activeSrc}
                     playsInline
-                    poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    muted
+                    loop
+                    autoPlay
+                    poster={poster}
                     onLoadedMetadata={(e) => {
                         const video = e.target as HTMLVideoElement;
                         if (video.videoHeight > 0) {
@@ -164,14 +171,25 @@ export function VideoWallpaperController() {
                         }
                     }}
                     style={{
-                        width: "100%",
-                        height: "100%",
+                        position: "absolute",
+                        width: mediaAspect > targetAspect ? "auto" : "100%",
+                        height: mediaAspect > targetAspect ? "100%" : "auto",
+                        minWidth: "100%",
+                        minHeight: "100%",
+                        left: `calc(50% + ${crop.x}%)`,
+                        top: `calc(50% + ${crop.y}%)`,
+                        willChange: "filter, transform",
+                        filter: filterString,
+                        transform: `translate(-50%, -50%) scale(${crop.scale}) rotate(${crop.rotate ?? 0}deg)`,
+                        transition: "filter 2s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+                        transformOrigin: "center center",
+                        opacity: isLoaded ? 1 : 0,
                         objectFit: "cover",
-                        opacity: status === "PLAYING" ? 1 : 0,
-                        transition: "opacity 0.5s ease"
                     }}
-                />
-            </div>
+                >
+                    <source src={activeSrc} type="video/mp4" />
+                </video>
+            )}
 
             {filters.rgbTint && (
                 <div style={{

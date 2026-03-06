@@ -10,16 +10,12 @@ export type Subject = string;
 interface UseFocusTimerProps {
     onComplete?: (mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => void;
     addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string) => Promise<void>;
+    isCompleting?: boolean;
 }
 
-export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTimerProps = {}) => {
+export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting }: UseFocusTimerProps = {}) => {
     // Auth State
     const [user, setUser] = useState<User | null>(null);
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
-        return () => unsubscribe();
-    }, []);
 
     // Persistent State
     const [mode, setMode] = useState<TimerMode>("FOCUS");
@@ -47,74 +43,116 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
     const sessionStartBaselineRef = useRef<number | null>(null);
     const accumulatedTimeSecondsRef = useRef<number>(0);
 
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (u) => {
+            setUser(u);
+            // SECURITY: If user logs out, kill any active timer and clear state
+            if (!u) {
+                if (timerRef.current) clearInterval(timerRef.current);
+                setIsActive(false);
+                setIsFocusStarted(false);
+                setIsBreakStarted(false);
+                setFocusTimeLeft(baselineFocusSecs);
+                setBreakTimeLeft(baselineBreakSecs);
+                setStopwatchElapsed(0);
+                endTimeRef.current = null;
+                startTimeRef.current = null;
+                accumulatedTimeSecondsRef.current = 0;
+                sessionStartBaselineRef.current = null;
+                localStorage.removeItem("focusTimerStateV2");
+            }
+        });
+        return () => unsubscribe();
+    }, [baselineFocusSecs, baselineBreakSecs]);
+
     // Load state from localStorage on mount
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Refs for closure access in onSnapshot
+    // Refs for stable visibility in callbacks/intervals
     const isActiveRef = useRef(isActive);
     const modeRef = useRef(mode);
+    const timeLeftRef = useRef(timeLeft);
     const lastLocalStopRef = useRef<number>(0);
+    const userRefCurrent = useRef<User | null>(user);
 
     useEffect(() => {
         isActiveRef.current = isActive;
         modeRef.current = mode;
-    }, [isActive, mode]);
+        timeLeftRef.current = timeLeft;
+        userRefCurrent.current = user;
+    }, [isActive, mode, timeLeft, user]);
 
     const handleTimerCompleteInternal = useCallback(async (isAuto: boolean) => {
-        if (!user) return;
+        if (!userRefCurrent.current) return;
+        const currentUser = userRefCurrent.current;
+
+        let finalMode: TimerMode = "FOCUS";
+        let finalDuration = 0;
+        let finalSubject = "";
 
         try {
-            let finalMode: TimerMode = "FOCUS";
-            let finalDuration = 0;
-            let finalSubject = "";
 
             await runTransaction(db, async (transaction) => {
-                const timerDocRef = doc(db, "users", user.uid, "activeTimer", "current");
+                const timerDocRef = doc(db, "users", currentUser.uid, "activeTimer", "current");
                 const docSnap = await transaction.get(timerDocRef);
 
                 if (!docSnap.exists()) {
-                    throw "Timer already completed on another device";
+                    throw "Timer already completed or already cleared";
                 }
 
                 const data = docSnap.data();
+                if (data.isBeingLogged) {
+                    throw "Timer is already being processed for logging";
+                }
+
                 const modeFromCloud = data.mode as TimerMode;
                 finalMode = modeFromCloud;
                 finalSubject = data.selectedSubject || "";
 
-                // Delete the cloud timer to prevent others from logging
-                transaction.delete(timerDocRef);
-
                 const cloudBaseline = data.originalBaseline ?? (modeFromCloud === "FOCUS" ? baselineFocusSecs : baselineBreakSecs);
                 const cloudAccumulated = data.accumulatedTime ?? 0;
 
-                if (modeFromCloud !== "STOPWATCH") {
+                if (modeFromCloud === "STOPWATCH") {
+                    // Stopwatch logic within transaction
+                    const startTime = data.startTime || Date.now();
+                    finalDuration = (Date.now() - startTime) / 60000;
+
+                    if (addSessionTransaction) {
+                        // Type "focus" is used for stopwatch logging as well for stats
+                        await addSessionTransaction(transaction, "focus", finalDuration, finalSubject);
+                    }
+                } else {
                     if (isAuto) {
-                        // Auto-complete (timer hit 0)
+                        // Auto-complete: User spent exactly the remaining time
                         finalDuration = (cloudAccumulated + cloudBaseline) / 60;
                     } else {
-                        // Manual complete (using local timeLeft for precision)
-                        finalDuration = (cloudAccumulated + (cloudBaseline - timeLeft)) / 60;
+                        // Manual complete: User spent (baseline - remaining) time
+                        const elapsedInSegment = Math.max(0, cloudBaseline - timeLeftRef.current);
+                        finalDuration = (cloudAccumulated + elapsedInSegment) / 60;
                     }
 
                     if (addSessionTransaction) {
                         await addSessionTransaction(transaction, modeFromCloud === "FOCUS" ? "focus" : "break", finalDuration, finalSubject);
                     }
                 }
+
+                // Delete the cloud timer ONLY after all reads and writes are done within transaction
+                transaction.set(timerDocRef, { isBeingLogged: true }, { merge: true }); // Prevent double-trigger
+                transaction.delete(timerDocRef);
             });
 
-            // If Transaction Succeeded
-            const resolvedMode = finalMode as TimerMode;
+            // Post-Transaction UI Updates
             setIsActive(false);
+            const resolvedMode = finalMode as TimerMode;
 
-            // Use switch to avoid TS narrowing issues with successive if statements
             switch (resolvedMode) {
                 case "FOCUS":
                     setIsFocusStarted(false);
-                    setFocusTimeLeft(0);
+                    setFocusTimeLeft(baselineFocusSecs); // RESET to baseline
                     break;
                 case "BREAK":
                     setIsBreakStarted(false);
-                    setBreakTimeLeft(0);
+                    setBreakTimeLeft(baselineBreakSecs); // RESET to baseline
                     break;
                 case "STOPWATCH":
                     setStopwatchElapsed(0);
@@ -126,51 +164,112 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
             sessionStartBaselineRef.current = null;
 
             if (onComplete) {
-                onComplete(resolvedMode, finalDuration, finalSubject, true); // true = already logged to DB
+                onComplete(resolvedMode, finalDuration, finalSubject, true);
             }
             setSelectedSubject("");
 
         } catch (e) {
-            console.warn("Completion transaction ignored:", e);
-            // If it failed because it was already completed, we just sync our local state
+            console.warn("Timer completion transaction failed. Queuing locally for retry.", e);
+
+            // OFFLINE INSURANCE: If transaction fails (usually network), queue the session data
+            try {
+                const queuedSessions = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
+                queuedSessions.push({
+                    mode: finalMode,
+                    duration: finalDuration,
+                    subject: finalSubject,
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem("queuedFocusSessions", JSON.stringify(queuedSessions));
+
+                // Still notify the UI it "completed" locally
+                if (onComplete) onComplete(finalMode, finalDuration, finalSubject as Subject, false);
+            } catch (err) {
+                console.error("Failed to queue session locally:", err);
+            }
+
+            // Cleanup local state even on failure
             setIsActive(false);
+            setIsFocusStarted(false);
+            setIsBreakStarted(false);
+            setFocusTimeLeft(baselineFocusSecs);
+            setBreakTimeLeft(baselineBreakSecs);
+            setStopwatchElapsed(0);
             endTimeRef.current = null;
         }
-    }, [user, db, addSessionTransaction, focusTimeLeft, breakTimeLeft, timeLeft, baselineFocusSecs, baselineBreakSecs, onComplete]);
+    }, [db, addSessionTransaction, baselineFocusSecs, baselineBreakSecs, onComplete]);
+
+    // OFFLINE INSURANCE: Process queued sessions when online/mount
+    useEffect(() => {
+        if (!user || !addSessionTransaction) return;
+
+        const processQueue = async () => {
+            const queued = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
+            if (queued.length === 0) return;
+
+            console.log(`Processing ${queued.length} queued sessions...`);
+            const remaining: any[] = [];
+
+            for (const session of queued) {
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        const type = session.mode === "BREAK" ? "break" : "focus";
+                        await addSessionTransaction(transaction, type, session.duration, session.subject);
+                    });
+                } catch (err) {
+                    console.error("Failed to process queued session, keeping in queue:", err);
+                    remaining.push(session);
+                }
+            }
+
+            localStorage.setItem("queuedFocusSessions", JSON.stringify(remaining));
+        };
+
+        const interval = setInterval(processQueue, 30000); // Check every 30s
+        processQueue(); // Also run on mount
+
+        return () => clearInterval(interval);
+    }, [user, addSessionTransaction, db]);
+
+    // Stabilize the completion function for the listener
+    const stableCompleteRef = useRef(handleTimerCompleteInternal);
+    useEffect(() => {
+        stableCompleteRef.current = handleTimerCompleteInternal;
+    }, [handleTimerCompleteInternal]);
 
     // 1. Sync FROM Cloud (Multi-device support)
     useEffect(() => {
         if (!user || !isLoaded) return;
 
-        const timerRef = doc(db, "users", user.uid, "activeTimer", "current");
-        const unsubscribe = onSnapshot(timerRef, (docSnap) => {
+        const timerDocRef = doc(db, "users", user.uid, "activeTimer", "current");
+        const unsubscribe = onSnapshot(timerDocRef, (docSnap) => {
+            const now = Date.now();
+
             if (!docSnap.exists()) {
                 if (isActiveRef.current) {
                     setIsActive(false);
                     endTimeRef.current = null;
+                    // If it was a focus timer, reset it locally too since it's gone from cloud
+                    if (modeRef.current === "FOCUS") setIsFocusStarted(false);
                 }
                 return;
             }
 
             const data = docSnap.data();
-            const now = Date.now();
 
-            // Catch-up on mount / background change: If timer EXPIRED, trigger transaction-based completion
+            // Catch-up: If timer EXPIRED while we were away, complete it
             if (data.isActive && data.endTime <= now && data.mode !== "STOPWATCH") {
-                handleTimerCompleteInternal(true);
+                stableCompleteRef.current(true);
                 return;
             }
 
             // Handle ACTIVE state update
             if (data.isActive && (data.mode === "STOPWATCH" || data.endTime > now)) {
-                // If we stopped locally less than 2 seconds ago, ignore cloud "active" signal
-                if (Date.now() - lastLocalStopRef.current < 2000) {
-                    return;
-                }
+                // If we stopped locally less than 2 seconds ago, ignore cloud "active" signal override
+                if (Date.now() - lastLocalStopRef.current < 2000) return;
 
                 const remaining = data.mode === "STOPWATCH" ? 0 : Math.ceil((data.endTime - now) / 1000);
 
-                // Reconstruct history Refs for accurate logging on this client
                 if (data.accumulatedTime !== undefined) accumulatedTimeSecondsRef.current = data.accumulatedTime;
                 if (data.originalBaseline !== undefined) sessionStartBaselineRef.current = data.originalBaseline;
 
@@ -185,29 +284,26 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
                     startTimeRef.current = data.startTime || null;
                     if (data.mode === "FOCUS") setFocusTimeLeft(remaining);
                     else if (data.mode === "BREAK") setBreakTimeLeft(remaining);
-                    else if (data.mode === "STOPWATCH") {
-                        if (data.startTime) {
-                            const elapsed = Math.floor((now - data.startTime) / 1000);
-                            setStopwatchElapsed(elapsed);
-                        }
+                    else if (data.mode === "STOPWATCH" && data.startTime) {
+                        setStopwatchElapsed(Math.floor((now - data.startTime) / 1000));
                     }
-
                     setIsFocusStarted(data.isFocusStarted ?? true);
-
-                    if (data.selectedSubject !== undefined) {
-                        setSelectedSubject(data.selectedSubject);
-                    }
+                    setSelectedSubject(data.selectedSubject || "");
                 }
             } else if (!data.isActive) {
                 if (isActiveRef.current) {
                     setIsActive(false);
                     endTimeRef.current = null;
                 }
+                // Update local time if cloud paused
+                if (data.mode === "FOCUS" && data.endTime && !isActiveRef.current) {
+                    // Optionally sync paused remaining time
+                }
             }
         });
 
         return () => unsubscribe();
-    }, [user, isLoaded, handleTimerCompleteInternal]); // Added handleTimerCompleteInternal to dependencies
+    }, [user, isLoaded]); // listener is now stable and doesn't depend on handleTimerCompleteInternal directly
 
 
     useEffect(() => {
@@ -224,6 +320,10 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
                 setSelectedSubject(parsed.selectedSubject || "");
                 setIsFocusStarted(parsed.isFocusStarted || false);
                 setIsBreakStarted(parsed.isBreakStarted || false);
+
+                // RESTORE persistent refs to prevent time loss on refresh
+                if (parsed.accumulatedTime !== undefined) accumulatedTimeSecondsRef.current = parsed.accumulatedTime;
+                if (parsed.sessionStartBaseline !== undefined) sessionStartBaselineRef.current = parsed.sessionStartBaseline;
 
                 if (parsed.isActive) {
                     const now = Date.now();
@@ -269,7 +369,9 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
             isFocusStarted,
             isBreakStarted,
             endTime: isActive ? endTimeRef.current : null,
-            startTime: isActive ? startTimeRef.current : null
+            startTime: isActive ? startTimeRef.current : null,
+            accumulatedTime: accumulatedTimeSecondsRef.current,
+            sessionStartBaseline: sessionStartBaselineRef.current
         };
         localStorage.setItem("focusTimerStateV2", JSON.stringify(stateToSave));
     }, [mode, focusTimeLeft, breakTimeLeft, stopwatchElapsed, selectedSubject, isActive, isFocusStarted, isBreakStarted, isLoaded]);
@@ -329,25 +431,12 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction }: UseFocusTim
     }, [isActive, mode, handleTimerCompleteInternal]);
 
     const completeSession = useCallback(() => {
-        // Manual finish for Stopwatch or Timer
-        if (mode === "STOPWATCH") {
-            // Stopwatch is still simple manual finish for now as it doesn't use countdown/endTime
-            setIsActive(false);
-            const sessionElapsedSeconds = stopwatchElapsed;
-            const durationMinutes = sessionElapsedSeconds / 60;
-            if (onComplete) onComplete(mode, durationMinutes, selectedSubject);
-            setStopwatchElapsed(0);
-            endTimeRef.current = null;
-            startTimeRef.current = null;
-            if (user) deleteDoc(doc(db, "users", user.uid, "activeTimer", "current")).catch(console.error);
-            setSelectedSubject("");
-        } else {
-            // Timer completion now uses the atomic transaction
-            handleTimerCompleteInternal(false);
-        }
-    }, [mode, stopwatchElapsed, onComplete, selectedSubject, handleTimerCompleteInternal, user]);
+        // All completions (Timer & Stopwatch) now use the atomic transaction
+        handleTimerCompleteInternal(false);
+    }, [handleTimerCompleteInternal]);
 
     const toggleTimer = useCallback(() => {
+        if (isCompleting) return;
         if (isActive) {
             setIsActive(false);
 
