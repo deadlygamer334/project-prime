@@ -42,6 +42,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
     const startTimeRef = useRef<number | null>(null); // For Stopwatch
     const sessionStartBaselineRef = useRef<number | null>(null);
     const accumulatedTimeSecondsRef = useRef<number>(0);
+    const lastRunningModeRef = useRef<TimerMode>(mode);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -86,7 +87,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
         if (!userRefCurrent.current) return;
         const currentUser = userRefCurrent.current;
 
-        let finalMode: TimerMode = "FOCUS";
+        let finalMode: TimerMode = mode;
         let finalDuration = 0;
         let finalSubject = "";
 
@@ -114,8 +115,15 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
 
                 if (modeFromCloud === "STOPWATCH") {
                     // Stopwatch logic within transaction
-                    const startTime = data.startTime || Date.now();
-                    finalDuration = (Date.now() - startTime) / 60000;
+                    if (data.isActive) {
+                        const startTime = data.startTime || Date.now();
+                        // startTime is a VIRTUAL start time that already accounts for past pauses.
+                        // So Date.now() - startTime is the TOTAL elapsed time.
+                        finalDuration = (Date.now() - startTime) / 60000;
+                    } else {
+                        // If it was already paused, use just the accumulated time
+                        finalDuration = cloudAccumulated / 60;
+                    }
 
                     if (addSessionTransaction) {
                         // Type "focus" is used for stopwatch logging as well for stats
@@ -126,9 +134,14 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                         // Auto-complete: User spent exactly the remaining time
                         finalDuration = (cloudAccumulated + cloudBaseline) / 60;
                     } else {
-                        // Manual complete: User spent (baseline - remaining) time
-                        const elapsedInSegment = Math.max(0, cloudBaseline - timeLeftRef.current);
-                        finalDuration = (cloudAccumulated + elapsedInSegment) / 60;
+                        if (data.isActive) {
+                            // Active Manual complete: User spent (baseline - remaining) time
+                            const elapsedInSegment = Math.max(0, cloudBaseline - timeLeftRef.current);
+                            finalDuration = (cloudAccumulated + elapsedInSegment) / 60;
+                        } else {
+                            // Paused manual complete: The elapsed time was already pushed to cloudAccumulated
+                            finalDuration = cloudAccumulated / 60;
+                        }
                     }
 
                     if (addSessionTransaction) {
@@ -173,14 +186,16 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
 
             // OFFLINE INSURANCE: If transaction fails (usually network), queue the session data
             try {
-                const queuedSessions = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
-                queuedSessions.push({
-                    mode: finalMode,
-                    duration: finalDuration,
-                    subject: finalSubject,
-                    timestamp: new Date().toISOString()
-                });
-                localStorage.setItem("queuedFocusSessions", JSON.stringify(queuedSessions));
+                if (finalMode !== "BREAK") {
+                    const queuedSessions = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
+                    queuedSessions.push({
+                        mode: finalMode,
+                        duration: finalDuration,
+                        subject: finalSubject,
+                        timestamp: new Date().toISOString()
+                    });
+                    localStorage.setItem("queuedFocusSessions", JSON.stringify(queuedSessions));
+                }
 
                 // Still notify the UI it "completed" locally
                 if (onComplete) onComplete(finalMode, finalDuration, finalSubject as Subject, false);
@@ -196,6 +211,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
             setBreakTimeLeft(baselineBreakSecs);
             setStopwatchElapsed(0);
             endTimeRef.current = null;
+            lastRunningModeRef.current = finalMode;
         }
     }, [db, addSessionTransaction, baselineFocusSecs, baselineBreakSecs, onComplete]);
 
@@ -289,6 +305,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                     }
                     setIsFocusStarted(data.isFocusStarted ?? true);
                     setSelectedSubject(data.selectedSubject || "");
+                    lastRunningModeRef.current = data.mode;
                 }
             } else if (!data.isActive) {
                 if (isActiveRef.current) {
@@ -324,6 +341,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                 // RESTORE persistent refs to prevent time loss on refresh
                 if (parsed.accumulatedTime !== undefined) accumulatedTimeSecondsRef.current = parsed.accumulatedTime;
                 if (parsed.sessionStartBaseline !== undefined) sessionStartBaselineRef.current = parsed.sessionStartBaseline;
+                if (parsed.mode) lastRunningModeRef.current = parsed.mode;
 
                 if (parsed.isActive) {
                     const now = Date.now();
@@ -441,7 +459,11 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
             setIsActive(false);
 
             // On pause, add current interval's elapsed time to accumulator
-            if (mode !== "STOPWATCH") {
+            if (mode === "STOPWATCH") {
+                if (startTimeRef.current) {
+                    accumulatedTimeSecondsRef.current = Math.max(0, (Date.now() - startTimeRef.current) / 1000);
+                }
+            } else {
                 const loggedBaseline = sessionStartBaselineRef.current ?? currentBaseline;
                 const intervalElapsed = loggedBaseline - timeLeft;
                 accumulatedTimeSecondsRef.current += Math.max(0, intervalElapsed);
@@ -469,6 +491,13 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                 return;
             }
 
+            // Prevent cross-mode accumulator leak
+            if (lastRunningModeRef.current !== mode) {
+                accumulatedTimeSecondsRef.current = 0;
+                sessionStartBaselineRef.current = null;
+            }
+            lastRunningModeRef.current = mode;
+
             if (mode === "STOPWATCH") {
                 startTimeRef.current = Date.now() - (stopwatchElapsed * 1000);
                 endTimeRef.current = null;
@@ -485,11 +514,9 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                     sessionStartBaselineRef.current = newTime;
                 } else {
                     endTimeRef.current = Date.now() + currentLeft * 1000;
-                    // If we are resuming, DON'T overwrite sessionStartBaselineRef.current
-                    // as it should represent the VERY START of the session.
-                    if (!sessionStartBaselineRef.current) {
-                        sessionStartBaselineRef.current = currentLeft;
-                    }
+                    // EVERY time we start/resume an interval, the baseline for THIS segment is currentLeft.
+                    // This prevents double accumulating session time on multiple pauses.
+                    sessionStartBaselineRef.current = currentLeft;
                 }
             }
             setIsActive(true);

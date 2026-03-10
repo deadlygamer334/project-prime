@@ -112,6 +112,26 @@ export const useFocusProgress = () => {
         };
     }, [user]);
 
+    // AUTO-CLEANUP: One-time check for 1-second focus logs on load
+    useEffect(() => {
+        if (!isLoaded || !user || recentSessions.length === 0) return;
+        
+        const cleanup = async () => {
+            const oneSecondInMins = 1.1 / 60; // 1.1s to be safe
+            const straySessions = recentSessions.filter(s => s.type === "focus" && s.duration <= oneSecondInMins);
+            
+            if (straySessions.length > 0) {
+                console.log(`Auto-cleaning ${straySessions.length} stray 1-second focus sessions...`);
+                for (const session of straySessions) {
+                    await deleteSession(session);
+                }
+            }
+        };
+
+        cleanup();
+    }, [isLoaded, user, recentSessions.length]); // Only trigger when recentSessions.length changes
+
+
     const loadMoreHistory = useCallback(async () => {
         if (!user || loadingHistory) return;
 
@@ -155,6 +175,7 @@ export const useFocusProgress = () => {
 
     const addSession = useCallback(async (type: "focus" | "break", duration: number, subject?: string) => {
         if (!user) return;
+        if (type === "break") return; // Do not log break sessions
 
         const newSession: any = {
             type,
@@ -162,6 +183,13 @@ export const useFocusProgress = () => {
             timestamp: new Date().toISOString(),
         };
         if (subject) newSession.subject = subject;
+
+        // PREVENTION: Skip 1-second (or less) sessions
+        if (duration < (1.5 / 60)) {
+            console.log("Skipping 1-second focus session log.");
+            return;
+        }
+
 
         // Optimistic
         const tempId = crypto.randomUUID();
@@ -337,6 +365,7 @@ export const useFocusProgress = () => {
         subject?: string
     ) => {
         if (!user) return;
+        if (type === "break") return; // Do not log break sessions
 
         const sessionRef = doc(collection(db, "users", user.uid, "focusSessions"));
         const userRef = doc(db, "users", user.uid);
@@ -347,6 +376,13 @@ export const useFocusProgress = () => {
             timestamp: new Date().toISOString(),
         };
         if (subject) newSession.subject = subject;
+
+        // PREVENTION: Skip 1-second (or less) sessions
+        if (duration < (1.5 / 60)) {
+            // console.log("Skipping 1-second focus session log in transaction.");
+            return;
+        }
+
 
         // Perform Reads first
         if (type === "focus") {

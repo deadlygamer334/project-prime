@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useRef, useEffect, useState } from "react";
 import { WallpaperState, WallpaperFilters, WallpaperCrop, useWallpaper } from "@/lib/WallpaperContext";
