@@ -97,11 +97,20 @@ export default function SettingsPage() {
                             <Link href="/" className="inline-flex items-center gap-2 mb-4 text-xs font-semibold uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity">
                                 <ArrowLeft size={14} /> Back to Dashboard
                             </Link>
-                            <h1 className="text-4xl font-bold tracking-tight mb-2 text-foreground">Settings</h1>
-                            <p className="text-lg text-muted-foreground dark:text-neutral-400">Customize your immersive focus environment.</p>
+                            <h1 
+                                className="text-3xl md:text-4xl font-black tracking-tight mb-2"
+                                style={{
+                                    background: 'linear-gradient(135deg, #ffffff 0%, rgba(167,139,250,0.8) 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
+                                }}
+                            >
+                                Settings
+                            </h1>
+                            <p className="text-sm text-muted-foreground">Customize your Prime experience</p>
 
                             {/* Productivity Reminder */}
-                            <div className="mt-4 p-4 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.08] backdrop-blur-sm max-w-2xl">
+                            <div className="mt-4 p-4 rounded-2xl bg-foreground/[0.03] border border-border max-w-2xl">
                                 <p className="text-sm text-foreground/50 font-medium leading-relaxed">
                                     <span className="mr-2 opacity-50">💡</span>
                                     Don't spend too much time here—your best work happens when you focus.
@@ -111,8 +120,8 @@ export default function SettingsPage() {
                         </div>
 
                         {/* User Greeting Input */}
-                        <div className="flex items-center gap-3 bg-card/50 backdrop-blur-sm p-3 rounded-2xl border border-border">
-                            <span className="text-sm font-medium text-muted-foreground dark:text-neutral-300">Hello,</span>
+                        <div className="flex items-center gap-3 bg-card p-3 rounded-2xl border border-border">
+                            <span className="text-sm font-medium text-muted-foreground">Hello,</span>
                             <input
                                 type="text"
                                 value={settings.userName}
@@ -123,19 +132,19 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    <div className="mb-12">
-                        <SectionHeading icon={Palette} title="Visual Theme" color="text-purple-400" />
+                    <div className="gradient-border card-premium rounded-2xl p-6 mb-6">
+                        <SectionHeading icon={Palette} title="Visual Theme" desc="Select a curated theme palette" />
                         <VibeGallery />
                     </div>
 
                     {/* Immersive Background Section */}
-                    <section className="mb-12 p-8 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+                    <section className="gradient-border card-premium rounded-2xl p-6 mb-6 bg-card border border-border flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
                         {/* Background Decoration */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
 
                         <div className="relative z-10 flex-grow">
-                            <SectionHeading icon={ImageIcon} title="Immersive Background" color="text-emerald-400" />
-                            <p className="text-muted-foreground dark:text-neutral-400 max-w-xl">
+                            <SectionHeading icon={ImageIcon} title="Immersive Background" desc="Custom cinematic wallpapers and stills" />
+                            <p className="text-muted-foreground max-w-xl text-sm">
                                 Transform your focus workspace with 4K cinematic loop videos and high-resolution stills.
                                 Custom wallpapers help reduce digital eye strain and maintain focus deep into your sessions.
                             </p>
@@ -144,7 +153,7 @@ export default function SettingsPage() {
                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
                                     <Sparkles size={12} /> Live Wallpapers
                                 </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-[11px] font-bold uppercase tracking-wider">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
                                     <Clock size={12} /> Auto-Dimming Enabled
                                 </div>
                             </div>
@@ -154,12 +163,12 @@ export default function SettingsPage() {
                             <WallpaperManagerBtn className="w-full h-14 !rounded-2xl !bg-primary !text-primary-foreground !shadow-lg !shadow-primary/20 hover:!scale-[1.02] active:!scale-[0.98] transition-all !text-base !font-bold">
                                 Change Wallpaper
                             </WallpaperManagerBtn>
-                            <p className="text-[10px] text-muted-foreground/60 font-medium">Browse 1000+ premium assets</p>
+                            <p className="text-[10px] text-muted-foreground font-medium">Browse 1000+ premium assets</p>
 
                             {wallpaper && (
                                 <button
                                     onClick={() => setWallpaper(null)}
-                                    className="mt-2 w-full h-10 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                                    className="mt-2 w-full h-10 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
                                 >
                                     <Trash2 className="w-4 h-4" /> Remove Wallpaper
                                 </button>
@@ -171,13 +180,13 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                         {/* LEFT COLUMN */}
-                        <div className="space-y-8">
+                        <div className="space-y-6">
 
                             {/* Appearance Section */}
-                            <section className="p-6 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm">
-                                <SectionHeading icon={Layout} title="Appearance" color="text-blue-400" />
+                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
+                                <SectionHeading icon={Layout} title="Appearance" desc="Customize the look and feel" />
 
-                                <div className="space-y-8">
+                                <div className="space-y-6">
                                     <ToggleRow
                                         label="Reverse Desktop Layout"
                                         desc="Swap Timer and Todo columns"
@@ -192,8 +201,34 @@ export default function SettingsPage() {
                                         onChange={(v) => settings.updateSetting("autoDimWallpaper", v)}
                                     />
 
+                                    {/* Accent Color Selector */}
+                                    <div className="py-3 border-b border-border">
+                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block text-foreground/70">Accent Color</label>
+                                        <div className="flex items-center gap-3">
+                                            {([
+                                                { id: "purple", label: "Purple", bgClass: "bg-primary" },
+                                                { id: "blue", label: "Blue", bgClass: "bg-sky-400" },
+                                                { id: "green", label: "Green", bgClass: "bg-emerald-400" },
+                                                { id: "pink", label: "Pink", bgClass: "bg-pink-400" },
+                                                { id: "orange", label: "Orange", bgClass: "bg-amber-400" },
+                                            ] as const).map(color => (
+                                                <button
+                                                    key={color.id}
+                                                    type="button"
+                                                    onClick={() => settings.updateSetting("accentColor", color.id)}
+                                                    title={color.label}
+                                                    className={`w-8 h-8 rounded-full ${color.bgClass} hover:scale-110 transition-all ${
+                                                        settings.accentColor === color.id
+                                                            ? "ring-2 ring-white ring-offset-2 ring-offset-background scale-105"
+                                                            : "opacity-80 hover:opacity-100"
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     {/* Typography */}
-                                    <div>
+                                    <div className="py-3 border-b border-border">
                                         <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block text-foreground/70">Typography</label>
                                         <div className="grid grid-cols-4 gap-2">
                                             {fonts.map(font => (
@@ -212,7 +247,7 @@ export default function SettingsPage() {
                                     </div>
 
                                     {/* Clock Style */}
-                                    <div>
+                                    <div className="py-3 border-b border-border">
                                         <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block text-foreground/70">Clock Style</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {[
@@ -242,7 +277,7 @@ export default function SettingsPage() {
                                     </div>
 
                                     {/* Visual Density */}
-                                    <div>
+                                    <div className="py-3 border-b border-border">
                                         <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Density</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {(["compact", "normal", "spacious"] as const).map(scale => (
@@ -261,7 +296,7 @@ export default function SettingsPage() {
                                     </div>
 
                                     {/* Corner Radius */}
-                                    <div>
+                                    <div className="pt-1">
                                         <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Corners</label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {(["sharp", "smooth"] as const).map(radius => (
@@ -282,17 +317,18 @@ export default function SettingsPage() {
                             </section>
 
                             {/* Acoustics Section */}
-                            <section className="p-6 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm">
-                                <SectionHeading icon={Music} title="Acoustics" color="text-pink-400" />
+                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
+                                <SectionHeading icon={Music} title="Acoustics" desc="Configure sound effects and audio feedback" />
 
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
-                                        <span className="font-medium text-sm">Master Sound</span>
+                                        <span className="font-medium text-sm text-foreground">Master Sound</span>
                                         <button
+                                            type="button"
                                             onClick={() => settings.updateSetting("soundEnabled", !settings.soundEnabled)}
-                                            className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${settings.soundEnabled ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                                            className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${settings.soundEnabled ? 'bg-primary' : 'bg-muted border border-border'}`}
                                         >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-zinc-900 transition-transform ${settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-primary-foreground transition-transform ${settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
@@ -339,8 +375,8 @@ export default function SettingsPage() {
                             </section>
 
                             {/* Security */}
-                            <section className="p-6 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm">
-                                <SectionHeading icon={Shield} title="Security" color="text-orange-400" />
+                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
+                                <SectionHeading icon={Shield} title="Security" desc="Manage account security and credentials" />
                                 <div className="space-y-4">
                                     <button
                                         onClick={() => setShowPasswordModal(true)}
@@ -350,7 +386,7 @@ export default function SettingsPage() {
                                             <Lock size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
                                             <div className="text-left">
                                                 <span className="block text-sm font-medium text-foreground">Change Password</span>
-                                                <span className="block text-xs text-muted-foreground dark:text-neutral-400">Update your account security</span>
+                                                <span className="block text-xs text-muted-foreground">Update your account security</span>
                                             </div>
                                         </div>
                                         <ArrowRight size={14} className="opacity-30" />
@@ -359,21 +395,22 @@ export default function SettingsPage() {
                             </section>
 
                             {/* System */}
-                            <section className="p-6 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm">
-                                <SectionHeading icon={Layout} title="System" color="text-cyan-400" />
+                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
+                                <SectionHeading icon={Command} title="System" desc="Shortcuts and profile visibility" />
                                 <div className="space-y-4">
                                     <ShortcutsSection />
                                     <div className="pt-4 border-t border-border mt-4">
                                         <button
+                                            type="button"
                                             onClick={() => settings.updateSetting("leaderboardPublic", !settings.leaderboardPublic)}
                                             className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors group text-left"
                                         >
                                             <div>
-                                                <div className="text-sm font-medium">Public Profile</div>
-                                                <div className="text-xs text-foreground/60">Manage leaderboard visibility</div>
+                                                <div className="text-sm font-medium text-foreground">Public Profile</div>
+                                                <div className="text-xs text-muted-foreground">Manage leaderboard visibility</div>
                                             </div>
-                                            <div className={`w-10 h-6 rounded-full transition-colors flex items-center ${settings.leaderboardPublic ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-200 dark:bg-zinc-700"}`}>
-                                                <div className={`h-4 w-4 rounded-full bg-white dark:bg-zinc-900 transition-transform ${settings.leaderboardPublic ? "translate-x-5" : "translate-x-1"}`} />
+                                            <div className={`w-10 h-6 rounded-full transition-colors flex items-center ${settings.leaderboardPublic ? "bg-primary" : "bg-muted border border-border"}`}>
+                                                <div className={`h-4 w-4 rounded-full bg-primary-foreground transition-transform ${settings.leaderboardPublic ? "translate-x-5" : "translate-x-1"}`} />
                                             </div>
                                         </button>
                                     </div>
@@ -382,11 +419,11 @@ export default function SettingsPage() {
                         </div>
 
                         {/* RIGHT COLUMN */}
-                        <div className="space-y-8">
+                        <div className="space-y-6">
 
                             {/* Clock & Timer Preferences */}
-                            <section className="p-6 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm">
-                                <SectionHeading icon={Clock} title="Clock & Timer" color="text-orange-400" />
+                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
+                                <SectionHeading icon={Clock} title="Clock & Timer" desc="Customize time displays and timer preferences" />
                                 <div className="space-y-2">
                                     <ToggleRow
                                         label="Show Seconds"
@@ -455,8 +492,8 @@ export default function SettingsPage() {
                             <NotificationSettings />
 
                             {/* Visual Effects */}
-                            <section className="p-6 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm">
-                                <SectionHeading icon={PartyPopper} title="Visual Effects" color="text-emerald-400" />
+                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
+                                <SectionHeading icon={PartyPopper} title="Visual Effects" desc="Configure animations and visual effects" />
                                 <div className="space-y-2">
                                     <ToggleRow
                                         label="Confetti Celebration"
@@ -466,7 +503,7 @@ export default function SettingsPage() {
                                     />
                                     <ToggleRow
                                         label="Glassmorphism"
-                                        desc="Enable blur effects on cards"
+                                        desc="Enable blur effects on floating surfaces"
                                         value={settings.enableGlassmorphism}
                                         onChange={(v) => settings.updateSetting("enableGlassmorphism", v)}
                                     />
@@ -482,11 +519,11 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Data & Privacy (Full Width Footer) */}
-                    <div className="mt-12 bg-muted/10 border border-border rounded-3xl p-8 backdrop-blur-sm">
+                    <div className="gradient-border card-premium rounded-2xl p-6 mb-6 bg-card border border-border">
+                        <SectionHeading icon={Download} title="Data & Privacy" desc="Manage your personal data and account" />
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div>
-                                <h3 className="text-lg font-bold mb-1 text-foreground">Data & Privacy</h3>
-                                <p className="text-sm text-muted-foreground dark:text-neutral-400 max-w-md">
+                                <p className="text-sm text-muted-foreground max-w-md">
                                     Manage your personal data. All data is stored securely in the cloud.
                                 </p>
                             </div>
@@ -888,29 +925,33 @@ function AccountDeletionModal({ onClose }: { onClose: () => void }) {
     );
 }
 
-function SectionHeading({ icon: Icon, title, color }: { icon: any, title: string, color: string }) {
+function SectionHeading({ icon: Icon, title, desc, color }: { icon: any, title: string, desc?: string, color?: string }) {
     return (
-        <div className="flex items-center gap-3 mb-6">
-            <div className={`p-2 rounded-xl bg-muted/30 ${color}`}>
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+            <div className={`p-2 rounded-xl ${color || "bg-primary/10 text-primary"}`}>
                 <Icon size={18} />
             </div>
-            <h2 className="text-base font-bold tracking-tight">{title}</h2>
+            <div>
+                <h2 className="text-base font-semibold text-foreground">{title}</h2>
+                {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
+            </div>
         </div>
     );
 }
 
 function ToggleRow({ label, desc, value, onChange }: { label: string, desc: string, value: boolean, onChange: (v: boolean) => void }) {
     return (
-        <div className="flex items-center justify-between py-3 group">
+        <div className="flex items-center justify-between py-3 border-b border-border last:border-0 group">
             <div className="pr-4">
-                <div className="text-sm font-medium group-hover:text-primary transition-colors">{label}</div>
-                <div className="text-xs text-muted-foreground dark:text-neutral-400">{desc}</div>
+                <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</div>
+                <div className="text-xs text-muted-foreground">{desc}</div>
             </div>
             <button
+                type="button"
                 onClick={() => onChange(!value)}
-                className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${value ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${value ? 'bg-primary' : 'bg-muted border border-border'}`}
             >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-zinc-900 transition-transform ${value ? 'translate-x-5' : 'translate-x-1'}`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-primary-foreground transition-transform ${value ? 'translate-x-5' : 'translate-x-1'}`} />
             </button>
         </div>
     );
@@ -1031,9 +1072,17 @@ function NotificationSettings() {
     };
 
     return (
-        <section className="p-6 rounded-3xl border backdrop-blur-md bg-card border-border shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-                <SectionHeading icon={Bell} title="Push Notifications" color="text-purple-400" />
+        <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                        <Bell size={18} />
+                    </div>
+                    <div>
+                        <h2 className="text-base font-semibold text-foreground">Push Notifications</h2>
+                        <p className="text-xs text-muted-foreground">Alerts for timer completion and goals</p>
+                    </div>
+                </div>
                 {getPermissionBadge()}
             </div>
 
@@ -1041,19 +1090,20 @@ function NotificationSettings() {
                 {/* Main Toggle */}
                 <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20">
                     <div>
-                        <div className="text-sm font-medium">Enable Notifications</div>
+                        <div className="text-sm font-medium text-foreground">Enable Notifications</div>
                         <div className="text-xs text-muted-foreground">Get alerts for timer completion</div>
                     </div>
                     <button
+                        type="button"
                         onClick={() => handleToggleNotifications(!settings.notificationsEnabled)}
                         disabled={isLoading}
-                        className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${settings.notificationsEnabled ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-200 dark:bg-zinc-700'
+                        className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${settings.notificationsEnabled ? 'bg-primary' : 'bg-muted border border-border'
                             } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {isLoading ? (
-                            <Loader2 size={14} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white dark:text-zinc-900" />
+                            <Loader2 size={14} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-primary-foreground" />
                         ) : (
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-zinc-900 transition-transform ${settings.notificationsEnabled ? 'translate-x-5' : 'translate-x-1'
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-primary-foreground transition-transform ${settings.notificationsEnabled ? 'translate-x-5' : 'translate-x-1'
                                 }`} />
                         )}
                     </button>

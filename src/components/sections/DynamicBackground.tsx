@@ -26,15 +26,25 @@ export default function DynamicBackground() {
         >
             {settings.backgroundStyle === "aurora" && (
                 <>
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-aurora blur-[60px] opacity-40 animate-float will-change-transform" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-aurora blur-[60px] opacity-40 animate-float will-change-transform" style={{ animationDelay: "-3s" }} />
-                    {/* Fallback/Base Glow */}
-                    <div className={`absolute inset-0 bg-aurora opacity-20`} />
+                    {/* Orb 1: Top-left, large, slow — primary purple */}
+                    <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vh] rounded-full blur-[120px] opacity-[0.18] bg-[var(--color-orb-purple)] animate-[float_18s_ease-in-out_infinite] will-change-transform" />
+
+                    {/* Orb 2: Top-right, medium, medium speed — pink */}
+                    <div className="absolute -top-[10%] -right-[15%] w-[55vw] h-[55vh] rounded-full blur-[100px] opacity-[0.13] bg-[var(--color-orb-pink)] animate-[float_22s_ease-in-out_infinite_-7s] will-change-transform" />
+
+                    {/* Orb 3: Center-bottom, very large, slow — purple again for depth */}
+                    <div className="absolute top-[40%] left-[20%] w-[80vw] h-[60vh] rounded-full blur-[140px] opacity-[0.10] bg-[var(--color-orb-purple)] animate-[float_25s_ease-in-out_infinite_-12s] will-change-transform" />
+
+                    {/* Orb 4: Bottom-left — green accent */}
+                    <div className="absolute -bottom-[15%] -left-[10%] w-[50vw] h-[50vh] rounded-full blur-[100px] opacity-[0.12] bg-[var(--color-orb-green)] animate-[float_20s_ease-in-out_infinite_-4s] will-change-transform" />
+
+                    {/* Orb 5: Bottom-right, small, faster — pink accent */}
+                    <div className="absolute -bottom-[5%] -right-[5%] w-[35vw] h-[35vh] rounded-full blur-[80px] opacity-[0.10] bg-[var(--color-orb-pink)] animate-[float_15s_ease-in-out_infinite_-9s] will-change-transform" />
                 </>
             )}
 
             {settings.backgroundStyle === "mesh" && (
-                <div className="absolute inset-0 bg-mesh" />
+                <div className="absolute inset-0 bg-mesh opacity-70" />
             )}
 
             {settings.backgroundStyle === "particles" && (

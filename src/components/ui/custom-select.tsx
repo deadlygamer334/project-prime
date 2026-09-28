@@ -114,7 +114,7 @@ export const CustomSelect = ({ value, onChange, options, disabled, placeholder, 
                                     />
                                     <button
                                         onClick={handleAdd}
-                                        className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                        className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                                     >
                                         <Plus size={16} />
                                     </button>

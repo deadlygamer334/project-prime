@@ -148,11 +148,9 @@ export default function QuoteBlock() {
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
-                        className={`flex flex-col items-center justify-center min-h-[140px] p-8 rounded-3xl border transition-all duration-500 relative overflow-hidden select-text ${hasWallpaper
-                            ? "bg-black/30 border-white/20 backdrop-blur-lg shadow-[0_8px_32px_rgba(0,0,0,0.5)] hover:bg-black/40"
-                            : isDark
-                                ? "backdrop-blur-md bg-white/5 border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.07] hover:border-white/20"
-                                : "backdrop-blur-md bg-white/40 border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:border-black/10"
+                        className={`flex flex-col items-center justify-center min-h-[140px] p-8 rounded-3xl border transition-all duration-500 relative overflow-hidden select-text gradient-border card-premium ${hasWallpaper
+                            ? "bg-card/80 border-border hover:bg-card/90"
+                            : "bg-card border-border hover:bg-card/90"
                             }`}
                     >
                         <h2

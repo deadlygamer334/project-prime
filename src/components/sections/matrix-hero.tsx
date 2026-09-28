@@ -2,7 +2,7 @@ import React from 'react';
 
 const MatrixHero = () => {
   return (
-    <section className="matrix-hero panel mb-10 w-full rounded-3xl p-10 bg-card/60 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-soft relative overflow-hidden flex flex-col gap-6">
+    <section className="matrix-hero panel mb-10 w-full rounded-3xl p-10 bg-card border border-border gradient-border card-premium relative overflow-hidden flex flex-col gap-6">
       {/* Top section: Title and Subtitle */}
       <div>
         <p className="text-xs font-bold uppercase tracking-widest mb-3 text-muted-foreground/60">
@@ -41,7 +41,7 @@ const MatrixHero = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="w-3.5 h-3.5 rounded-full bg-zinc-400 shadow-[0_0_0_4px_rgba(161,161,170,0.15)]"></span>
+          <span className="w-3.5 h-3.5 rounded-full bg-muted-foreground shadow-[0_0_0_4px_rgba(161,161,170,0.15)]"></span>
           <span className="text-sm text-foreground/80">
             Not important, not urgent (NINU)
           </span>

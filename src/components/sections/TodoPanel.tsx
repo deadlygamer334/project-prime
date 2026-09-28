@@ -274,7 +274,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
 
   if (!isLoaded) return (
     <section
-      className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] bg-card/60 border-border"
+      className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 transition-all duration-500 border min-h-[500px] bg-card border-border gradient-border card-premium"
     >
       <div className="flex items-center justify-between gap-4 mb-6">
         <PremiumSkeleton height="32px" width="120px" borderRadius="8px" />
@@ -294,7 +294,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
 
   return (
     <section
-      className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] max-md:landscape:min-h-0 bg-card/60 border-border shadow-[0_24px_48px_rgba(0,0,0,0.1)]"
+      className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 transition-all duration-500 border min-h-[500px] max-md:landscape:min-h-0 bg-card border-border gradient-border card-premium"
     >
       {/* Todo Header Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -448,7 +448,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
             <Reorder.Item
               key={task.id}
               value={task}
-              className="group flex items-center gap-3 p-4 border border-border rounded-2xl transition-colors bg-card hover:bg-muted/50"
+              className="group flex items-center gap-3 p-4 border border-border rounded-2xl transition-all bg-card hover:bg-muted/50 hover:border-l-2 hover:border-l-primary/50"
             >
               {/* Drag Handle */}
               <div

@@ -27,7 +27,7 @@ const MotivationReelsGrid: React.FC = () => {
                         placeholder="Search Reel Number..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-card/40 backdrop-blur-md border border-border rounded-full py-3.5 pl-12 pr-6 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all shadow-lg"
+                        className="w-full bg-card border border-border rounded-full py-3.5 pl-12 pr-6 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all shadow-lg"
                     />
                     {searchQuery && (
                         <button
@@ -49,7 +49,7 @@ const MotivationReelsGrid: React.FC = () => {
                     <button
                         key={reel.id}
                         onClick={() => setSelectedVideo(reel)}
-                        className="group relative aspect-square rounded-2xl border border-border bg-card/30 backdrop-blur-sm flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.04] hover:bg-card/50 hover:border-primary/40 hover:shadow-[0_10px_30px_rgba(0,0,0,0.3)] group-active:scale-95"
+                        className="group relative aspect-square rounded-2xl border border-border bg-card gradient-border card-premium flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.04] hover:border-primary/40 group-active:scale-95"
                     >
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                             <Play size={16} fill="currentColor" fillOpacity={0} className="group-hover:fill-current" />

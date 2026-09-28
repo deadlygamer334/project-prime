@@ -218,14 +218,14 @@
   h1 {
     font-size: 32px;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--foreground);
     letter-spacing: -0.02em;
   }
 
   .subtitle {
     font-size: 16px;
     font-weight: 400;
-    color: #94a3b8;
+    color: var(--muted-foreground);
   }
 
   .glass-card {
@@ -239,6 +239,119 @@
 
   .glass-card:hover {
     border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Premium Gradient Border */
+  .gradient-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(167, 139, 250, 0.35) 0%,
+      rgba(255, 255, 255, 0.06) 40%,
+      rgba(167, 139, 250, 0.12) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Premium Card Surface */
+  .card-premium {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 8px 24px rgba(0, 0, 0, 0.25),
+      0 32px 64px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-premium:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 12px 32px rgba(0, 0, 0, 0.3),
+      0 40px 80px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Ambient Glow Animation for Active Timer State */
+  @keyframes ambient-pulse {
+    0%, 100% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 0 0 0 rgba(167, 139, 250, 0),
+        0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    50% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        0 0 60px 10px rgba(167, 139, 250, 0.12),
+        0 8px 40px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  .timer-active-glow {
+    animation: ambient-pulse 3s ease-in-out infinite;
+  }
+
+  /* Break mode: green glow */
+  @keyframes break-pulse {
+    0%, 100% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 0 0 0 rgba(34, 197, 94, 0),
+        0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    50% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        0 0 60px 10px rgba(34, 197, 94, 0.10),
+        0 8px 40px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  .break-active-glow {
+    animation: break-pulse 3s ease-in-out infinite;
+  }
+
+  /* Shimmer-on-Hover for interactive cards */
+  @keyframes shimmer-sweep {
+    0% { transform: translateX(-100%) skewX(-12deg); }
+    100% { transform: translateX(200%) skewX(-12deg); }
+  }
+
+  .shimmer-hover {
+    overflow: hidden;
+    position: relative;
+  }
+  .shimmer-hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.04),
+      transparent
+    );
+    transform: translateX(-100%) skewX(-12deg);
+    pointer-events: none;
+  }
+  .shimmer-hover:hover::after {
+    animation: shimmer-sweep 0.6s ease forwards;
   }
 
   .floating-orb {
@@ -335,6 +448,18 @@
     }
   }
 
+  @keyframes float {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(25px, -35px) scale(1.04);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.96);
+    }
+  }
+
   /* Mesh Gradient (Aurora/Oceanic/etc. will use this structure) */
   .bg-mesh,
   .theme-oceanic body,
@@ -356,10 +481,10 @@
   .bg-particles {
     background-image: radial-gradient(white 1px, transparent 1px),
       radial-gradient(white 1px, transparent 1px);
-    background-size: 50px 50px, 20px 20px;
+    background-size: 80px 80px, 30px 30px;
     background-position: 0 0, 25px 25px;
-    opacity: 0.1;
-    animation: particles-move 60s linear infinite;
+    opacity: 0.07;
+    animation: particles-move 120s linear infinite;
   }
 
   @keyframes particles-move {

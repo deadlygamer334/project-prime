@@ -26,9 +26,7 @@ const FlipDigit = React.memo(({ value, label, isRetro, fontClass, isDark }: Flip
     // Retro Flip Card Style
     return (
         <div className="flex flex-col items-center select-text">
-            <div className={`relative ${fontClass} text-[15vw] max-md:landscape:text-[8vw] md:text-8xl leading-none rounded-xl px-4 py-8 max-md:landscape:py-2 border-b-4 shadow-2xl transition-colors ${isDark
-                ? 'bg-zinc-900/90 border-zinc-800 text-white'
-                : 'bg-card/90 border-border text-foreground'}`}>
+            <div className={`relative ${fontClass} text-[15vw] max-md:landscape:text-[8vw] md:text-8xl leading-none rounded-xl px-4 py-8 max-md:landscape:py-2 border-b-4 shadow-2xl transition-colors bg-card/90 border-border text-foreground`}>
                 {formatTimeDigit(value)}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10 pointer-events-none rounded-xl" />
                 <div className="absolute inset-x-0 top-1/2 h-[2px] bg-black/20" />

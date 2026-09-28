@@ -32,7 +32,7 @@ export default function OverviewStats() {
   return (
     <section className="grid grid-cols-1 lg:grid-cols-2 gap-[24px] mt-[24px]">
       {/* Overview Daily Progress Card */}
-      <Reveal className="border rounded-[16px] p-[32px] shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col items-center transition-colors duration-300 bg-card border-border">
+      <Reveal className="border rounded-[16px] p-[32px] flex flex-col items-center transition-colors duration-300 bg-card border-border gradient-border card-premium">
         <h3 className="text-[14px] font-[600] tracking-[0.05em] uppercase mb-[32px] w-full text-center text-foreground">
           OVERVIEW DAILY PROGRESS
         </h3>
@@ -89,7 +89,7 @@ export default function OverviewStats() {
       </Reveal>
 
       {/* Top 5 Daily Habits Card */}
-      <Reveal delay={200} className="border rounded-[16px] p-[32px] shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col items-center transition-colors duration-300 bg-card border-border">
+      <Reveal delay={200} className="border rounded-[16px] p-[32px] flex flex-col items-center transition-colors duration-300 bg-card border-border gradient-border card-premium">
         <h3 className="text-[14px] font-[600] tracking-[0.05em] uppercase mb-[32px] w-full text-center text-foreground">
           TOP 5 DAILY HABITS
         </h3>

@@ -237,8 +237,8 @@ export default function FocusProgressPage() {
                     </div>
                 </div>
 
-                {/* Metric Strip - No Cards */}
-                <div className="flex flex-wrap gap-6 md:gap-24 mb-16 pb-8 border-b border-border">
+                {/* Metric Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
                     <Metric
                         label="Total Timer"
                         value={formatDuration(totalFocusTime)}
@@ -414,9 +414,9 @@ export default function FocusProgressPage() {
 
 function Metric({ label, value }: { label: string, value: string | number }) {
     return (
-        <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">{label}</p>
-            <h3 className="text-3xl md:text-5xl font-light tracking-tight text-foreground">{value}</h3>
+        <div className="gradient-border card-premium rounded-2xl p-6 bg-card">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">{label}</p>
+            <h3 className="text-4xl md:text-5xl font-black tabular-nums text-transparent bg-clip-text bg-gradient-to-b from-foreground to-foreground/60 tracking-tight truncate">{value}</h3>
         </div>
     );
 }

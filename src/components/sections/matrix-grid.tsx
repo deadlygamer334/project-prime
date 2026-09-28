@@ -78,14 +78,14 @@ const QuadrantCard = ({ id, title, description, tasks, onAddTask, onToggleTask, 
 
   return (
     <section
-      className={`matrix-quadrant flex flex-col h-full rounded-3xl p-5 md:p-[30.4px] border transition-all duration-300 shadow-soft hover:shadow-lg backdrop-blur-sm ${colors.bg} ${colors.border}`}
+      className={`matrix-quadrant flex flex-col h-full rounded-3xl p-5 md:p-[30.4px] border transition-all duration-300 shadow-soft hover:shadow-lg ${colors.bg} ${colors.border}`}
     >
       <header className="matrix-quadrant-header flex justify-between items-start mb-6">
         <div className="flex-1 pr-4">
           <h3 className="relative pl-[20px] text-[18.4px] font-semibold leading-[1.4] mb-[5.6px] text-foreground">
             <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-[8px] h-[8px] rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)] ${id === 'urgent-important' ? 'bg-red-500' :
               id === 'not-urgent-important' ? 'bg-blue-500' :
-                id === 'urgent-not-important' ? 'bg-yellow-500' : 'bg-zinc-400'
+                id === 'urgent-not-important' ? 'bg-yellow-500' : 'bg-muted-foreground'
               }`} />
             {title}
           </h3>
@@ -117,7 +117,7 @@ const QuadrantCard = ({ id, title, description, tasks, onAddTask, onToggleTask, 
 
       <div className="matrix-list flex-1 space-y-2 overflow-y-auto max-h-[300px] custom-scrollbar pr-2">
         {tasks.length === 0 ? (
-          <div className={`matrix-empty border border-dashed rounded-2xl p-[40px] text-center text-[14px] backdrop-blur-sm border-border text-muted-foreground bg-muted/20`}>
+          <div className={`matrix-empty border border-dashed rounded-2xl p-[40px] text-center text-[14px] border-border text-muted-foreground bg-muted/20`}>
             No tasks here yet.
           </div>
         ) : (

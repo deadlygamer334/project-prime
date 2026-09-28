@@ -50,7 +50,7 @@ export default function ProgressGraph() {
   return (
     <section className="w-full mt-10 px-0">
       <div
-        className={`habit-main-card w-full border rounded-3xl p-8 md:p-12 transition-all duration-500 relative overflow-hidden bg-card border-border shadow-soft backdrop-blur-xl`}
+        className={`w-full border rounded-3xl p-8 md:p-12 transition-all duration-500 relative overflow-hidden bg-card border-border gradient-border card-premium`}
       >
         {/* Decorative Background Elements */}
         <div className="absolute top-0 right-0 w-64 h-64 blur-[100px] rounded-full pointer-events-none opacity-20 bg-primary" />

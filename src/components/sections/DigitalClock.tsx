@@ -24,11 +24,18 @@ interface ClockProps {
 // 1. Standard (Glassmorphism Box)
 const StandardClock = React.memo(({ hours, minutes, seconds, ampm, dateStr, isDark, showSeconds }: ClockProps) => (
     <div className={cn(
-        "flex flex-col items-center justify-center p-8 rounded-[32px] backdrop-blur-xl border shadow-sm text-center",
-        isDark ? "bg-white/5 border-white/10" : "bg-white/60 border-white"
+        "flex flex-col items-center justify-center p-8 rounded-[32px] backdrop-blur-xl card-premium gradient-border text-center",
+        isDark ? "bg-white/5" : "bg-white/60"
     )}>
         <div className="flex items-baseline gap-2 tabular-nums">
-            <span className={cn("text-5xl sm:text-7xl font-bold tracking-tighter", isDark ? "text-white" : "text-neutral-900")}>
+            <span
+                className={cn("text-5xl sm:text-7xl font-bold tracking-tighter", isDark ? "text-white" : "text-neutral-900")}
+                style={isDark ? {
+                    background: 'linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.7) 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                } : undefined}
+            >
                 {hours}:{minutes}{showSeconds && <span className="text-3xl sm:text-4xl">:{seconds}</span>}
             </span>
             <span className={cn("text-xl sm:text-2xl font-medium", isDark ? "text-white/40" : "text-neutral-500")}>{ampm}</span>

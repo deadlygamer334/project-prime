@@ -20,7 +20,7 @@ interface WeekProps {
 
 const WeeklyProgressCard: React.FC<WeekProps> = ({ weekNum, dateRange, days, completed, percent }) => {
   return (
-    <div className="group border rounded-2xl p-5 flex flex-col min-h-[260px] transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-primary/30 bg-card border-border shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+    <div className="group border rounded-2xl p-5 flex flex-col min-h-[260px] transition-all duration-300 hover:scale-[1.01] hover:border-primary/30 bg-card border-border gradient-border card-premium shimmer-hover">
       {/* Card Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex flex-col">

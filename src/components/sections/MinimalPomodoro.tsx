@@ -42,9 +42,10 @@ function ZenModeClock({ isDark, hasWallpaper }: { isDark: boolean, hasWallpaper:
 interface MinimalPomodoroProps {
     onComplete?: (mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => void;
     addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string) => Promise<void>;
+    onTimerStateChange?: (state: "idle" | "focus" | "break") => void;
 }
 
-function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroProps) {
+function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange }: MinimalPomodoroProps) {
     const { theme } = useTheme();
     const { showAlert, showToast } = useNotification();
     const isDark = theme === "dark";
@@ -103,6 +104,18 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
             setPulseDanger(false);
         }
     }, [isDangerOrCompleteVisible]);
+
+    useEffect(() => {
+        if (!isActive) {
+            onTimerStateChange?.("idle");
+            return;
+        }
+        if (mode === "FOCUS" || mode === "STOPWATCH") {
+            onTimerStateChange?.("focus");
+        } else if (mode === "BREAK") {
+            onTimerStateChange?.("break");
+        }
+    }, [isActive, mode, onTimerStateChange]);
 
     const completeSession = useCallback(async () => {
         if (isCompletingSession) return;
@@ -520,10 +533,37 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                 </div>
             )}
 
-            <div className={`relative flex items-end gap-2 max-md:landscape:gap-1 md:gap-4 ${isPiP ? "p-4 rounded-3xl border bg-card/20 border-border" : "p-4 max-md:landscape:p-1 md:p-8 rounded-[3rem] border backdrop-blur-xl shadow-2xl"} ${!isPiP && (isDark
-                ? "border-white/5 bg-black/20"
-                : "border-black/5 bg-white/40"
-            )}`}>
+            <div className="relative flex items-center justify-center">
+                {!isPiP && (
+                    <svg
+                        className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none"
+                        viewBox="0 0 300 300"
+                    >
+                        <circle
+                            cx="150" cy="150" r="140"
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            fill="transparent"
+                            className="text-border opacity-20"
+                        />
+                        <circle
+                            cx="150" cy="150" r="140"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            fill="transparent"
+                            strokeDasharray={`${2 * Math.PI * 140}`}
+                            strokeDashoffset={`${2 * Math.PI * 140 * (1 - progress / 100)}`}
+                            strokeLinecap="round"
+                            className="text-primary transition-all duration-1000 ease-linear"
+                            style={{ opacity: isActive ? 0.6 : 0.2 }}
+                        />
+                    </svg>
+                )}
+
+                <div className={`relative flex items-end gap-2 max-md:landscape:gap-1 md:gap-4 ${isPiP ? "p-4 rounded-3xl border bg-card/20 border-border" : "p-4 max-md:landscape:p-1 md:p-8 rounded-[3rem] border shadow-2xl"} ${!isPiP && (isDark
+                    ? "border-white/5 bg-black/20"
+                    : "border-black/5 bg-white/40"
+                )}`}>
                 {[
                     { val: hours, unit: "H" },
                     { val: minutes, unit: "M" },
@@ -591,6 +631,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                         </div>
                     </div>
                 ))}
+                </div>
             </div>
 
             {/* Controls in PiP */}

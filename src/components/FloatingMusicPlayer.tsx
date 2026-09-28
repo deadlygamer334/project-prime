@@ -23,9 +23,8 @@ export default function FloatingMusicPlayer() {
                 initial={{ opacity: 0, scale: 0.9, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 50 }}
-                style={{ borderRadius: isMinimized ? "50%" : "24px" }}
-                className={`fixed bottom-8 right-8 z-[100] cursor-move select-none shadow-2xl overflow-hidden ${isMinimized ? "w-14 h-14" : "w-72"
-                    } bg-card/95 border border-border backdrop-blur-xl`}
+                className={`fixed bottom-8 right-8 z-[100] cursor-move select-none shadow-2xl rounded-2xl overflow-hidden ${isMinimized ? "w-14 h-14" : "w-72"
+                    } bg-background/80 backdrop-blur-2xl gradient-border card-premium`}
             >
                 <div className={`w-full h-full flex flex-col ${isMinimized ? "items-center justify-center" : "p-4"}`}>
                     <div className={`flex items-center justify-between ${isMinimized ? "w-full h-full justify-center relative" : "mb-4"}`}>
@@ -33,20 +32,19 @@ export default function FloatingMusicPlayer() {
                             className="flex items-center gap-2"
                             onClick={() => isMinimized && setIsMinimized(false)}
                         >
-                            <div className={`relative w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isDark ? "bg-white/5" : "bg-black/5"
-                                } ${isMinimized ? "w-10 h-10 rounded-full" : ""}`}>
+                            <div className={`relative w-8 h-8 rounded-xl flex items-center justify-center transition-all bg-primary/10 ${isMinimized ? "w-10 h-10 rounded-full" : ""}`}>
                                 <Music
                                     size={isMinimized ? 20 : 16}
-                                    className={`${isDark ? "text-purple-400" : "text-purple-600"} ${activeSounds.length > 0 ? "animate-pulse" : ""}`}
+                                    className={`text-primary ${activeSounds.length > 0 ? "animate-pulse" : ""}`}
                                 />
                                 {isMinimized && (
-                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
                                         {activeSounds.length}
                                     </div>
                                 )}
                             </div>
                             {!isMinimized && (
-                                <span className={`text-sm font-bold ${isDark ? "text-white" : "text-black"}`}>
+                                <span className="text-sm font-bold text-foreground">
                                     Focus Ambience
                                 </span>
                             )}
@@ -56,8 +54,7 @@ export default function FloatingMusicPlayer() {
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => setIsMinimized(true)}
-                                    className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/5 text-white/40" : "hover:bg-black/5 text-black/40"
-                                        }`}
+                                    className="p-1.5 rounded-lg transition-colors hover:bg-muted text-muted-foreground hover:text-foreground"
                                 >
                                     <Minimize2 size={14} />
                                 </button>
@@ -66,8 +63,7 @@ export default function FloatingMusicPlayer() {
                                         e.stopPropagation();
                                         stopAll();
                                     }}
-                                    className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-red-500/20 text-red-500/60" : "hover:bg-red-50 text-red-500"
-                                        }`}
+                                    className="p-1.5 rounded-lg transition-colors hover:bg-destructive/20 text-destructive/70 hover:text-destructive"
                                 >
                                     <X size={14} />
                                 </button>
@@ -85,23 +81,22 @@ export default function FloatingMusicPlayer() {
                                 {activeSounds.map((sound) => (
                                     <div key={sound.id} className="flex flex-col gap-1 mb-1">
                                         <div className="flex items-center justify-between">
-                                            <span className={`text-[11px] font-medium truncate ${isDark ? "text-white/60" : "text-black/60"}`}>
+                                            <span className="text-[11px] font-medium truncate text-foreground/80">
                                                 {sound.icon} {sound.title}
                                             </span>
-                                            <span className={`text-[10px] ${isDark ? "text-white/30" : "text-black/30"}`}>
+                                            <span className="text-[10px] text-muted-foreground font-mono tabular-nums">
                                                 {sound.volume}%
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Volume2 size={12} className={isDark ? "text-white/20" : "text-black/20"} />
+                                            <Volume2 size={12} className="text-muted-foreground shrink-0" />
                                             <input
                                                 type="range"
                                                 min="0"
                                                 max="100"
                                                 value={sound.volume}
                                                 onChange={(e) => updateSoundVolume(sound.id, parseInt(e.target.value))}
-                                                className={`w-full h-1 rounded-full cursor-pointer appearance-none accent-primary ${isDark ? "bg-white/10" : "bg-black/10"
-                                                    }`}
+                                                className="w-full h-1 rounded-full cursor-pointer appearance-none accent-primary bg-muted shadow-[0_0_8px_rgba(167,139,250,0.4)]"
                                             />
                                         </div>
                                     </div>
@@ -110,10 +105,7 @@ export default function FloatingMusicPlayer() {
 
                             <button
                                 onClick={stopAll}
-                                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${isDark
-                                        ? "bg-white/5 hover:bg-white/10 text-white border border-white/5"
-                                        : "bg-black/5 hover:bg-black/10 text-black border border-black/5"
-                                    }`}
+                                className="w-full py-2.5 rounded-xl text-xs font-bold transition-all bg-muted/60 hover:bg-muted text-foreground border border-border"
                             >
                                 Stop All Sounds
                             </button>

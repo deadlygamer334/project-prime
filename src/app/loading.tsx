@@ -13,7 +13,7 @@ export default function Loading() {
             </div>
             <div className="flex flex-col items-center gap-2">
                 <PremiumSkeleton width="180px" height="20px" borderRadius="12px" />
-                <p className="text-zinc-400 text-xs font-mono uppercase tracking-widest opacity-80 animate-pulse">
+                <p className="text-muted-foreground text-xs font-mono uppercase tracking-widest opacity-80 animate-pulse">
                     Loading System
                 </p>
             </div>

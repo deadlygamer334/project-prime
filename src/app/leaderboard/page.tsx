@@ -65,9 +65,18 @@ export default function LeaderboardPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-12"
                     >
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                            <Trophy className="w-12 h-12 text-yellow-500" />
-                            <h1 className={`text-4xl font-bold ${isDark ? "text-white" : "text-black"}`}>Weekly Leaderboard</h1>
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                            <div className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+                                <Trophy className="w-10 h-10 text-yellow-500" />
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-black tracking-tight"
+                                style={{
+                                    background: 'linear-gradient(135deg, #ffffff 0%, rgba(167,139,250,0.8) 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
+                                }}>
+                                Weekly Leaderboard
+                            </h1>
                         </div>
                         <p className="text-lg text-muted-foreground">
                             Top performers this week
@@ -77,13 +86,13 @@ export default function LeaderboardPage() {
                         </p>
                     </motion.div>
 
-                    {/* Current User Rank Card - USES THE NEWcurrentUserEntry FROM HOOK */}
+                    {/* Current User Rank Card - USES THE NEW currentUserEntry FROM HOOK */}
                     <AnimatePresence>
                         {currentUserEntry && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="mb-8 p-6 rounded-2xl border backdrop-blur-md bg-primary/10 border-primary/30 shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.1)]"
+                                className="mb-8 p-6 rounded-2xl border gradient-border card-premium bg-primary/5 border-primary/20 shadow-[0_0_40px_rgba(167,139,250,0.1)] ring-1 ring-primary/30"
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
@@ -138,7 +147,7 @@ export default function LeaderboardPage() {
 
                     {/* Empty State */}
                     {!isLoading && !error && leaderboard.length === 0 && (
-                        <div className="p-12 rounded-2xl border text-center bg-card border-border">
+                        <div className="p-12 rounded-2xl border text-center bg-card border-border gradient-border card-premium">
                             <Trophy className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
                             <h3 className="text-xl font-semibold mb-2">No data yet</h3>
                             <p className="text-muted-foreground">
@@ -157,31 +166,46 @@ export default function LeaderboardPage() {
                         >
                             {leaderboard.map((entry, index) => {
                                 const isCurrentUser = entry.userId === currentUserId;
-                                const isTop3 = index < 3;
+                                const isTop1 = index === 0;
+                                const isTop2 = index === 1;
+                                const isTop3 = index === 2;
 
                                 return (
                                     <motion.div
                                         key={entry.userId}
                                         variants={itemVariants}
-                                        className={`p-5 rounded-2xl border backdrop-blur-md transition-all hover:scale-[1.01] ${isCurrentUser
-                                            ? "bg-primary/20 border-primary/40 shadow-[0_4px_15px_rgba(var(--color-primary-rgb),0.15)]"
-                                            : isTop3
-                                                ? "bg-gradient-to-r from-yellow-500/10 to-orange-500/5 border-yellow-500/20"
-                                                : "bg-card border-border hover:bg-muted/30"
+                                        className={`p-5 rounded-2xl border transition-all hover:scale-[1.01] gradient-border shimmer-hover card-premium ${isCurrentUser
+                                            ? "bg-primary/5 border-primary/20 shadow-[0_0_40px_rgba(167,139,250,0.1)] ring-1 ring-primary/30"
+                                            : isTop1
+                                                ? "border-yellow-500/30 bg-yellow-500/5 shadow-[0_0_30px_rgba(234,179,8,0.1)]"
+                                                : isTop2
+                                                    ? "border-slate-400/30 bg-slate-400/5"
+                                                    : isTop3
+                                                        ? "border-amber-700/30 bg-amber-700/5"
+                                                        : "bg-card border-border hover:bg-muted/30"
                                             }`}
                                     >
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                             <div className="flex items-center gap-4 w-full sm:w-auto">
                                                 {/* Rank Badge */}
-                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0 ${index === 0 ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg shadow-yellow-500/20" :
-                                                    index === 1 ? "bg-gradient-to-br from-gray-300 to-gray-500 text-white shadow-lg shadow-gray-400/20" :
-                                                        index === 2 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/20" :
-                                                            "bg-muted text-muted-foreground"
-                                                    }`}>
-                                                    {index === 0 ? <Trophy className="w-6 h-6" /> :
-                                                        index === 1 ? <Medal className="w-6 h-6" /> :
-                                                            index === 2 ? <Award className="w-6 h-6" /> :
-                                                                `#${entry.rank}`}
+                                                <div className="shrink-0">
+                                                    {isTop1 ? (
+                                                        <div className="p-2.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                                                            <Trophy size={20} className="text-yellow-500" />
+                                                        </div>
+                                                    ) : isTop2 ? (
+                                                        <div className="p-2.5 rounded-xl bg-slate-400/10 border border-slate-400/20">
+                                                            <Medal size={20} className="text-slate-300" />
+                                                        </div>
+                                                    ) : isTop3 ? (
+                                                        <div className="p-2.5 rounded-xl bg-amber-700/10 border border-amber-700/20">
+                                                            <Award size={20} className="text-amber-500" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-xs text-muted-foreground">
+                                                            #{entry.rank}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {/* User Info */}
@@ -201,10 +225,10 @@ export default function LeaderboardPage() {
                                             </div>
 
                                             {/* Focus Time */}
-                                            <div className="text-left sm:text-right w-full sm:w-auto pl-[64px] sm:pl-0">
+                                            <div className="text-left sm:text-right w-full sm:w-auto pl-[56px] sm:pl-0">
                                                 <div className="flex items-center gap-2 justify-start sm:justify-end">
-                                                    <Flame className={`w-5 h-5 ${isTop3 ? "text-orange-500 animate-pulse" : "text-muted-foreground"}`} />
-                                                    <p className={`text-2xl font-bold ${isTop3 ? "text-orange-500" : ""}`}>{formatTime(entry.weeklyFocusMinutes)}</p>
+                                                    <Flame className={`w-5 h-5 ${index < 3 ? "text-orange-500 animate-pulse" : "text-muted-foreground"}`} />
+                                                    <p className={`text-2xl font-bold ${index < 3 ? "text-orange-500" : ""}`}>{formatTime(entry.weeklyFocusMinutes)}</p>
                                                 </div>
                                                 <p className="text-sm text-muted-foreground">
                                                     Focus Minutes
@@ -223,7 +247,7 @@ export default function LeaderboardPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
-                            className="mt-8 p-6 rounded-2xl border backdrop-blur-md text-center bg-card/50 border-border"
+                            className="mt-8 p-6 rounded-2xl border text-center bg-card border-border gradient-border card-premium"
                         >
                             <TrendingUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                             <p className="text-sm text-muted-foreground">

@@ -87,7 +87,7 @@ export default function FocusChart({ data, timeframe, showBreakdown, subjects = 
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full gradient-border card-premium rounded-3xl p-6 md:p-8 bg-card">
             <div className="flex items-center justify-between mb-8 px-2">
                 <div>
                     <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">
@@ -119,15 +119,14 @@ export default function FocusChart({ data, timeframe, showBreakdown, subjects = 
                     >
                         <defs>
                             <linearGradient id="colorFocus" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor={isDark ? "#fff" : "#000"} stopOpacity={0.1} />
-                                <stop offset="95%" stopColor={isDark ? "#fff" : "#000"} stopOpacity={0} />
+                                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+                                <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                             </linearGradient>
                         </defs>
                         <CartesianGrid
                             strokeDasharray="3 3"
                             vertical={false}
-                            stroke="var(--border)"
-                            strokeOpacity={0.3}
+                            stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}
                         />
                         <XAxis
                             dataKey="name"
@@ -166,8 +165,8 @@ export default function FocusChart({ data, timeframe, showBreakdown, subjects = 
                             <Area
                                 type="monotone"
                                 dataKey="value"
-                                stroke="var(--foreground)"
-                                strokeWidth={2}
+                                stroke="var(--color-primary)"
+                                strokeWidth={2.5}
                                 fillOpacity={1}
                                 fill="url(#colorFocus)"
                                 animationDuration={1500}

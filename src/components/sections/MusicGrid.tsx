@@ -61,10 +61,7 @@ const MusicCard: React.FC<MusicCardProps> = ({
 
   return (
     <div
-      className={`music-card group relative p-[28px] rounded-3xl border transition-all duration-300 ${isDark
-        ? "bg-card/40 backdrop-blur-[12px] border-border hover:border-primary/50 shadow-2xl"
-        : "bg-card border-border hover:border-primary shadow-sm"
-        }`}
+      className="music-card group relative p-[28px] rounded-3xl border border-border transition-all duration-300 gradient-border card-premium bg-card hover:border-primary/50"
     >
 
       <div className="card-header flex items-center mb-[24px]">
