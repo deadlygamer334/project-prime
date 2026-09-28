@@ -77,10 +77,7 @@ export default function MonthlyStatsModal({ isOpen, onClose }: MonthlyStatsModal
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className={`relative w-full max-w-5xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-[2rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 backdrop-blur-2xl transition-colors ${isDark
-                            ? "bg-[#0a0a0c]/80"
-                            : "bg-white/80"
-                            }`}
+                        className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-[2rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-border backdrop-blur-2xl transition-colors bg-card/80"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Glow Effect */}
@@ -191,7 +188,7 @@ export default function MonthlyStatsModal({ isOpen, onClose }: MonthlyStatsModal
                                                 <div className="relative w-full flex flex-col justify-end h-full">
                                                     {/* Tooltip */}
                                                     <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-all pointer-events-none mb-2 z-20">
-                                                        <div className={`px-2 py-1 rounded-lg text-[10px] font-bold shadow-xl border ${isDark ? "bg-[#1a1b23] border-white/10 text-white" : "bg-white border-black/10 text-black"}`}>
+                                                        <div className="px-2 py-1 rounded-lg text-[10px] font-bold shadow-xl border bg-card border-border text-foreground">
                                                             {month.percentage.toFixed(1)}%
                                                         </div>
                                                     </div>

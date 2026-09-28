@@ -61,13 +61,10 @@ export default function KeyboardShortcutsModal() {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ duration: 0.2 }}
-                        className={`relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border ${isDark
-                            ? "bg-[#1c1c1e] border-white/10"
-                            : "bg-white border-black/5"
-                            }`}
+                        className="relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-border bg-card"
                     >
                         {/* Header */}
-                        <div className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? "border-white/10" : "border-black/5"}`}>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-lg">
                                     <button

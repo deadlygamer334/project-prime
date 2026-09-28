@@ -76,12 +76,16 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
   ];
 
   const toolItems = [
-    { label: "Matrix", href: "/matrix", icon: LayoutGrid, desc: "Prioritize tasks" },
-    { label: "Timer Progress", href: "/focus-progress", icon: Target, desc: "Track goals" },
-    { label: "Motivation", href: "/motivation", icon: Zap, desc: "Fuel your drive" },
-    { label: "Ambience", href: "/ambience", icon: Headphones, desc: "Soundscapes" },
-    { label: "Settings", href: "/settings", icon: Settings, desc: "Customize app" },
+    { label: "Matrix", href: "/matrix", icon: LayoutGrid, desc: "Prioritize tasks", tint: "bg-blue-500/10 text-blue-400" },
+    { label: "Timer Progress", href: "/focus-progress", icon: Target, desc: "Track goals", tint: "bg-violet-500/10 text-violet-400" },
+    { label: "Motivation", href: "/motivation", icon: Zap, desc: "Fuel your drive", tint: "bg-amber-500/10 text-amber-400" },
+    { label: "Ambience", href: "/ambience", icon: Headphones, desc: "Soundscapes", tint: "bg-emerald-500/10 text-emerald-400" },
+    { label: "Settings", href: "/settings", icon: Settings, desc: "Customize app", tint: "bg-slate-500/10 text-slate-400" },
   ];
+
+  const isToolPageActive = toolItems.some(
+    item => pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
+  );
 
   const isDark = theme === "dark";
 
@@ -90,12 +94,9 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
       <header className={`transition-all duration-500 fixed top-0 w-full z-[1000] px-4 md:px-6 pt-4 max-md:landscape:pt-2 ${isZenMode ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
         <div
           className={`mx-auto max-w-[1400px] flex relative items-center justify-between w-full h-[64px] max-md:landscape:h-[44px] px-4 md:px-6 max-md:landscape:pl-28 rounded-2xl border backdrop-blur-[24px] transition-all duration-500 shadow-2xl ${isDark
-            ? "bg-[rgba(20,20,20,0.6)] border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
-            : "bg-[rgba(255,255,255,0.6)] border-white/40 text-[#1d1d1f] shadow-[0_8px_32px_rgba(0,0,0,0.05)]"
+            ? "bg-background/60 border-white/20 text-foreground shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+            : "bg-background/60 border-border text-foreground shadow-[0_8px_32px_rgba(0,0,0,0.05)]"
             }`}
-          style={{
-            fontFamily: 'var(--font-current)'
-          }}
         >
           {/* Header Left: Logo/Title */}
           <div className="header-left flex items-center gap-3">
@@ -105,12 +106,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                 <Logo size={32} className="relative z-10" priority />
               </div>
               <h1
-                className={`page-title text-[18px] md:text-[22px] max-md:landscape:text-sm font-bold tracking-tight cursor-pointer transition-all whitespace-nowrap ${isDark ? "text-white" : "text-[#1d1d1f]"
-                  }`}
-                style={{
-                  letterSpacing: "-0.03em",
-                  lineHeight: "1.2"
-                }}
+                className="page-title text-[18px] md:text-[22px] max-md:landscape:text-sm font-bold tracking-[-0.03em] leading-[1.2] cursor-pointer transition-all whitespace-nowrap text-foreground"
               >
                 {title || "PRIME"}
               </h1>
@@ -140,8 +136,8 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                     key={item.label}
                     href={item.href}
                     className={`relative flex items-center justify-center px-4 h-[36px] text-[13.5px] font-medium rounded-xl transition-colors duration-300 whitespace-nowrap ${pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
-                      ? isDark ? "text-white shadow-sm" : "text-[#1d1d1f] font-semibold"
-                      : isDark ? "text-white/60 hover:text-white" : "text-black/60 hover:text-black"
+                      ? isDark ? "text-white shadow-sm" : "text-foreground font-semibold"
+                      : isDark ? "text-white/60 hover:text-white" : "text-foreground/60 hover:text-foreground"
                       }`}
                   >
                     {isActive && (
@@ -172,12 +168,25 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                   aria-expanded={isMoreOpen}
                   aria-haspopup="true"
                   aria-label="More Menu"
-                  className={`flex items-center gap-1.5 px-4 h-[36px] text-[13.5px] font-medium rounded-xl transition-all duration-300 whitespace-nowrap ${isMoreOpen || toolItems.some(i => i.href === activePath)
-                    ? isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
-                    : isDark ? "text-white/60 hover:text-white hover:bg-white/5" : "text-black/60 hover:text-black hover:bg-black/5"
+                  className={`relative flex items-center gap-1.5 px-4 h-[36px] text-[13.5px] font-medium rounded-xl transition-all duration-300 whitespace-nowrap ${isToolPageActive || isMoreOpen
+                    ? isDark ? "text-white font-semibold" : "text-foreground font-semibold"
+                    : isDark ? "text-white/60 hover:text-white hover:bg-white/5" : "text-foreground/60 hover:text-foreground hover:bg-black/5"
                     }`}
                 >
-                  More <ChevronDown size={14} className={`transition-transform duration-300 ${isMoreOpen ? 'rotate-180' : ''}`} />
+                  {(isToolPageActive || isMoreOpen) && (
+                    <motion.div
+                      layoutId="moreActiveHighlight"
+                      className={`absolute inset-0 z-0 rounded-xl ${isDark ? "bg-white/10" : "bg-black/5"}`}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 35
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    More <ChevronDown size={14} className={`transition-transform duration-300 ${isMoreOpen ? 'rotate-180' : ''}`} />
+                  </span>
                 </button>
 
                 <AnimatePresence>
@@ -187,36 +196,35 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className={`absolute right-0 top-full mt-2 w-64 rounded-2xl border overflow-hidden z-[100] ${isDark
-                        ? "bg-[#1a1a1a] border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_0_rgba(255,255,255,0.1)_inset]"
-                        : "bg-white border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.9)_inset,0_1px_0_0_rgba(255,255,255,1)_inset]"
-                        }`}
-                      style={{
-                        background: isDark
-                          ? "linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%)"
-                          : "linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 250, 250, 0.98) 100%)",
-                      }}
+                      className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden z-[100] py-1"
                     >
                       <div className="grid grid-cols-1">
-                        {toolItems.map((item, index) => (
-                          <Link
-                            key={item.label}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 transition-colors group ${isDark
-                              ? "text-white hover:bg-white/10"
-                              : "text-black hover:bg-black/5"
-                              }`}
-                            onClick={() => setIsMoreOpen(false)}
-                          >
-                            <div className={`p-2 rounded-lg transition-colors ${isDark ? "bg-white/5 group-hover:bg-white/10" : "bg-black/5 group-hover:bg-black/10"}`}>
-                              <item.icon size={16} />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[13.5px] font-medium leading-tight">{item.label}</span>
-                              <span className={`text-[11px] leading-tight ${isDark ? "text-white/40" : "text-black/40"}`}>{item.desc}</span>
-                            </div>
-                          </Link>
-                        ))}
+                        {toolItems.map((item) => {
+                          const isItemActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+                          return (
+                            <React.Fragment key={item.label}>
+                              {item.label === "Settings" && (
+                                <div className="h-px bg-border mx-4 my-1" />
+                              )}
+                              <Link
+                                href={item.href}
+                                className={`flex items-center gap-3 px-4 py-3 transition-colors duration-150 group relative ${isItemActive
+                                  ? "bg-primary/10 border-l-2 border-primary text-foreground"
+                                  : "bg-transparent hover:bg-muted/50 text-foreground"
+                                  }`}
+                                onClick={() => setIsMoreOpen(false)}
+                              >
+                                <div className={`p-2 rounded-xl transition-all duration-150 ${item.tint} group-hover:opacity-100 opacity-80`}>
+                                  <item.icon size={16} />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[13.5px] font-medium leading-tight">{item.label}</span>
+                                  <span className="text-[11px] leading-tight text-muted-foreground">{item.desc}</span>
+                                </div>
+                              </Link>
+                            </React.Fragment>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -278,10 +286,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         <div className={`md:hidden fixed bottom-6 left-0 right-0 landscape:bottom-auto landscape:top-1/2 landscape:-translate-y-1/2 landscape:left-4 landscape:right-auto landscape:w-auto z-[1001] px-4 landscape:px-0 pointer-events-none transition-all duration-500 ${isZenMode ? "translate-y-20 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
           <div className="flex justify-center max-w-md mx-auto pointer-events-auto">
             <nav
-              className={`flex items-center max-md:landscape:flex-col gap-1 p-2 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-500 ${isDark
-                ? "bg-[rgba(20,20,20,0.8)] border-white/20 text-white"
-                : "bg-[rgba(255,255,255,0.8)] border-black/10 text-black"
-                }`}
+              className="flex items-center max-md:landscape:flex-col gap-1 p-2 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-500 bg-background/80 border-border text-foreground"
             >
               {mainNavItems.map((item) => {
                 const isActive = (activePath || pathname) === item.href;
@@ -335,15 +340,12 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                     <span className="text-[9px] font-bold tracking-tighter uppercase mt-1 max-md:landscape:hidden">More</span>
                   </button>
                 </DrawerTrigger>
-                <DrawerContent className={`rounded-t-[32px] rounded-b-[32px] mb-28 mx-4 max-md:landscape:mb-0 max-md:landscape:mx-0 max-md:landscape:rounded-l-[32px] max-md:landscape:rounded-r-none max-md:landscape:rounded-tr-none border backdrop-blur-3xl transition-[background-color] duration-500 overflow-hidden ${isDark
-                  ? "bg-[#0a0a0c]/90 border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.5)]"
-                  : "bg-white/95 border-black/5 shadow-[0_-8px_32px_rgba(0,0,0,0.05)]"
-                  }`}>
-                  <div className="mx-auto w-12 h-1.5 max-md:landscape:w-1.5 max-md:landscape:h-12 rounded-full bg-white/20 mt-4 mb-4 max-md:landscape:my-auto max-md:landscape:ml-2 max-md:landscape:mr-4" />
+                <DrawerContent className="rounded-t-[32px] rounded-b-[32px] mb-28 mx-4 max-md:landscape:mb-0 max-md:landscape:mx-0 max-md:landscape:rounded-l-[32px] max-md:landscape:rounded-r-none max-md:landscape:rounded-tr-none border border-border backdrop-blur-3xl bg-card/95 shadow-2xl transition-[background-color] duration-500 overflow-hidden">
+                  <div className="mx-auto w-12 h-1.5 max-md:landscape:w-1.5 max-md:landscape:h-12 rounded-full bg-muted-foreground/30 mt-4 mb-4 max-md:landscape:my-auto max-md:landscape:ml-2 max-md:landscape:mr-4" />
                   <div className="max-md:landscape:flex-1 max-md:landscape:overflow-y-auto">
                     <DrawerHeader>
-                      <DrawerTitle className={`text-2xl font-bold tracking-tight text-center ${isDark ? "text-white" : "text-black"}`}>Apps & Tools</DrawerTitle>
-                      <DrawerDescription className={`text-center mb-6 ${isDark ? "text-white/40" : "text-black/40"}`}>
+                      <DrawerTitle className="text-2xl font-bold tracking-tight text-center text-foreground">Apps & Tools</DrawerTitle>
+                      <DrawerDescription className="text-center mb-6 text-muted-foreground">
                         All your productivity tools in one place
                       </DrawerDescription>
                     </DrawerHeader>
@@ -355,10 +357,10 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                           onClick={() => setIsDrawerOpen(false)}
                           className="flex flex-col items-center gap-3 transition-transform active:scale-90"
                         >
-                          <div className={`p-4 rounded-[24px] shadow-xl transition-all ${isDark ? "bg-white/5 border border-white/5" : "bg-black/5 border border-black/5"}`}>
-                            <item.icon size={28} className={isDark ? "text-white" : "text-black"} />
+                          <div className={`p-4 rounded-[24px] shadow-xl transition-all ${item.tint}`}>
+                            <item.icon size={28} />
                           </div>
-                          <span className={`text-[13px] font-bold tracking-tight ${isDark ? "text-white" : "text-black"}`}>{item.label}</span>
+                          <span className="text-[13px] font-bold tracking-tight text-foreground">{item.label}</span>
                         </Link>
                       ))}
                     </div>

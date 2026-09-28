@@ -50,6 +50,13 @@ export const CompletionOverlay = ({ show, duration, mode }: CompletionOverlayPro
                     >
                         {mode === "FOCUS" || mode === "STOPWATCH" ? `${displayTime} recorded!` : "Ready to get back to work?"}
                     </motion.p>
+                    <motion.div
+                        initial={{ scaleX: 1 }}
+                        animate={{ scaleX: 0 }}
+                        transition={{ duration: 4, ease: "linear" }}
+                        style={{ transformOrigin: "left" }}
+                        className="absolute bottom-0 left-0 w-full h-1 bg-primary/80 rounded-full"
+                    />
                 </motion.div>
             )}
         </AnimatePresence>

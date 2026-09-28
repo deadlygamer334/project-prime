@@ -286,7 +286,7 @@ const MatrixGrid = () => {
               setDate={(d) => d && setCurrentDate(d)}
               className="h-[46.4px] px-4 py-2 rounded-xl border border-border bg-card/50 text-foreground/80 shadow-none hover:bg-muted"
             />
-            <span className={`hidden sm:inline-block text-[14.4px] font-semibold whitespace-nowrap px-2 ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
+            <span className="hidden sm:inline-block text-[14.4px] font-semibold whitespace-nowrap px-2 text-muted-foreground">
               {formatDisplayDate(currentDate)}
             </span>
           </div>

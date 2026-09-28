@@ -35,7 +35,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
             }
 
             return (
-                <div className="min-h-[400px] h-full w-full flex flex-col items-center justify-center p-8 text-center bg-zinc-50 dark:bg-[#050505] transition-colors">
+                <div className="min-h-[400px] h-full w-full flex flex-col items-center justify-center p-8 text-center bg-background transition-colors">
                     <div className="p-4 rounded-full bg-red-500/10 mb-6 animate-in slide-in-from-bottom-2 fade-in duration-500">
                         <AlertCircle className="w-12 h-12 text-red-500" />
                     </div>

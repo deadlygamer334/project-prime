@@ -20,28 +20,28 @@ const MatrixHero = () => {
       {/* Bottom section: Color Legend */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 w-fit">
         <div className="flex items-center gap-3">
-          <span className="w-3.5 h-3.5 rounded-full bg-[#ff5f56] shadow-[0_0_0_4px_rgba(255,95,86,0.15)]"></span>
+          <span className="w-3.5 h-3.5 rounded-full bg-rose-500 shadow-[0_0_0_4px_rgba(244,63,94,0.15)]"></span>
           <span className="text-sm text-foreground/80">
             Important & urgent (IU)
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="w-3.5 h-3.5 rounded-full bg-[#5eaeff] shadow-[0_0_0_4px_rgba(94,174,255,0.15)]"></span>
+          <span className="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]"></span>
           <span className="text-sm text-foreground/80">
             Important, not urgent (IBNU)
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] shadow-[0_0_0_4px_rgba(255,189,46,0.15)]"></span>
+          <span className="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.15)]"></span>
           <span className="text-sm text-foreground/80">
             Not important, urgent (NIBU)
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="w-3.5 h-3.5 rounded-full bg-[#a1a1aa] shadow-[0_0_0_4px_rgba(161,161,170,0.15)]"></span>
+          <span className="w-3.5 h-3.5 rounded-full bg-zinc-400 shadow-[0_0_0_4px_rgba(161,161,170,0.15)]"></span>
           <span className="text-sm text-foreground/80">
             Not important, not urgent (NINU)
           </span>

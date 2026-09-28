@@ -58,6 +58,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
     const [lastSessionDuration, setLastSessionDuration] = useState(0);
     const [isCompletingSession, setIsCompletingSession] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
+    const [pulseDanger, setPulseDanger] = useState(false);
     const { playTick, playAlarm } = useSoundEffects();
 
     const handleTimerCompleteWrapper = useCallback(async (m: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => {
@@ -88,6 +89,20 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
         addSessionTransaction,
         isCompleting: isCompletingSession
     });
+
+    const isDangerOrCompleteVisible = (mode === "STOPWATCH" && timeLeft > 0) || (((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0);
+
+    useEffect(() => {
+        if (isDangerOrCompleteVisible) {
+            setPulseDanger(true);
+            const timer = setTimeout(() => {
+                setPulseDanger(false);
+            }, 1500);
+            return () => clearTimeout(timer);
+        } else {
+            setPulseDanger(false);
+        }
+    }, [isDangerOrCompleteVisible]);
 
     const completeSession = useCallback(async () => {
         if (isCompletingSession) return;
@@ -466,7 +481,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
     const getFontClass = (f: string) => {
         switch (f) {
             case "mono": return "font-mono";
-            case "digital": return "font-mono tracking-widest";
+            case "digital": return "font-digital";
             case "retro": return "font-serif";
             default: return "font-sans";
         }
@@ -735,28 +750,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
             */}
             {!pipWindow && (
                 <div className="flex items-center gap-4 sm:gap-6 z-10 order-4 max-md:landscape:order-4 justify-self-center max-md:landscape:justify-self-start">
-                    {mode === "STOPWATCH" && timeLeft > 0 && (
-                        <button
-                            onClick={completeSession}
-                            disabled={isCompletingSession}
-                            className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
-                                ? (isDark ? "bg-green-500/20 border-green-400 text-green-400 hover:bg-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "bg-green-500/20 border-green-600 text-green-600 hover:bg-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]")
-                                : isDark
-                                    ? "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
-                                    : "bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
-                                }`}
-                            title="Finish Session"
-                        >
-                            {isCompletingSession ? (
-                                <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-6 sm:h-6">
-                                    <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            )}
-                        </button>
-                    )}
-
+                    {/* Primary Button (Start/Pause) */}
                     <button
                         onClick={handleStart}
                         disabled={isCompletingSession || isStarting}
@@ -774,67 +768,90 @@ function MinimalPomodoro({ onComplete, addSessionTransaction }: MinimalPomodoroP
                         {isActive ? <Pause fill="currentColor" className="w-5 h-5 max-md:landscape:w-4 max-md:landscape:h-4 sm:w-8 sm:h-8" /> : <Play fill="currentColor" className="w-5 h-5 max-md:landscape:w-4 max-md:landscape:h-4 sm:w-8 sm:h-8 ml-1" />}
                     </button>
 
-                    <button
-                        onClick={resetTimer}
-                        disabled={isCompletingSession}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:rotate-180 duration-500 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
-                            ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
-                            : isDark
-                                ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                                : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
-                            }`}
-                    >
-                        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-
-                    <button
-                        onClick={toggleFullScreen}
-                        disabled={isCompletingSession}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
-                            ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
-                            : isDark
-                                ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                                : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
-                            }`}
-                        title="Zen Mode"
-                    >
-                        <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-
-
-                    <button
-                        onClick={togglePiP}
-                        disabled={isCompletingSession}
-                        className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-110 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
-                            ? (isDark ? "border-white/20 bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40" : "border-black/10 bg-white/40 backdrop-blur-md text-black/80 hover:text-black hover:border-black/20")
-                            : isDark
-                                ? "border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                                : "border-black/10 text-black/40 hover:text-black hover:border-black/30"
-                            }`}
-                        title="Picture-in-Picture"
-                    >
-                        <PictureInPicture2 className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
-                    </button>
-
-                    {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
+                    {/* Secondary Controls Group (Reset + Zen + PiP) */}
+                    <div className="flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border">
                         <button
-                            onClick={completeSession}
+                            onClick={resetTimer}
                             disabled={isCompletingSession}
-                            className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
-                                ? (isDark ? "bg-red-500/20 border-red-400 text-red-400 hover:bg-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]" : "bg-red-500/20 border-red-600 text-red-600 hover:bg-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]")
-                                : isDark
-                                    ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
-                                    : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20"
-                                }`}
-                            title="Stop and Log Session"
+                            className={`flex items-center justify-center w-10 h-10 max-md:landscape:w-9 max-md:landscape:h-9 sm:w-12 sm:h-12 rounded-full border border-transparent hover:border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""}`}
+                            title="Reset Timer"
                         >
-                            {isCompletingSession ? (
-                                <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                                <Square className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" />
-                            )}
+                            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 transition-transform hover:rotate-180 duration-500" />
                         </button>
-                    )}
+
+                        <button
+                            onClick={toggleFullScreen}
+                            disabled={isCompletingSession}
+                            className={`flex items-center justify-center w-10 h-10 max-md:landscape:w-9 max-md:landscape:h-9 sm:w-12 sm:h-12 rounded-full border border-transparent hover:border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""}`}
+                            title="Zen Mode"
+                        >
+                            <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5 hover:scale-110 transition-transform" />
+                        </button>
+
+                        <button
+                            onClick={togglePiP}
+                            disabled={isCompletingSession}
+                            className={`flex items-center justify-center w-10 h-10 max-md:landscape:w-9 max-md:landscape:h-9 sm:w-12 sm:h-12 rounded-full border border-transparent hover:border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""}`}
+                            title="Picture-in-Picture"
+                        >
+                            <PictureInPicture2 className="w-[18px] h-[18px] sm:w-5 sm:h-5 hover:scale-110 transition-transform" />
+                        </button>
+                    </div>
+
+                    {/* Danger / Complete Action */}
+                    <AnimatePresence>
+                        {mode === "STOPWATCH" && timeLeft > 0 && (
+                            <motion.button
+                                key="stopwatch-complete"
+                                initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                exit={{ opacity: 0, x: 20, scale: 0.8 }}
+                                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                                onClick={completeSession}
+                                disabled={isCompletingSession}
+                                className={`group flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${pulseDanger ? "animate-pulse ring-2 ring-green-500/50" : ""} ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
+                                    ? (isDark ? "bg-green-500/20 border-green-400 text-green-400 hover:bg-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "bg-green-500/20 border-green-600 text-green-600 hover:bg-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]")
+                                    : isDark
+                                        ? "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
+                                        : "bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
+                                    }`}
+                                title="Finish Session"
+                            >
+                                {isCompletingSession ? (
+                                    <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-6 sm:h-6">
+                                        <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                )}
+                            </motion.button>
+                        )}
+
+                        {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
+                            <motion.button
+                                key="timer-stop"
+                                initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                exit={{ opacity: 0, x: 20, scale: 0.8 }}
+                                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                                onClick={completeSession}
+                                disabled={isCompletingSession}
+                                className={`flex items-center justify-center w-12 h-12 max-md:landscape:w-10 max-md:landscape:h-10 sm:w-14 sm:h-14 rounded-full border transition-all hover:scale-105 duration-300 ${pulseDanger ? "animate-pulse ring-2 ring-red-500/50" : ""} ${isCompletingSession ? "opacity-50 cursor-not-allowed" : ""} ${currentWallpaper
+                                    ? (isDark ? "bg-red-500/20 border-red-400 text-red-400 hover:bg-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]" : "bg-red-500/20 border-red-600 text-red-600 hover:bg-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]")
+                                    : isDark
+                                        ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
+                                        : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20"
+                                    }`}
+                                title="Stop and Log Session"
+                            >
+                                {isCompletingSession ? (
+                                    <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <Square className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" />
+                                )}
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                 </div>
             )}
 

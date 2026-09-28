@@ -96,8 +96,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, isToday, isCurrentMonth
           <div
             key={task.id}
             className={cn(
-              "task-item flex items-center gap-2 p-1.5 rounded-lg border text-[11px] font-medium transition-all relative group/task",
-              isDark ? "bg-[#1c1c1e] border-[#333]" : "bg-[#f5f5f7] border-[#e5e5ea]"
+              "task-item flex items-center gap-2 p-1.5 rounded-lg border text-[11px] font-medium transition-all relative group/task bg-card border-border text-foreground"
             )}
           >
             <button
@@ -230,10 +229,7 @@ const CalendarGrid: React.FC = () => {
               <ChevronLeft size={20} strokeWidth={2.5} />
             </button>
 
-            <h2 className={cn(
-              "text-[32px] md:text-[40px] font-bold leading-tight tracking-tight select-none",
-              isDark ? "text-[#f5f5f7]" : "text-[#1d1d1f]"
-            )}>
+            <h2 className="text-[32px] md:text-[40px] font-bold leading-tight tracking-tight select-none text-foreground">
               {currentDate.toLocaleString('default', { month: 'long' })}
               <span className={cn("ml-3 font-medium opacity-30", isDark ? "text-white" : "text-black")}>
                 {currentYear}
@@ -416,8 +412,7 @@ const CalendarGrid: React.FC = () => {
               <div
                 key={task.id}
                 className={cn(
-                  "p-5 rounded-3xl border flex items-center gap-4 transition-all active:scale-[0.98]",
-                  isDark ? "bg-[#1c1c1e] border-white/5" : "bg-white border-black/5 shadow-sm",
+                  "p-5 rounded-3xl border flex items-center gap-4 transition-all active:scale-[0.98] bg-card border-border shadow-sm text-foreground",
                   task.completed && "opacity-60"
                 )}
               >

@@ -62,52 +62,48 @@ const MusicCard: React.FC<MusicCardProps> = ({
   return (
     <div
       className={`music-card group relative p-[28px] rounded-3xl border transition-all duration-300 ${isDark
-        ? "bg-[rgba(255,255,255,0.05)] backdrop-blur-[12px] border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] shadow-[rgba(0,0,0,0.3)_0px_8px_32px_0px]"
-        : "bg-white border-[#e5e5ea] hover:border-[#8b5cf6] shadow-[rgba(0,0,0,0.05)_0px_8px_24px_0px]"
+        ? "bg-card/40 backdrop-blur-[12px] border-border hover:border-primary/50 shadow-2xl"
+        : "bg-card border-border hover:border-primary shadow-sm"
         }`}
     >
 
       <div className="card-header flex items-center mb-[24px]">
         <div
-          className={`music-icon flex items-center justify-center w-[64px] h-[64px] rounded-xl text-[32px] mr-[16px] ${isDark ? "bg-[rgba(167,139,250,0.2)]" : "bg-[#f3f0ff]"
-            }`}
+          className="music-icon flex items-center justify-center w-[64px] h-[64px] rounded-xl text-[32px] mr-[16px] bg-primary/10 text-primary"
           style={{
-            boxShadow: isDark ? "rgba(102, 126, 234, 0.2) 0px 8px 24px 0px" : "none",
             minWidth: "64px",
           }}
         >
           {icon}
         </div>
         <div className="card-info">
-          <div className={`card-title text-[20px] font-semibold mb-[4px] leading-tight ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
+          <div className="card-title text-[20px] font-semibold mb-[4px] leading-tight text-foreground">
             {title}
           </div>
-          <div className={`card-type text-[13px] ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
+          <div className="card-type text-[13px] text-muted-foreground">
             {type}
           </div>
         </div>
       </div>
 
-      <div className={`visualizer-container flex items-center justify-center relative w-full h-[100px] mb-[20px] rounded-xl border ${isDark ? "bg-[rgba(0,0,0,0.3)] border-white/5" : "bg-[#f5f5f7] border-black/5"
-        }`}>
+      <div className="visualizer-container flex items-center justify-center relative w-full h-[100px] mb-[20px] rounded-xl border bg-muted/30 border-border">
         <div className="visualizer-bars flex items-end gap-[6px] h-[50px]">
           {visualizerHeights.map((h, i) => (
             <div
               key={i}
-              className={`v-bar w-[5px] rounded-[3px] transition-all duration-200 ${isDark ? "bg-[#a78bfa]" : "bg-[#8b5cf6]"}`}
+              className="v-bar w-[5px] rounded-[3px] transition-all duration-200 bg-primary"
               style={{ height: `${h}px` }}
             />
           ))}
         </div>
       </div>
 
-      <div className={`controls-section flex items-center gap-[12px] p-[12px] rounded-2xl border ${isDark ? "bg-[rgba(255,255,255,0.03)] border-white/5" : "bg-[#f5f5f7] border-black/5"
-        }`}>
+      <div className="controls-section flex items-center gap-[12px] p-[12px] rounded-2xl border bg-muted/40 border-border">
         <button
           onClick={handleToggleLoop}
           className={`flex items-center justify-center w-[36px] h-[36px] rounded-lg transition-colors ${isLooping
-            ? isDark ? "bg-[#a78bfa] text-black" : "bg-[#8b5cf6] text-white"
-            : isDark ? "bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]" : "bg-black/5 text-black/60 hover:bg-black/10"
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-muted-foreground hover:text-foreground"
             }`}
           title="Loop"
         >
@@ -116,8 +112,7 @@ const MusicCard: React.FC<MusicCardProps> = ({
 
         <button
           onClick={handleTogglePlay}
-          className={`flex items-center justify-center w-[44px] h-[44px] rounded-full shadow-lg hover:scale-105 transition-transform active:scale-95 ${isDark ? "bg-white text-black" : "bg-[#8b5cf6] text-white"
-            }`}
+          className="flex items-center justify-center w-[44px] h-[44px] rounded-full shadow-lg hover:scale-105 transition-transform active:scale-95 bg-primary text-primary-foreground"
         >
           {isPlaying ? (
             <Pause size={18} fill="currentColor" />
@@ -127,14 +122,14 @@ const MusicCard: React.FC<MusicCardProps> = ({
         </button>
 
         <div className="volume-control flex items-center flex-1 gap-[8px]">
-          <Volume2 size={16} className={isDark ? "text-[#8e8e93]" : "text-[#86868b]"} />
+          <Volume2 size={16} className="text-muted-foreground" />
           <input
             type="range"
             min="0"
             max="100"
             value={volume}
             onChange={handleVolumeChange}
-            className={`volume-slider flex-1 h-[3px] rounded-full cursor-pointer ${isDark ? "bg-white/10 accent-white" : "bg-black/10 accent-[#8b5cf6]"}`}
+            className="volume-slider flex-1 h-[3px] rounded-full cursor-pointer bg-muted accent-primary"
             style={{ WebkitAppearance: "none" }}
           />
         </div>
@@ -169,10 +164,10 @@ const MusicGrid: React.FC = () => {
   return (
     <section className="w-full max-w-[1200px] mx-auto pb-20">
       <div className="header mb-12">
-        <h2 className={`text-[32px] md:text-[40px] font-bold mb-2 tracking-tight ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
+        <h2 className="text-[32px] md:text-[40px] font-bold mb-2 tracking-tight text-foreground">
           Soundscapes
         </h2>
-        <p className={`text-lg ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
+        <p className="text-lg text-muted-foreground">
           Personalize your focus environment with immersive audio.
         </p>
       </div>

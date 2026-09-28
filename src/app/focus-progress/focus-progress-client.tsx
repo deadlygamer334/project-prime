@@ -214,7 +214,8 @@ export default function FocusProgressPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-light tracking-tight mb-2 opacity-90">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Analytics</p>
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 text-foreground">
                             Timer Progress
                         </h1>
                     </div>
@@ -226,8 +227,8 @@ export default function FocusProgressPage() {
                                 key={tf}
                                 onClick={() => setTimeframe(tf)}
                                 className={`px-4 py-2 text-sm transition-all duration-300 ${timeframe === tf
-                                    ? "opacity-100 font-medium"
-                                    : "opacity-40 hover:opacity-70"
+                                    ? "opacity-100 font-medium text-foreground"
+                                    : "text-muted-foreground hover:text-foreground"
                                     }`}
                             >
                                 {tf.charAt(0).toUpperCase() + tf.slice(1)}
@@ -258,19 +259,22 @@ export default function FocusProgressPage() {
                     {/* Main Chart - Full Width */}
                     <section>
                         <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-2">
-                                <BarChart3 className="text-blue-500" />
-                                <h2 className="text-xl font-semibold">Activity Graph</h2>
+                            <div className="flex items-center gap-3">
+                                <BarChart3 className="text-primary" size={24} />
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Overview</p>
+                                    <h2 className="text-2xl font-bold text-foreground">Activity Graph</h2>
+                                </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className={`text-xs uppercase tracking-widest font-bold ${showBreakdown ? "" : "opacity-40"}`}>
+                                <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${showBreakdown ? "text-primary" : "text-muted-foreground"}`}>
                                     Breakdown
                                 </span>
                                 <button
                                     onClick={() => setShowBreakdown(!showBreakdown)}
-                                    className={`w-10 h-6 rounded-full p-1 transition-colors duration-300 ${showBreakdown ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-800"}`}
+                                    className={`w-10 h-6 rounded-full p-1 transition-colors duration-300 ${showBreakdown ? "bg-primary" : "bg-muted"}`}
                                 >
-                                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${showBreakdown ? "translate-x-4" : ""}`} />
+                                    <div className={`w-4 h-4 rounded-full bg-card shadow-sm transition-transform duration-300 ${showBreakdown ? "translate-x-4" : ""}`} />
                                 </button>
                             </div>
                         </div>
@@ -291,9 +295,12 @@ export default function FocusProgressPage() {
 
                         {/* Subject Breakdown */}
                         <div>
-                            <div className="flex items-center gap-3 mb-8 opacity-60">
-                                <PieChart size={18} />
-                                <h2 className="text-sm font-medium uppercase tracking-widest">Subject Split</h2>
+                            <div className="mb-8">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <PieChart size={16} className="text-primary" />
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Breakdown</span>
+                                </div>
+                                <h2 className="text-2xl font-bold text-foreground">Subject Split</h2>
                             </div>
 
                             {loading ? (
@@ -303,7 +310,7 @@ export default function FocusProgressPage() {
                                     <PremiumSkeleton height="40px" borderRadius="8px" />
                                 </div>
                             ) : subjectStats.length === 0 ? (
-                                <div className="h-40 flex items-center justify-center opacity-40 text-sm">
+                                <div className="h-40 flex items-center justify-center text-muted-foreground text-sm">
                                     No data recorded
                                 </div>
                             ) : (
@@ -316,7 +323,7 @@ export default function FocusProgressPage() {
                                                     <span className="text-lg font-light tabular-nums text-foreground">
                                                         {formatDuration(stat.value)}
                                                     </span>
-                                                    <span className="text-xs opacity-40 ml-2">({stat.percent.toFixed(2)}%)</span>
+                                                    <span className="text-xs text-muted-foreground ml-2">({stat.percent.toFixed(2)}%)</span>
                                                 </div>
                                             </div>
                                             <div className="h-[1px] w-full bg-border overflow-hidden">
@@ -335,15 +342,18 @@ export default function FocusProgressPage() {
 
                         {/* Recent Sessions List */}
                         <div>
-                            <div className="flex items-center gap-3 mb-8 opacity-60">
-                                <Clock size={18} />
-                                <h2 className="text-sm font-medium uppercase tracking-widest">History</h2>
+                            <div className="mb-8">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Clock size={16} className="text-primary" />
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Log</span>
+                                </div>
+                                <h2 className="text-2xl font-bold text-foreground">History</h2>
                             </div>
                             <div className="space-y-6">
                                 {loading ? (
                                     [...Array(3)].map((_, i) => <PremiumSkeleton key={i} height="60px" borderRadius="0px" />)
                                 ) : sessions.length === 0 ? (
-                                    <p className="opacity-40 text-sm">No sessions in this period.</p>
+                                    <p className="text-muted-foreground text-sm">No sessions in this period.</p>
                                 ) : (
                                     <>
                                         {sessions.slice(0, displayLimit).map((session, i) => (
@@ -357,7 +367,7 @@ export default function FocusProgressPage() {
                                                 <div className="flex items-center gap-4">
                                                     <div>
                                                         <h4 className="text-base font-medium text-foreground">{session.subject || "Timer"}</h4>
-                                                        <p className="text-xs opacity-40 mt-1 uppercase tracking-wider">
+                                                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
                                                             {format(new Date(session.timestamp), "MMM d • h:mm a")}
                                                         </p>
                                                     </div>
@@ -372,10 +382,7 @@ export default function FocusProgressPage() {
 
                                                     <button
                                                         onClick={() => handleDelete(session)}
-                                                        className={`p-2 rounded-lg transition-all ${isDark
-                                                            ? "hover:bg-red-500/10 text-white/20 hover:text-red-400"
-                                                            : "hover:bg-red-500/5 text-black/20 hover:text-red-500"
-                                                            }`}
+                                                        className="p-2 rounded-lg transition-all hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                                                         title="Delete session"
                                                     >
                                                         <Trash2 size={16} />
@@ -389,7 +396,7 @@ export default function FocusProgressPage() {
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 onClick={() => setDisplayLimit(prev => prev + 5)}
-                                                className={`w-full py-4 text-xs font-bold tracking-widest uppercase opacity-40 hover:opacity-100 transition-all border-b border-transparent hover:border-border mt-2`}
+                                                className="w-full py-4 text-xs font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-all border-b border-transparent hover:border-border mt-2"
                                             >
                                                 Load More ({sessions.length - displayLimit} remaining)
                                             </motion.button>
@@ -408,8 +415,8 @@ export default function FocusProgressPage() {
 function Metric({ label, value }: { label: string, value: string | number }) {
     return (
         <div>
-            <p className="text-xs font-medium uppercase tracking-widest opacity-40 mb-1">{label}</p>
-            <h3 className="text-3xl md:text-5xl font-light tracking-tight">{value}</h3>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">{label}</p>
+            <h3 className="text-3xl md:text-5xl font-light tracking-tight text-foreground">{value}</h3>
         </div>
     );
 }

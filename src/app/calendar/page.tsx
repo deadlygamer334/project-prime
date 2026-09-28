@@ -14,7 +14,7 @@ export default function CalendarPage() {
     const settings = useSettings();
 
     return (
-        <div className={`min-h-screen flex flex-col transition-colors duration-300 ${isDark ? 'bg-[#050505] text-white' : 'bg-[#f5f5f7] text-[#1d1d1f]'}`}>
+        <div className="min-h-screen flex flex-col transition-colors duration-300 bg-background text-foreground">
             <DynamicBackground />
 
             <AppHeader

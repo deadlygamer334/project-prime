@@ -111,7 +111,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-[#050505] gap-6 transition-colors duration-300">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6 transition-colors duration-300">
                 <div className="relative">
                     <PremiumSkeleton width="64px" height="64px" borderRadius="16px" />
                     <div className="absolute inset-0 flex items-center justify-center">

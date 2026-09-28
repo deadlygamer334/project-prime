@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Trash2, Check, BarChart3, Copy, Pencil, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Check, BarChart3, Copy, Pencil, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useHabitContext } from "@/lib/HabitContext";
 import { useTheme } from "@/lib/ThemeContext";
 import MonthlyStatsModal from "./monthly-stats-modal";
 import { Counter, Reveal } from "../animations/RevealEffect";
 import { HabitSchema } from "@/lib/schemas";
 import { z } from "zod";
-import { AlertCircle } from "lucide-react";
 
 const HabitTrackerMain = () => {
   const {
@@ -87,8 +86,7 @@ const HabitTrackerMain = () => {
   return (
     <section className="px-4 md:px-10 pb-6 w-full max-w-[1400px] mx-auto">
       <div
-        className="border rounded-[16px] p-4 md:p-8 shadow-lg transition-colors duration-300 bg-card border-border"
-        style={{ minHeight: '600px' }}
+        className="border rounded-[16px] p-4 md:p-8 shadow-lg transition-colors duration-300 bg-card border-border min-h-[600px]"
       >
         {/* Month Navigation */}
         <div className="flex flex-wrap items-center gap-4 mb-8">
@@ -143,8 +141,6 @@ const HabitTrackerMain = () => {
           </Reveal>
         </div>
 
-
-
         {/* Action Bar / Add Habit Section */}
         <div className="flex flex-col gap-4 mb-6">
           <div className="rounded-xl p-3 md:p-4 flex flex-col gap-4 bg-muted/30">
@@ -186,7 +182,7 @@ const HabitTrackerMain = () => {
             </div>
           </div>
           {error && (
-            <div className="flex items-center gap-2 text-red-500 text-sm px-2 animate-in slide-in-from-top-1">
+            <div className="flex items-center gap-2 text-destructive text-sm px-2 animate-in slide-in-from-top-1">
               <AlertCircle size={14} />
               <span>{error}</span>
             </div>
@@ -196,15 +192,15 @@ const HabitTrackerMain = () => {
         {/* Habit Data Table - Desktop (md+) */}
         <div className="hidden md:block overflow-x-auto custom-scrollbar rounded-xl border border-border">
           <table className="w-full border-collapse">
-            <thead className="sticky top-0 z-10 backdrop-blur-md bg-card/95">
+            <thead className="sticky top-0 z-20 backdrop-blur-md bg-card/95">
               <tr>
                 <th
-                  className="sticky left-0 min-w-[200px] text-left px-4 py-4 text-[13px] font-semibold border-b border-border z-30 bg-background text-foreground shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)]"
+                  className="sticky left-0 z-30 min-w-[160px] max-w-[200px] text-left px-4 py-4 text-[13px] font-semibold border-b border-border bg-card text-foreground shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)]"
                 >
                   My Habits
                 </th>
                 {days.map((item, idx) => (
-                  <th key={idx} className={`min-w-[44px] py-4 px-1 text-center border-b border-border transition-colors ${item.date === today ? 'bg-primary/10' : ''}`}>
+                  <th key={idx} className={`min-w-[36px] max-w-[36px] py-4 px-1 text-center border-b border-border transition-colors ${item.date === today ? 'bg-primary/10' : ''}`}>
                     <div className="flex flex-col items-center">
                       <span className="text-[10px] font-medium uppercase text-muted-foreground">{item.day}</span>
                       <span className={`text-[13px] font-bold ${item.date === today ? 'text-primary' : 'text-foreground'}`}>{item.date}</span>
@@ -216,14 +212,19 @@ const HabitTrackerMain = () => {
             <tbody>
               {habits.length === 0 ? (
                 <tr>
-                  <td colSpan={32} className="py-20 text-center italic text-sm text-muted-foreground">
-                    No habits added yet. Add your first habit above.
+                  <td colSpan={daysInMonth + 1} className="py-8">
+                    <div className="flex flex-col items-center justify-center py-24 gap-4">
+                      <CheckCircle2 size={48} className="text-primary/20" />
+                      <p className="text-muted-foreground text-center">
+                        No habits yet. Add your first habit above to get started.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 habits.map((habit) => (
                   <tr key={habit.id} className="group transition-colors hover:bg-muted/30">
-                    <td className="sticky left-0 z-20 px-4 py-3 border-b border-r border-border flex items-center justify-between bg-background text-foreground shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)] select-text">
+                    <td className="sticky left-0 z-10 min-w-[160px] max-w-[200px] px-4 py-3 border-b border-r border-border flex items-center justify-between bg-card text-foreground shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)] select-text">
                       {editingHabitId === habit.id ? (
                         <div className="flex items-center gap-2 w-full">
                           <input
@@ -246,7 +247,7 @@ const HabitTrackerMain = () => {
                         </div>
                       ) : (
                         <>
-                          <span className="truncate max-w-[140px] font-medium">{habit.name}</span>
+                          <span className="truncate max-w-[120px] font-medium">{habit.name}</span>
                           <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
                             <button
                               onClick={() => {
@@ -272,16 +273,16 @@ const HabitTrackerMain = () => {
                     {days.map((day) => (
                       <td
                         key={`${habit.id}-${day.date}`}
-                        className={`p-1 border-b border-border text-center ${day.date === today ? 'bg-primary/5' : ''}`}
+                        className={`min-w-[36px] max-w-[36px] p-1 border-b border-border text-center transition-colors ${day.date === today ? 'bg-primary/5' : ''}`}
                       >
                         <button
                           onClick={() => toggleHabitCompletion(habit.id, day.date)}
-                          className={`w-8 h-8 rounded-md border transition-all flex items-center justify-center mx-auto ${habit.completions[`${currentYear}-${currentMonth}`]?.[day.date]
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : "bg-muted/10 border-2 border-neutral-300 dark:border-muted hover:border-primary text-transparent"
+                          className={`w-[36px] h-[36px] min-w-[36px] min-h-[36px] rounded-lg border transition-all duration-150 flex items-center justify-center mx-auto active:scale-90 hover:bg-primary/10 ${habit.completions[`${currentYear}-${currentMonth}`]?.[day.date]
+                            ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                            : "bg-muted/20 border-border hover:border-primary text-transparent"
                             }`}
                         >
-                          {habit.completions[`${currentYear}-${currentMonth}`]?.[day.date] && <Check size={16} />}
+                          {habit.completions[`${currentYear}-${currentMonth}`]?.[day.date] && <Check size={16} strokeWidth={2.5} />}
                         </button>
                       </td>
                     ))}
@@ -295,8 +296,11 @@ const HabitTrackerMain = () => {
         {/* Habit List - Mobile/Tablet (<md) */}
         <div className="md:hidden space-y-8">
           {habits.length === 0 ? (
-            <div className="py-12 text-center italic text-sm text-muted-foreground border rounded-xl border-dashed">
-              No habits added yet.
+            <div className="flex flex-col items-center justify-center py-16 gap-4 border border-dashed rounded-xl border-border">
+              <CheckCircle2 size={48} className="text-primary/20" />
+              <p className="text-muted-foreground text-center">
+                No habits yet. Add your first habit above to get started.
+              </p>
             </div>
           ) : (
             habits.map((habit) => (
@@ -378,7 +382,7 @@ const HabitTrackerMain = () => {
                             onClick={() => toggleHabitCompletion(habit.id, item.date)}
                             className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center ${habit.completions[`${currentYear}-${currentMonth}`]?.[item.date]
                               ? "bg-primary border-primary text-primary-foreground shadow-[0_0_12px_rgba(var(--primary),0.4)]"
-                              : "bg-background border-muted dark:border-white/10 text-transparent active:border-primary"
+                              : "bg-background border-border text-transparent active:border-primary"
                               }`}
                           >
                             {habit.completions[`${currentYear}-${currentMonth}`]?.[item.date] && <Check size={20} strokeWidth={3} />}

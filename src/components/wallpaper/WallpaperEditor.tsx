@@ -366,10 +366,10 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                     >
                         {/* HUD / Guides inside focal area */}
                         {activeTab === "crop" && (
-                            <div className="absolute inset-0 border-[rgba(255,255,255,0.2)] border-x-[15%] border-y-[10%] grid grid-cols-2 grid-rows-2">
-                                <div className="border-r border-b border-[rgba(255,255,255,0.2)]" />
-                                <div className="border-b border-[rgba(255,255,255,0.2)]" />
-                                <div className="border-r border-[rgba(255,255,255,0.2)]" />
+                            <div className="absolute inset-0 border-white/20 border-x-[15%] border-y-[10%] grid grid-cols-2 grid-rows-2">
+                                <div className="border-r border-b border-white/20" />
+                                <div className="border-b border-white/20" />
+                                <div className="border-r border-white/20" />
                             </div>
                         )}
                     </div>

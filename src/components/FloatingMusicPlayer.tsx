@@ -25,10 +25,7 @@ export default function FloatingMusicPlayer() {
                 exit={{ opacity: 0, scale: 0.9, y: 50 }}
                 style={{ borderRadius: isMinimized ? "50%" : "24px" }}
                 className={`fixed bottom-8 right-8 z-[100] cursor-move select-none shadow-2xl overflow-hidden ${isMinimized ? "w-14 h-14" : "w-72"
-                    } ${isDark
-                        ? "bg-[#1a1a1e]/95 border border-white/10 backdrop-blur-xl"
-                        : "bg-white/95 border border-black/5 backdrop-blur-xl"
-                    }`}
+                    } bg-card/95 border border-border backdrop-blur-xl`}
             >
                 <div className={`w-full h-full flex flex-col ${isMinimized ? "items-center justify-center" : "p-4"}`}>
                     <div className={`flex items-center justify-between ${isMinimized ? "w-full h-full justify-center relative" : "mb-4"}`}>
@@ -43,7 +40,7 @@ export default function FloatingMusicPlayer() {
                                     className={`${isDark ? "text-purple-400" : "text-purple-600"} ${activeSounds.length > 0 ? "animate-pulse" : ""}`}
                                 />
                                 {isMinimized && (
-                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1a1a1e]">
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
                                         {activeSounds.length}
                                     </div>
                                 )}
@@ -103,9 +100,8 @@ export default function FloatingMusicPlayer() {
                                                 max="100"
                                                 value={sound.volume}
                                                 onChange={(e) => updateSoundVolume(sound.id, parseInt(e.target.value))}
-                                                className={`w-full h-1 rounded-full cursor-pointer appearance-none ${isDark ? "bg-white/10" : "bg-black/10"
+                                                className={`w-full h-1 rounded-full cursor-pointer appearance-none accent-primary ${isDark ? "bg-white/10" : "bg-black/10"
                                                     }`}
-                                                style={{ accentColor: isDark ? "#a78bfa" : "#8b5cf6" }}
                                             />
                                         </div>
                                     </div>

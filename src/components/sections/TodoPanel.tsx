@@ -274,10 +274,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
 
   if (!isLoaded) return (
     <section
-      className={`todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] ${isDark
-        ? "bg-[rgba(10,10,10,0.6)] border-white/5"
-        : "bg-[rgba(255,255,255,0.6)] border-white"
-        }`}
+      className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] bg-card/60 border-border"
     >
       <div className="flex items-center justify-between gap-4 mb-6">
         <PremiumSkeleton height="32px" width="120px" borderRadius="8px" />
@@ -297,14 +294,11 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
 
   return (
     <section
-      className={`todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] max-md:landscape:min-h-0 ${isDark
-        ? "bg-[rgba(10,10,10,0.6)] border-white/5 shadow-[0_24px_48px_rgba(0,0,0,0.4)]"
-        : "bg-[rgba(255,255,255,0.6)] border-white shadow-[0_24px_48px_rgba(0,0,0,0.05)]"
-        }`}
+      className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 backdrop-blur-[20px] transition-all duration-500 border min-h-[500px] max-md:landscape:min-h-0 bg-card/60 border-border shadow-[0_24px_48px_rgba(0,0,0,0.1)]"
     >
       {/* Todo Header Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h2 className={`text-[20px] md:text-[24px] font-bold tracking-[-0.02em] ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
+        <h2 className="text-[20px] md:text-[24px] font-bold tracking-[-0.02em] text-foreground">
           To-do list
         </h2>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -318,22 +312,22 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
           >
             <Settings2 size={18} />
           </button>
-          <div className={`flex items-center rounded-xl p-1 ${isDark ? "bg-[#1c1c1e]" : "bg-[#f5f5f7]"} overflow-x-auto max-w-full hide-scrollbar`}>
+          <div className="flex items-center rounded-xl p-1 bg-muted overflow-x-auto max-w-full hide-scrollbar">
             <button
               onClick={goToPreviousDay}
-              className={`flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg ${isDark ? "text-white hover:bg-[#3a3a3c]" : "text-[#1d1d1f] hover:bg-[#e5e5ea]"}`}
+              className="flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg text-foreground hover:bg-background/80"
             >
               <ChevronLeft className="w-3 md:w-4 h-3 md:h-4 mr-1" /> Prev
             </button>
             <button
               onClick={goToToday}
-              className={`flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg border-x ${isDark ? "text-white hover:bg-[#3a3a3c] border-black/20" : "text-[#1d1d1f] hover:bg-[#e5e5ea] border-black/5"}`}
+              className="flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg border-x border-border text-foreground hover:bg-background/80"
             >
               Today
             </button>
             <button
               onClick={goToNextDay}
-              className={`flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg ${isDark ? "text-white hover:bg-[#3a3a3c]" : "text-[#1d1d1f] hover:bg-[#e5e5ea]"}`}
+              className="flex items-center px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-lg text-foreground hover:bg-background/80"
             >
               Next <ChevronRight className="w-3 md:w-4 h-3 md:h-4 ml-1" />
             </button>
@@ -345,7 +339,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
             className="h-10 md:h-[44px] px-3 md:px-4 py-2 text-[12px] md:text-[14.4px] font-medium transition-colors rounded-xl border-none shadow-none hover:bg-black/5 dark:hover:bg-white/5"
           />
 
-          <span className={`hidden sm:inline-block text-[12px] md:text-[14.4px] font-medium px-2 py-2 whitespace-nowrap ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
+          <span className="hidden sm:inline-block text-[12px] md:text-[14.4px] font-medium px-2 py-2 whitespace-nowrap text-muted-foreground">
             {formatDisplayDate(currentDate)}
           </span>
         </div>
@@ -362,7 +356,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
             }}
           />
         </div>
-        <span className={`text-base font-medium min-w-[32px] ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>{getStatsByDateStr(currentDateString).progress.toFixed(2)}%</span>
+        <span className="text-base font-medium min-w-[32px] text-foreground">{getStatsByDateStr(currentDateString).progress.toFixed(2)}%</span>
       </div>
 
 
@@ -374,15 +368,13 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
               placeholder="Task title (required)"
               value={newTaskText}
               onChange={(e) => setNewTaskText(e.target.value)}
-              className={`border rounded-xl px-4 py-3 text-[14px] focus:border-[#007aff] outline-none transition-colors ${isDark ? "bg-[#1c1c1e] border-[#3a3a3c] text-white placeholder-[#8e8e93]" : "bg-white border-[#e5e5ea] text-black placeholder-[#86868b]"
-                }`}
+              className="border border-border rounded-xl px-4 py-3 text-[14px] focus:border-primary outline-none transition-colors bg-card text-foreground placeholder:text-muted-foreground"
             />
             <input
               placeholder="Add a note (optional)"
               value={newTaskNote}
               onChange={(e) => setNewTaskNote(e.target.value)}
-              className={`border rounded-xl px-4 py-3 text-[14px] focus:border-[#007aff] outline-none transition-colors ${isDark ? "bg-[#1c1c1e] border-[#3a3a3c] text-white placeholder-[#8e8e93]" : "bg-white border-[#e5e5ea] text-black placeholder-[#86868b]"
-                }`}
+              className="border border-border rounded-xl px-4 py-3 text-[14px] focus:border-primary outline-none transition-colors bg-card text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
@@ -442,7 +434,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
         className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar"
       >
         {filteredTasks.length === 0 ? (
-          <div className={`flex flex-col items-center justify-center py-20 ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p className="text-[14px]">No tasks found for this filter</p>
             {loadingHistory && (
               <div className="mt-4 flex items-center gap-2 text-[12px] opacity-70">
@@ -456,12 +448,11 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
             <Reorder.Item
               key={task.id}
               value={task}
-              className={`group flex items-center gap-3 p-4 border rounded-2xl transition-colors ${isDark ? "bg-[#1c1c1e] hover:bg-[#2c2c2e] border-[#3a3a3c]" : "bg-[#f5f5f7] hover:bg-[#e5e5ea] border-[#e5e5ea]"
-                }`}
+              className="group flex items-center gap-3 p-4 border border-border rounded-2xl transition-colors bg-card hover:bg-muted/50"
             >
               {/* Drag Handle */}
               <div
-                className={`cursor-grab active:cursor-grabbing opacity-50 group-hover:opacity-100 transition-opacity ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}
+                className="cursor-grab active:cursor-grabbing opacity-50 group-hover:opacity-100 transition-opacity text-muted-foreground"
                 title="Drag to reorder"
               >
                 <GripVertical size={18} />
@@ -485,7 +476,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
                     });
                   }
                 }}
-                className={`transition-colors shrink-0 ${task.completed ? "text-green-500" : isDark ? "text-[#8e8e93] hover:text-white" : "text-[#86868b] hover:text-black"}`}
+                className={`transition-colors shrink-0 ${task.completed ? "text-green-500" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {task.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
               </motion.button>
@@ -494,11 +485,11 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
               <div className="flex flex-col flex-1 min-w-0 select-text">
                 <motion.span
                   animate={task.completed ? { scale: [1, 1.02, 1], opacity: 0.5 } : { scale: 1, opacity: 1 }}
-                  className={`text-[15px] font-medium transition-all truncate ${task.completed ? "line-through" : isDark ? "text-white" : "text-black"}`}
+                  className={`text-[15px] font-medium transition-all truncate ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
                 >
                   {task.text}
                 </motion.span>
-                {task.note && <span className={`text-[12px] truncate ${isDark ? "text-[#8e8e93]" : "text-[#86868b]"}`}>{task.note}</span>}
+                {task.note && <span className="text-[12px] truncate text-muted-foreground">{task.note}</span>}
                 <div className="mt-2">
                   <PriorityDropdown
                     currentPriority={task.priority}
@@ -518,7 +509,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
               <div className="flex items-center gap-2 shrink-0">
                 {/* Estimated Time */}
                 {task.estimatedTime !== "0:0" && (
-                  <span className={`text-[12px] font-medium px-2 py-1 rounded-md ${isDark ? "text-[#8e8e93] bg-[#0c0c0e]" : "text-[#86868b] bg-white border border-[#e5e5ea]"}`}>
+                  <span className="text-[12px] font-medium px-2 py-1 rounded-md text-muted-foreground bg-muted border border-border">
                     {task.estimatedTime}
                   </span>
                 )}
@@ -532,7 +523,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
                       currentTaskDate.setDate(currentTaskDate.getDate() - 1);
                       moveTaskToDate(task.id, currentTaskDate.toISOString().split('T')[0]);
                     }}
-                    className={`p-2 hover:bg-yellow-500/10 rounded-lg transition-all ${isDark ? "text-[#8e8e93] hover:text-yellow-400" : "text-[#86868b] hover:text-yellow-600"}`}
+                    className="p-2 hover:bg-yellow-500/10 rounded-lg transition-all text-muted-foreground hover:text-yellow-500"
                     title="Move to Yesterday"
                   >
                     <ChevronLeft size={18} />
@@ -545,7 +536,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
                       currentTaskDate.setDate(currentTaskDate.getDate() + 1);
                       moveTaskToDate(task.id, currentTaskDate.toISOString().split('T')[0]);
                     }}
-                    className={`p-2 hover:bg-yellow-500/10 rounded-lg transition-all ${isDark ? "text-[#8e8e93] hover:text-yellow-400" : "text-[#86868b] hover:text-yellow-600"}`}
+                    className="p-2 hover:bg-yellow-500/10 rounded-lg transition-all text-muted-foreground hover:text-yellow-500"
                     title="Move to Tomorrow"
                   >
                     <ChevronRight size={18} />
@@ -556,7 +547,7 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
                   {/* Delete Button */}
                   <button
                     onClick={() => deleteTask(task.id)}
-                    className="p-2 hover:bg-red-500/10 text-[#8e8e93] hover:text-red-500 rounded-lg transition-all"
+                    className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-all"
                     title="Delete"
                   >
                     <Trash2 size={18} />

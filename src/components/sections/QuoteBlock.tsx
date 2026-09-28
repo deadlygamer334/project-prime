@@ -4,10 +4,13 @@ import React, { useState, useEffect } from "react";
 import { RotateCcw } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { useWallpaper } from "@/lib/WallpaperContext";
+import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function QuoteBlock() {
     const [quote, setQuote] = useState("");
     const [quotesList, setQuotesList] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const { wallpaper } = useWallpaper();
@@ -68,6 +71,7 @@ export default function QuoteBlock() {
                         // Fallback logic if pop fails somehow
                         setQuote(cleanQuote(data[Math.floor(Math.random() * data.length)]));
                     }
+                    setLoading(false);
                     return;
                 }
             }
@@ -85,6 +89,7 @@ export default function QuoteBlock() {
         ];
         setQuotesList(fallbacks);
         setQuote(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -126,32 +131,50 @@ export default function QuoteBlock() {
 
     return (
         <div className="group relative w-full max-w-[600px] mx-auto px-4">
-            <div
-                className={`flex flex-col items-center justify-center min-h-[140px] p-8 rounded-3xl border transition-all duration-500 relative overflow-hidden select-text ${hasWallpaper
-                    ? "bg-black/30 border-white/20 backdrop-blur-lg shadow-[0_8px_32px_rgba(0,0,0,0.5)] hover:bg-black/40"
-                    : isDark
-                        ? "backdrop-blur-md bg-white/5 border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.07] hover:border-white/20"
-                        : "backdrop-blur-md bg-white/40 border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:border-black/10"
-                    }`}
-            >
-                <h2
-                    className={`text-[16px] md:text-[18px] font-semibold leading-relaxed tracking-tight transition-all duration-500 text-center opacity-100 translate-y-0 ${hasWallpaper ? (isDark ? "text-white text-shadow-contrast" : "text-black text-shadow-light") : isDark ? "text-white/90" : "text-black/80"
-                        }`}
-                >
-                    {quote}
-                </h2>
-
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                    <button
-                        onClick={refreshQuote}
-                        className={`p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all ${hasWallpaper ? (isDark ? 'text-white/80 hover:text-white hover:bg-white/20 drop-shadow-md' : 'text-black/60 hover:text-black hover:bg-black/10 drop-shadow-md') : isDark ? 'text-white/40 hover:text-white hover:bg-white/10' : 'text-black/30 hover:text-black hover:bg-black/5'
-                            }`}
-                        title="Refresh Quote"
+            <AnimatePresence mode="wait">
+                {loading || !quote ? (
+                    <motion.div
+                        key="skeleton"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
                     >
-                        <RotateCcw size={16} className="hover:rotate-180 transition-transform duration-500" />
-                    </button>
-                </div>
-            </div>
+                        <PremiumSkeleton height="60px" width="100%" borderRadius="12px" className="mb-4" />
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="quote-card"
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className={`flex flex-col items-center justify-center min-h-[140px] p-8 rounded-3xl border transition-all duration-500 relative overflow-hidden select-text ${hasWallpaper
+                            ? "bg-black/30 border-white/20 backdrop-blur-lg shadow-[0_8px_32px_rgba(0,0,0,0.5)] hover:bg-black/40"
+                            : isDark
+                                ? "backdrop-blur-md bg-white/5 border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.07] hover:border-white/20"
+                                : "backdrop-blur-md bg-white/40 border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:border-black/10"
+                            }`}
+                    >
+                        <h2
+                            className={`text-[16px] md:text-[18px] font-semibold leading-relaxed tracking-tight transition-all duration-500 text-center opacity-100 translate-y-0 ${hasWallpaper ? (isDark ? "text-white text-shadow-contrast" : "text-black text-shadow-light") : isDark ? "text-white/90" : "text-black/80"
+                                }`}
+                        >
+                            {quote}
+                        </h2>
+
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                            <button
+                                onClick={refreshQuote}
+                                className={`p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all ${hasWallpaper ? (isDark ? 'text-white/80 hover:text-white hover:bg-white/20 drop-shadow-md' : 'text-black/60 hover:text-black hover:bg-black/10 drop-shadow-md') : isDark ? 'text-white/40 hover:text-white hover:bg-white/10' : 'text-black/30 hover:text-black hover:bg-black/5'
+                                    }`}
+                                title="Refresh Quote"
+                            >
+                                <RotateCcw size={16} className="hover:rotate-180 transition-transform duration-500" />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

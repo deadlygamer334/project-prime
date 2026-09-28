@@ -29,7 +29,7 @@ const AddFromListModal = ({ isOpen, onClose }: ModalProps) => {
       id="addFromListModal"
     >
       <div 
-        className="w-full max-w-[500px] overflow-hidden rounded-[16px] border border-white/10 bg-[#0a0a0a] shadow-[0_8px_32px_0_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]"
+        className="w-full max-w-[500px] overflow-hidden rounded-[16px] border border-white/10 bg-card shadow-[0_8px_32px_0_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]"
       >
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <h3 className="text-[18px] font-semibold text-white">Add Tasks from List</h3>
@@ -85,7 +85,7 @@ const MoveBlockModal = ({ isOpen, onClose }: ModalProps) => {
       id="moveBlockModal"
     >
       <div 
-        className="w-[320px] overflow-hidden rounded-[16px] border border-white/10 bg-[#0a0a0a] p-6 shadow-2xl"
+        className="w-[320px] overflow-hidden rounded-[16px] border border-white/10 bg-card p-6 shadow-2xl"
       >
         <div className="mb-4 text-[16px] font-semibold text-white">
           Move Task to Block

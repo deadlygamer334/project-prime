@@ -34,7 +34,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
       {/* Modal Content */}
       <div
-        className="relative w-full max-w-[400px] bg-white rounded-3xl p-8 shadow-[0_20px_40px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in duration-200"
+        className="relative w-full max-w-[400px] bg-card border border-border text-foreground rounded-3xl p-8 shadow-[0_20px_40px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in duration-200"
         style={{
           fontFamily: 'var(--font-current)',
         }}
@@ -51,7 +51,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {/* Heading */}
           <h3
             id="modalTitle"
-            className="text-[20px] font-bold tracking-tight text-[#1d1d1f] mb-2"
+            className="text-[20px] font-bold tracking-tight text-foreground mb-2"
           >
             {title}
           </h3>
@@ -59,7 +59,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {/* Message Text */}
           <p
             id="modalMessage"
-            className="text-[14px] leading-relaxed text-[#86868b] mb-8 px-2"
+            className="text-[14px] leading-relaxed text-muted-foreground mb-8 px-2"
           >
             {message}
           </p>
@@ -68,7 +68,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <div className="flex gap-3 w-full">
             <button
               onClick={onClose}
-              className="flex-1 h-[44px] flex items-center justify-center rounded-xl bg-[#f5f5f7] text-[#1d1d1f] text-[14px] font-medium transition-colors hover:bg-[#e5e5ea] active:scale-[0.98]"
+              className="flex-1 h-[44px] flex items-center justify-center rounded-xl bg-muted text-foreground text-[14px] font-medium transition-colors hover:bg-muted/80 active:scale-[0.98]"
             >
               Cancel
             </button>
@@ -77,7 +77,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 onConfirm();
                 onClose();
               }}
-              className="flex-1 h-[44px] flex items-center justify-center rounded-[12px] bg-[#ff3b30] text-white text-[14px] font-semibold transition-colors hover:bg-[#e03126] active:scale-[0.98]"
+              className="flex-1 h-[44px] flex items-center justify-center rounded-[12px] bg-destructive text-destructive-foreground text-[14px] font-semibold transition-colors hover:bg-destructive/90 active:scale-[0.98]"
             >
               Clear All
             </button>

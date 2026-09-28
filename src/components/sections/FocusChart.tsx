@@ -38,7 +38,7 @@ interface FocusChartProps {
 const CustomTooltip = ({ active, payload, label, isDark, showBreakdown }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className={`p-4 rounded-xl border backdrop-blur-md shadow-xl bg-popover border-border text-popover-foreground min-w-[200px]`}>
+            <div className="p-4 rounded-xl border backdrop-blur-md shadow-xl bg-card/90 border-border text-foreground min-w-[200px]">
                 <p className="text-sm font-medium opacity-60 mb-2">{payload[0].payload.date}</p>
 
                 {showBreakdown ? (
@@ -80,7 +80,7 @@ export default function FocusChart({ data, timeframe, showBreakdown, subjects = 
 
     if (!data || data.length === 0) {
         return (
-            <div className={`w-full h-[300px] flex items-center justify-center rounded-3xl border border-dashed border-border bg-muted/20`}>
+            <div className="w-full h-[300px] flex items-center justify-center rounded-3xl border border-dashed border-border bg-muted/20">
                 <p className="opacity-40 text-muted-foreground">No data available for this period</p>
             </div>
         );
@@ -90,10 +90,10 @@ export default function FocusChart({ data, timeframe, showBreakdown, subjects = 
         <div className="w-full">
             <div className="flex items-center justify-between mb-8 px-2">
                 <div>
-                    <h3 className={`text-sm font-medium uppercase tracking-widest text-muted-foreground`}>
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">
                         {showBreakdown ? "Subject Breakdown" : "Timer Trends"}
                     </h3>
-                    <p className={`text-sm text-muted-foreground/60`}>
+                    <p className="text-sm text-muted-foreground/60">
                         {timeframe === "day" && "Minutes per hour"}
                         {timeframe === "week" && "Daily timer total"}
                         {timeframe === "month" && "Daily timer total"}
@@ -102,12 +102,11 @@ export default function FocusChart({ data, timeframe, showBreakdown, subjects = 
                 </div>
                 {/* Total for the chart period */}
                 <div className="text-right">
-                    <p className={`text-xs uppercase tracking-widest font-bold opacity-40 text-foreground`}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">
                         Total
                     </p>
-                    <p className="text-2xl font-bold tabular-nums text-foreground dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/60">
+                    <p className="text-2xl font-bold tabular-nums text-foreground">
                         {formatDuration(data.reduce((acc, curr) => acc + (showBreakdown ? 0 : curr.value) + (showBreakdown ? subjects.reduce((sAcc, s) => sAcc + (curr[s] || 0), 0) : 0), 0))}
-                        {/* Note: Logic above is a bit complex to handle both cases, simplification: just sum the values we display */}
                     </p>
                 </div>
             </div>

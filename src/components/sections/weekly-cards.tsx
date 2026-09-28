@@ -2,7 +2,6 @@
 
 import React, { useMemo } from 'react';
 import { useHabitContext } from '@/lib/HabitContext';
-import { useTheme } from '@/lib/ThemeContext';
 import { Counter, Reveal } from '../animations/RevealEffect';
 
 interface DayData {
@@ -20,26 +19,19 @@ interface WeekProps {
 }
 
 const WeeklyProgressCard: React.FC<WeekProps> = ({ weekNum, dateRange, days, completed, percent }) => {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
   return (
-    <div className={`group border rounded-2xl p-5 flex flex-col min-h-[260px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isDark
-      ? "bg-[#111218]/80 backdrop-blur-md border-[#2d2e37] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-      : "bg-white/80 backdrop-blur-md border-[#e5e5ea] shadow-[0_8px_32px_rgba(0,0,0,0.05)]"
-      }`}>
+    <div className="group border rounded-2xl p-5 flex flex-col min-h-[260px] transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-primary/30 bg-card border-border shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
       {/* Card Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex flex-col">
-          <h3 className={`text-[11px] font-black tracking-widest uppercase mb-0.5 ${isDark ? "text-primary/90" : "text-primary"}`}>
+          <h3 className="text-[11px] font-black tracking-widest uppercase mb-0.5 text-primary">
             Week {weekNum}
           </h3>
-          <span className={`text-[13px] font-bold ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
+          <span className="text-[13px] font-bold text-foreground">
             {dateRange}
           </span>
         </div>
-        <div className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tighter ${isDark ? "bg-white/5 text-[#a0a0a0]" : "bg-black/5 text-[#86868b]"
-          }`}>
+        <div className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tighter bg-muted text-muted-foreground">
           {percent >= 100 ? "Perfect" : percent >= 80 ? "Great" : percent >= 50 ? "Steady" : "Starting"}
         </div>
       </div>
@@ -55,7 +47,7 @@ const WeeklyProgressCard: React.FC<WeekProps> = ({ weekNum, dateRange, days, com
                 <div
                   className={`w-full rounded-full transition-all duration-500 ease-out relative ${hasCompletion
                     ? 'bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]'
-                    : isDark ? 'bg-white/5' : 'bg-black/5'
+                    : 'bg-muted'
                     }`}
                   style={{ height: hasCompletion ? `${Math.max((day.count / 5) * 60, 4)}px` : '4px' }}
                 >
@@ -65,10 +57,10 @@ const WeeklyProgressCard: React.FC<WeekProps> = ({ weekNum, dateRange, days, com
                 </div>
               </div>
               <div className="flex flex-col items-center gap-0.5">
-                <span className={`text-[9px] font-black uppercase ${isDark ? "text-[#a0a0a0]" : "text-[#86868b]"}`}>
+                <span className="text-[9px] font-black uppercase text-muted-foreground">
                   {day.dayName}
                 </span>
-                <span className={`text-[10px] font-medium leading-none ${isDark ? "text-white/40" : "text-black/40"}`}>
+                <span className="text-[10px] font-medium leading-none text-muted-foreground">
                   {day.dayNum}
                 </span>
               </div>
@@ -78,16 +70,16 @@ const WeeklyProgressCard: React.FC<WeekProps> = ({ weekNum, dateRange, days, com
       </div>
 
       {/* Footer Stats */}
-      <div className={`flex justify-between items-end mt-auto pt-4 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
+      <div className="flex justify-between items-end mt-auto pt-4 border-t border-border">
         <div className="flex flex-col">
-          <span className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDark ? "text-[#a0a0a0]" : "text-[#86868b]"}`}>Completion</span>
-          <div className={`text-[18px] font-black leading-none ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
+          <span className="text-[9px] font-bold uppercase tracking-widest mb-1 text-muted-foreground">Completion</span>
+          <div className="text-[18px] font-black leading-none text-foreground">
             {completed}
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <span className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDark ? "text-[#a0a0a0]" : "text-[#86868b]"}`}>Progress</span>
-          <div className={`text-[14px] font-bold leading-none ${isDark ? "text-primary" : "text-primary"}`}>
+          <span className="text-[9px] font-bold uppercase tracking-widest mb-1 text-muted-foreground">Progress</span>
+          <div className="text-[14px] font-bold leading-none text-primary">
             <Counter value={percent} decimals={0} suffix="%" />
           </div>
         </div>

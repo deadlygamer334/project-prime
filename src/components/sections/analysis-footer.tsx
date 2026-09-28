@@ -2,13 +2,10 @@
 
 import React from 'react';
 import { useHabitContext } from '@/lib/HabitContext';
-import { useTheme } from '@/lib/ThemeContext';
 import { Counter } from '../animations/RevealEffect';
 
 const AnalysisFooter = () => {
   const { habits, overallStats } = useHabitContext();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
 
   const getAnalysisText = () => {
     if (habits.length === 0) return "Add some habits to start your journey! Consistency is the key to building long-term success.";
@@ -33,18 +30,14 @@ const AnalysisFooter = () => {
   return (
     <section className="container mt-6 mb-8 w-full px-10">
       <div
-        className={`w-full border rounded-[16px] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.1)] transition-colors duration-300 ${isDark
-          ? "bg-[rgba(255,255,255,0.06)] border-[#2d2e37] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]"
-          : "bg-white border-[#e5e5ea]"
-          }`}
-        style={{ minHeight: '120px' }}
+        className="w-full border rounded-[16px] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.1)] transition-colors duration-300 bg-card border-border min-h-[120px]"
       >
-        <h3 className={`font-bold mb-4 tracking-wide text-[14px] ${isDark ? "text-white" : "text-[#1d1d1f]"}`}>
+        <h3 className="font-bold mb-4 tracking-wide text-[14px] text-foreground">
           Analysis
         </h3>
 
         <div className="flex flex-col gap-4">
-          <p className={`leading-relaxed text-[14px] ${isDark ? "text-[#a0a0a0]" : "text-[#86868b]"}`}>
+          <p className="leading-relaxed text-[14px] text-muted-foreground">
             {getAnalysisText()}
           </p>
         </div>

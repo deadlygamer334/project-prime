@@ -141,7 +141,7 @@ export default function MotivationModal({
           {/* Video Stage */}
           <div className="flex flex-col items-center flex-1 max-w-[450px] relative">
             <div 
-              className="relative aspect-[9/16] w-full bg-black rounded-[20px] overflow-hidden border border-[#2a2a2e] shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+              className="relative aspect-[9/16] w-full bg-black rounded-[20px] overflow-hidden border border-border shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
               style={{ maxHeight: "85vh" }}
             >
               <video
