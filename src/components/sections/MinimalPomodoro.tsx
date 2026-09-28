@@ -154,6 +154,10 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
     // PiP State
     const [pipWindow, setPipWindow] = useState<Window | null>(null);
 
+    // Zen Mode: auto-hide controls while timer is running; reveal on any interaction
+    const [showZenControls, setShowZenControls] = useState(true);
+    const zenHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
     // Touch Brightness Interaction
     const touchStartY = useRef<number | null>(null);
     const lastTapTime = useRef<number>(0);
@@ -204,12 +208,12 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
         return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, [isFullScreen, setIsZenMode]);
 
-    // Auto-exit Zen Mode/PiP only when a RUNNING timer is stopped/cleared externally
+    // Auto-exit Zen Mode/PiP ONLY when a session is fully reset — NOT when merely paused.
+    // isFocusStarted / isBreakStarted remain true while paused; they become false only on reset.
     const wasActiveRef = useRef(isActive);
     useEffect(() => {
-        // If it was active and now it's not, and we are in Zen mode, exit.
-        // This handles completion/cancellation but allows opening Zen Mode while paused.
-        if (wasActiveRef.current && !isActive && isFullScreen) {
+        const sessionStillInProgress = isFocusStarted || isBreakStarted;
+        if (wasActiveRef.current && !isActive && isFullScreen && !sessionStillInProgress) {
             setIsFullScreen(false);
             setIsZenMode(false);
             if (document.fullscreenElement) {
@@ -217,13 +221,13 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
             }
         }
 
-        if (wasActiveRef.current && !isActive && pipWindow) {
+        if (wasActiveRef.current && !isActive && pipWindow && !sessionStillInProgress) {
             pipWindow.close();
             setPipWindow(null);
         }
 
         wasActiveRef.current = isActive;
-    }, [isActive, isFullScreen, setIsZenMode, pipWindow]);
+    }, [isActive, isFocusStarted, isBreakStarted, isFullScreen, setIsZenMode, pipWindow]);
 
     // Sync Zen Brightness with Backgrounds
     useEffect(() => {
@@ -341,8 +345,14 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
             if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) return;
 
             if (e.key === "Escape") {
-                if (editingUnit) setEditingUnit(null);
-                if (isFullScreen) setIsFullScreen(false);
+                if (editingUnit) { setEditingUnit(null); return; }
+                if (isFullScreen) {
+                    setIsFullScreen(false);
+                    setIsZenMode(false);
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen().catch(() => { });
+                    }
+                }
             }
             // Spacebar to toggle timer
             if (e.key === " ") {
@@ -486,6 +496,30 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
         touchStartY.current = null;
         initialPinchDist.current = null;
     };
+
+    // Reveal zen controls momentarily; auto-hide after 3 s while playing
+    const revealZenControls = useCallback(() => {
+        setShowZenControls(true);
+        if (zenHideTimerRef.current) clearTimeout(zenHideTimerRef.current);
+        if (isActive && isFullScreen) {
+            zenHideTimerRef.current = setTimeout(() => setShowZenControls(false), 3000);
+        }
+    }, [isActive, isFullScreen]);
+
+    // Sync auto-hide with playing / paused state
+    useEffect(() => {
+        if (!isFullScreen) {
+            setShowZenControls(true);
+            if (zenHideTimerRef.current) clearTimeout(zenHideTimerRef.current);
+            return;
+        }
+        setShowZenControls(true);
+        if (zenHideTimerRef.current) clearTimeout(zenHideTimerRef.current);
+        if (isActive) {
+            zenHideTimerRef.current = setTimeout(() => setShowZenControls(false), 3000);
+        }
+        return () => { if (zenHideTimerRef.current) clearTimeout(zenHideTimerRef.current); };
+    }, [isActive, isFullScreen]);
 
     const formatTimeDigit = (val: number) => val.toString().padStart(2, "0");
 
@@ -912,13 +946,14 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{
                                 duration: 0.4,
-                                ease: [0.23, 1, 0.32, 1] // Apple-style premium easing
+                                ease: [0.23, 1, 0.32, 1]
                             }}
-                            className={`fixed inset-0 ${currentWallpaper ? "bg-transparent backdrop-blur-none" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none cursor-pointer select-none`}
+                            className={`fixed inset-0 ${currentWallpaper ? "bg-transparent backdrop-blur-none" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none select-none`}
+                            onMouseMove={revealZenControls}
                             onTouchStart={handleTouchStart}
                             onTouchMove={handleTouchMove}
                             onTouchEnd={handleTouchEnd}
-                            onDoubleClick={handleStart}
+                            onDoubleClick={(e) => { e.stopPropagation(); handleStart(); }}
                             style={{
                                 height: '100dvh',
                                 width: '100vw',
@@ -929,6 +964,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                 filter: `brightness(${brightness})`,
                                 transition: "background-color 0.8s ease, backdrop-filter 0.8s ease",
                                 pointerEvents: 'auto',
+                                cursor: showZenControls ? 'default' : 'none',
                             }}
                         >
                             {/* Themed Background Layer */}
@@ -942,9 +978,9 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                             )}
 
                             {/* Progress Bar */}
-                            <div className="absolute top-0 left-0 w-full h-2 bg-white/5 z-10">
+                            <div className="absolute top-0 left-0 w-full h-[3px] bg-white/5 z-10">
                                 <motion.div
-                                    className="h-full bg-[var(--color-button)] shadow-[0_0_20px_var(--color-button)]"
+                                    className="h-full bg-[var(--color-button)] shadow-[0_0_12px_var(--color-button)]"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, ease: "linear" }}
@@ -953,17 +989,45 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
 
                             <CompletionOverlay show={showCompletion} duration={lastSessionDuration} mode={completionMode} />
 
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleFullScreen();
-                                }}
-                                className="absolute top-8 right-8 max-md:landscape:top-4 max-md:landscape:right-4 p-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-50 hover:rotate-90"
-                            >
-                                <Minimize2 size={20} />
-                            </button>
+                            {/* ── TOP-RIGHT: Exit Zen button ── */}
+                            <AnimatePresence>
+                                {showZenControls && (
+                                    <motion.button
+                                        key="zen-exit"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.25 }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleFullScreen();
+                                        }}
+                                        className="absolute top-8 right-8 max-md:landscape:top-4 max-md:landscape:right-4 p-2.5 rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all z-50 hover:rotate-90"
+                                    >
+                                        <Minimize2 size={18} />
+                                    </motion.button>
+                                )}
+                            </AnimatePresence>
 
-                            {/* Real-Time Clock - Dedicated component to prevent frequent full-component re-renders */}
+                            {/* ── TOP-CENTER: PAUSED pill ── */}
+                            <AnimatePresence>
+                                {!isActive && (isFocusStarted || isBreakStarted) && (
+                                    <motion.div
+                                        key="paused-pill"
+                                        initial={{ opacity: 0, y: -8, scale: 0.9 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -8, scale: 0.9 }}
+                                        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                                        className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-1.5 rounded-full border backdrop-blur-md"
+                                        style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.15)' }}
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                        <span className="text-[10px] font-bold tracking-[0.3em] text-white/60 uppercase">Paused</span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Real-Time Clock */}
                             <ZenModeClock isDark={isDark} hasWallpaper={!!currentWallpaper} />
 
                             {/* Main Content Container with Scale */}
@@ -976,23 +1040,21 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                 className="flex flex-col items-center"
                             >
                                 <div className="mb-12 max-md:landscape:mb-4 text-center">
-                                    {/* Hide Title in Fullscreen for minimalism */}
-                                    {!isFullScreen && (
-                                        <>
-                                            <h2 className={`text-4xl md:text-6xl font-bold mb-4 tracking-tight ${isDark ? "text-white" : "text-foreground"} ${currentWallpaper ? (isDark ? "text-shadow-contrast" : "text-shadow-light") : ""}`}>
-                                                {selectedSubject || "Deep Work"}
-                                            </h2>
-                                            <p className={`text-xl tracking-widest uppercase ${isDark ? "text-white/40" : "text-foreground/40"} ${currentWallpaper ? (isDark ? "text-shadow-contrast text-white/90" : "text-shadow-light text-black/90 font-bold") : ""}`}>
-                                                {isActive ? "Stay Focused" : "Ready?"}
+                                    {/* Subject + mode label — always visible in zen */}
+                                    <div className="flex flex-col items-center gap-2">
+                                        {(selectedSubject || mode) && (
+                                            <p className={`text-[10px] font-bold tracking-[0.35em] uppercase opacity-40 ${isDark ? "text-white" : "text-black"} ${currentWallpaper ? (isDark ? "text-shadow-contrast opacity-70" : "text-shadow-light opacity-70") : ""}`}>
+                                                {mode === "FOCUS" ? "Timer" : mode === "BREAK" ? "Break" : "Stopwatch"}
+                                                {selectedSubject ? ` · ${selectedSubject}` : ""}
                                             </p>
-                                        </>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className={`relative flex items-center gap-4 mb-16 max-md:landscape:mb-8 p-8 md:p-12 rounded-[4rem] border backdrop-blur-3xl shadow-2xl transition-all ${isDark
+                                <div className={`relative flex items-center gap-4 mb-16 max-md:landscape:mb-8 p-8 md:p-12 rounded-[4rem] border backdrop-blur-3xl shadow-2xl transition-all duration-700 ${isDark
                                     ? "bg-black/20 border-white/5 shadow-white/5"
                                     : "bg-white/40 border-black/5 shadow-black/5"
-                                    }`}>
+                                    } ${!isActive && (isFocusStarted || isBreakStarted) ? "opacity-60" : "opacity-100"}`}>
                                     <FlipDigit value={hours} label="Hours" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
                                     <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
                                     <FlipDigit value={minutes} label="Minutes" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
@@ -1005,93 +1067,128 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                 </div>
                             </motion.div>
 
-                            {/* Bottom Controls Container - Absolute Bottom Right for better accessibility */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.4 }}
-                                style={{ willChange: 'opacity' }}
-                                className={`absolute z-50 flex flex-col gap-2 ${settings.zenControlsAlignment === "top-left" ? "top-8 left-8 max-md:landscape:top-4 max-md:landscape:left-4" :
-                                    settings.zenControlsAlignment === "top-right" ? "top-20 right-8 max-md:landscape:top-16 max-md:landscape:right-4" :
-                                        settings.zenControlsAlignment === "bottom-left" ? "bottom-8 left-8 max-md:landscape:bottom-4 max-md:landscape:left-4" :
-                                            "bottom-8 right-8 max-md:landscape:bottom-4 max-md:landscape:right-4"
-                                    }`}
-                            >
-                                {/* Size Controls - Hidden on mobile as gestures are preferred */}
-                                <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                                    ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
-                                    : isDark
-                                        ? "bg-white/5 border-transparent"
-                                        : "bg-black/5 border-transparent"
-                                    }`}>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setScale(s => Math.max(0.5, s - 0.1));
-                                        }}
-                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
-                                            }`}
+                            {/* ── BOTTOM-CENTER: Primary play controls (auto-hide) ── */}
+                            <AnimatePresence>
+                                {showZenControls && (
+                                    <motion.div
+                                        key="zen-play-controls"
+                                        initial={{ opacity: 0, y: 16 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 16 }}
+                                        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                                        className="absolute bottom-10 max-md:landscape:bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3"
+                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        -
-                                    </button>
-                                    <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
-                                        ? (isDark ? "text-white/80" : "text-black/80")
-                                        : isDark ? "text-white/40" : "text-black/40"
-                                        }`}>SIZE</span>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setScale(s => Math.min(2, s + 0.1));
-                                        }}
-                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
-                                            }`}
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                                {/* Brightness Controls - Hidden on mobile as gestures are preferred */}
-                                <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                                    ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
-                                    : isDark
-                                        ? "bg-white/5 border-transparent"
-                                        : "bg-black/5 border-transparent"
-                                    }`}>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setBrightness(b => Math.max(0.3, b - 0.1));
-                                        }}
-                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
-                                            }`}
-                                    >
-                                        -
-                                    </button>
-                                    <span className={`text-[10px] font-mono font-bold tracking-widest ${currentWallpaper
-                                        ? (isDark ? "text-white/80" : "text-black/80")
-                                        : isDark ? "text-white/40" : "text-black/40"
-                                        }`}>BRIGHTNESS</span>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setBrightness(b => Math.min(1.5, b + 0.1));
-                                        }}
-                                        className={`px-2 font-mono text-xl font-bold transition-all ${currentWallpaper
-                                            ? (isDark ? "text-white/80 hover:text-white" : "text-black/80 hover:text-black")
-                                            : isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"
-                                            }`}
-                                    >
-                                        +
-                                    </button>
-                                </div>
+                                        {/* Play / Pause + Stop row */}
+                                        <div className="flex items-center gap-3">
+                                            {/* Play / Pause */}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); revealZenControls(); handleStart(); }}
+                                                disabled={isCompletingSession || isStarting}
+                                                className={`flex items-center justify-center w-14 h-14 rounded-full border backdrop-blur-xl transition-all duration-300 hover:scale-110 active:scale-95 shadow-2xl ${
+                                                    isActive
+                                                        ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                                                        : "border-[var(--color-button)] text-[var(--color-button-foreground)] shadow-[0_0_30px_var(--color-button)]"
+                                                } ${isCompletingSession || isStarting ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                style={!isActive ? { backgroundColor: 'var(--color-button)' } : {}}
+                                                title={isActive ? "Pause" : "Play"}
+                                            >
+                                                {isActive
+                                                    ? <Pause size={20} fill="currentColor" />
+                                                    : <Play size={20} fill="currentColor" className="ml-0.5" />
+                                                }
+                                            </button>
 
-                            </motion.div>
+                                            {/* Stop & Log — focus/break session in progress */}
+                                            {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); completeSession(); }}
+                                                    disabled={isCompletingSession}
+                                                    className="flex items-center justify-center w-10 h-10 rounded-full border backdrop-blur-xl border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:scale-110 active:scale-95 transition-all duration-200"
+                                                    title="Stop & Log Session"
+                                                >
+                                                    {isCompletingSession
+                                                        ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                        : <Square size={13} fill="currentColor" />
+                                                    }
+                                                </button>
+                                            )}
+
+                                            {/* Finish — stopwatch in progress */}
+                                            {mode === "STOPWATCH" && timeLeft > 0 && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); completeSession(); }}
+                                                    disabled={isCompletingSession}
+                                                    className="flex items-center justify-center w-10 h-10 rounded-full border backdrop-blur-xl border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 hover:scale-110 active:scale-95 transition-all duration-200"
+                                                    title="Finish Session"
+                                                >
+                                                    {isCompletingSession
+                                                        ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                        : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                                    }
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Keyboard hint */}
+                                        <span className="text-[9px] font-mono tracking-[0.25em] text-white/25 uppercase select-none">
+                                            SPACE to {isActive ? "pause" : "play"} · ESC to exit
+                                        </span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* ── CORNER: SIZE + BRIGHTNESS controls (auto-hide) ── */}
+                            <AnimatePresence>
+                                {showZenControls && (
+                                    <motion.div
+                                        key="zen-corner-controls"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        style={{ willChange: 'opacity' }}
+                                        className={`absolute z-50 flex flex-col gap-2 ${settings.zenControlsAlignment === "top-left" ? "top-8 left-8 max-md:landscape:top-4 max-md:landscape:left-4" :
+                                            settings.zenControlsAlignment === "top-right" ? "top-20 right-8 max-md:landscape:top-16 max-md:landscape:right-4" :
+                                                settings.zenControlsAlignment === "bottom-left" ? "bottom-10 left-8 max-md:landscape:bottom-4 max-md:landscape:left-4" :
+                                                    "bottom-10 right-8 max-md:landscape:bottom-4 max-md:landscape:right-4"
+                                            }`}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {/* Size Controls — hidden on mobile (use pinch gesture) */}
+                                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
+                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
+                                            : isDark ? "bg-white/5 border-transparent" : "bg-black/5 border-transparent"
+                                            }`}>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setScale(s => Math.max(0.5, s - 0.1)); }}
+                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                            >-</button>
+                                            <span className={`text-[10px] font-mono font-bold tracking-widest ${isDark ? "text-white/40" : "text-black/40"}`}>SIZE</span>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setScale(s => Math.min(2, s + 0.1)); }}
+                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                            >+</button>
+                                        </div>
+
+                                        {/* Brightness Controls — hidden on mobile (use swipe gesture) */}
+                                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
+                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
+                                            : isDark ? "bg-white/5 border-transparent" : "bg-black/5 border-transparent"
+                                            }`}>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setBrightness(b => Math.max(0.3, b - 0.1)); }}
+                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                            >-</button>
+                                            <span className={`text-[10px] font-mono font-bold tracking-widest ${isDark ? "text-white/40" : "text-black/40"}`}>BRIGHTNESS</span>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setBrightness(b => Math.min(1.5, b + 0.1)); }}
+                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
+                                            >+</button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </motion.div>
                     )}
                 </AnimatePresence>,
