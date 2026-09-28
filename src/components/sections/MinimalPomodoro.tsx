@@ -13,6 +13,7 @@ import { CompletionOverlay } from "@/components/ui/completion-overlay";
 import { FlipDigit } from "@/components/ui/flip-digit";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWallpaper } from "@/lib/WallpaperContext";
+import { ZenWallpaperRenderer } from "@/components/wallpaper/ZenWallpaperRenderer";
 
 function ZenModeClock({ isDark, hasWallpaper }: { isDark: boolean, hasWallpaper: boolean }) {
     const { showZenClock } = useSettings();
@@ -30,7 +31,7 @@ function ZenModeClock({ isDark, hasWallpaper }: { isDark: boolean, hasWallpaper:
     if (!showZenClock) return null;
 
     return (
-        <div className={`absolute top-8 max-md:landscape:top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full border backdrop-blur-md shadow-lg font-mono text-xs tracking-[0.2em] z-40 transition-all ${hasWallpaper
+        <div className={`absolute top-8 max-md:landscape:top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full border backdrop-blur-sm shadow-lg font-mono text-xs tracking-[0.2em] z-40 transition-all ${hasWallpaper
             ? (isDark ? "bg-black/40 border-white/20 text-white/80 text-shadow-contrast font-bold" : "bg-white/40 border-black/10 text-black/80 text-shadow-light font-bold")
             : (isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-foreground/40")
             }`}>
@@ -190,8 +191,11 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                     console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
                 });
             }
+        } else {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
         }
-        // Native exit is now decoupled. Browser stays in fullscreen when overlay is dismissed.
     }, [isFullScreen, setIsZenMode]);
 
     // Handle Esc or native browser fullscreen exit to keep state in sync
@@ -936,19 +940,18 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                 pipWindow.document.body
             )}
 
-            {/* Full Screen Zen Mode Portal */}
-            {mounted && createPortal(
-                <AnimatePresence>
+            {mounted && createPortal(                <AnimatePresence>
                     {isFullScreen && (
                         <motion.div
-                            initial={{ opacity: 0, scale: 1.05 }}
+                            key="zen-fullscreen-root"
+                            initial={{ opacity: 0, scale: 0.96 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
                             transition={{
-                                duration: 0.4,
-                                ease: [0.23, 1, 0.32, 1]
+                                duration: 0.28,
+                                ease: [0.16, 1, 0.3, 1],
                             }}
-                            className={`fixed inset-0 ${currentWallpaper ? "bg-transparent backdrop-blur-none" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none select-none`}
+                            className={`fixed inset-0 ${currentWallpaper ? "bg-black" : (isDark ? "bg-[#08090d]" : "bg-[#f8fafc]")} flex flex-col items-center justify-center overflow-hidden touch-none select-none`}
                             onMouseMove={revealZenControls}
                             onTouchStart={handleTouchStart}
                             onTouchMove={handleTouchMove}
@@ -961,113 +964,171 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                 position: 'fixed',
                                 top: 0,
                                 left: 0,
-                                filter: `brightness(${brightness})`,
-                                transition: "background-color 0.8s ease, backdrop-filter 0.8s ease",
+                                filter: brightness !== 1 ? `brightness(${brightness})` : undefined,
                                 pointerEvents: 'auto',
                                 cursor: showZenControls ? 'default' : 'none',
+                                willChange: 'opacity',
                             }}
                         >
-                            {/* Themed Background Layer */}
+                            {/* ── 1. FULLSCREEN WALLPAPER LAYER (If wallpaper is active) ── */}
+                            {currentWallpaper && (
+                                <ZenWallpaperRenderer
+                                    wallpaper={currentWallpaper}
+                                    brightness={brightness}
+                                />
+                            )}
+
+                            {/* ── 2. THEMED AMBIENT AURA LAYER (When no wallpaper is selected) ── */}
                             {!currentWallpaper && (
-                                <div className="absolute inset-0 z-0 pointer-events-none opacity-50 overflow-hidden">
-                                    <div className="absolute inset-0 bg-mesh opacity-40" />
-                                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-purple)] blur-[100px] opacity-20 animate-pulse" />
-                                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-orb-green)] blur-[100px] opacity-20 animate-pulse" />
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-[var(--color-orb-pink)] blur-[120px] opacity-10" />
+                                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                                    <div
+                                        className="absolute inset-0"
+                                        style={{
+                                            background: isDark
+                                                ? 'radial-gradient(ellipse at 50% 40%, rgba(30, 27, 75, 0.45) 0%, rgba(8, 9, 13, 0.96) 85%)'
+                                                : 'radial-gradient(ellipse at 50% 40%, rgba(224, 231, 255, 0.6) 0%, rgba(248, 250, 252, 0.96) 85%)',
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 bg-mesh opacity-25" />
+                                    <div
+                                        className="absolute -top-[10%] -left-[10%] w-[55vw] h-[55vh] rounded-full pointer-events-none"
+                                        style={{
+                                            background: 'radial-gradient(circle, var(--color-orb-purple) 0%, transparent 70%)',
+                                            opacity: 0.7,
+                                            animation: 'zen-pulse-slow 12s ease-in-out infinite',
+                                        }}
+                                    />
+                                    <div
+                                        className="absolute -bottom-[10%] -right-[10%] w-[50vw] h-[50vh] rounded-full pointer-events-none"
+                                        style={{
+                                            background: 'radial-gradient(circle, var(--color-orb-green) 0%, transparent 70%)',
+                                            opacity: 0.7,
+                                            animation: 'zen-pulse-slow 14s ease-in-out infinite 3s',
+                                        }}
+                                    />
+                                    <div
+                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vh] rounded-full pointer-events-none"
+                                        style={{
+                                            background: 'radial-gradient(circle, var(--color-orb-pink) 0%, transparent 70%)',
+                                            opacity: 0.18,
+                                        }}
+                                    />
                                 </div>
                             )}
 
-                            {/* Progress Bar */}
-                            <div className="absolute top-0 left-0 w-full h-[3px] bg-white/5 z-10">
+                            {/* ── 3. TOP PROGRESS BAR ── */}
+                            <motion.div
+                                initial={{ opacity: 0, scaleX: 0 }}
+                                animate={{ opacity: 1, scaleX: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                style={{ transformOrigin: 'left center' }}
+                                className="absolute top-0 left-0 w-full h-[3px] bg-white/5 z-20"
+                            >
                                 <motion.div
                                     className="h-full bg-[var(--color-button)] shadow-[0_0_12px_var(--color-button)]"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, ease: "linear" }}
                                 />
-                            </div>
+                            </motion.div>
 
                             <CompletionOverlay show={showCompletion} duration={lastSessionDuration} mode={completionMode} />
 
-                            {/* ── TOP-RIGHT: Exit Zen button ── */}
+                            {/* ── 4. TOP-RIGHT: EXIT ZEN BUTTON ── */}
                             <AnimatePresence>
                                 {showZenControls && (
                                     <motion.button
                                         key="zen-exit"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.25 }}
+                                        initial={{ opacity: 0, scale: 0.8, rotate: -45 }}
+                                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                        exit={{ opacity: 0, scale: 0.8, rotate: 45 }}
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             toggleFullScreen();
                                         }}
-                                        className="absolute top-8 right-8 max-md:landscape:top-4 max-md:landscape:right-4 p-2.5 rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all z-50 hover:rotate-90"
+                                        className="absolute top-8 right-8 max-md:landscape:top-4 max-md:landscape:right-4 p-2.5 rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all z-50 hover:rotate-90 hover:scale-110 active:scale-95 shadow-lg backdrop-blur-sm"
+                                        title="Exit Zen Mode (ESC)"
                                     >
                                         <Minimize2 size={18} />
                                     </motion.button>
                                 )}
                             </AnimatePresence>
 
-                            {/* ── TOP-CENTER: PAUSED pill ── */}
+                            {/* ── 5. TOP-CENTER: PAUSED PILL ── */}
                             <AnimatePresence>
                                 {!isActive && (isFocusStarted || isBreakStarted) && (
                                     <motion.div
                                         key="paused-pill"
-                                        initial={{ opacity: 0, y: -8, scale: 0.9 }}
+                                        initial={{ opacity: 0, y: -16, scale: 0.85 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -8, scale: 0.9 }}
-                                        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                                        className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-1.5 rounded-full border backdrop-blur-md"
-                                        style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.15)' }}
+                                        exit={{ opacity: 0, y: -16, scale: 0.85 }}
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                        className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-1.5 rounded-full border backdrop-blur-sm shadow-lg"
+                                        style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }}
                                     >
                                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                                        <span className="text-[10px] font-bold tracking-[0.3em] text-white/60 uppercase">Paused</span>
+                                        <span className="text-[10px] font-bold tracking-[0.3em] text-white/70 uppercase">Paused</span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            {/* Real-Time Clock */}
+                            {/* ── 6. REAL-TIME CLOCK ── */}
                             <ZenModeClock isDark={isDark} hasWallpaper={!!currentWallpaper} />
 
-                            {/* Main Content Container with Scale */}
+                            {/* ── 7. MAIN TIMER DISPLAY ── */}
                             <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.4 }}
-                                style={{ transform: `scale(${scale})`, willChange: 'transform, opacity' }}
-                                className="flex flex-col items-center"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{
+                                    duration: 0.25,
+                                    ease: [0.16, 1, 0.3, 1],
+                                }}
+                                style={{ willChange: 'opacity, transform', transformOrigin: 'center center' }}
+                                className="flex flex-col items-center z-10"
                             >
-                                <div className="mb-12 max-md:landscape:mb-4 text-center">
-                                    {/* Subject + mode label — always visible in zen */}
-                                    <div className="flex flex-col items-center gap-2">
-                                        {(selectedSubject || mode) && (
-                                            <p className={`text-[10px] font-bold tracking-[0.35em] uppercase opacity-40 ${isDark ? "text-white" : "text-black"} ${currentWallpaper ? (isDark ? "text-shadow-contrast opacity-70" : "text-shadow-light opacity-70") : ""}`}>
-                                                {mode === "FOCUS" ? "Timer" : mode === "BREAK" ? "Break" : "Stopwatch"}
-                                                {selectedSubject ? ` · ${selectedSubject}` : ""}
-                                            </p>
+                                <div
+                                    style={{
+                                        transform: `scale(${scale})`,
+                                        transformOrigin: 'center center',
+                                    }}
+                                    className="flex flex-col items-center"
+                                >
+                                    {/* Subject + Mode Header */}
+                                    <div className="mb-10 max-md:landscape:mb-3 text-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            {(selectedSubject || mode) && (
+                                                <p className={`text-[10px] font-bold tracking-[0.35em] uppercase opacity-50 ${isDark ? "text-white" : "text-black"} ${currentWallpaper ? (isDark ? "text-shadow-contrast opacity-80" : "text-shadow-light opacity-80") : ""}`}>
+                                                    {mode === "FOCUS" ? "Timer" : mode === "BREAK" ? "Break" : "Stopwatch"}
+                                                    {selectedSubject ? ` · ${selectedSubject}` : ""}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Flip Digit Card Container */}
+                                    <div
+                                        className={`relative flex items-center gap-4 mb-16 max-md:landscape:mb-8 p-8 md:p-12 rounded-[4rem] border backdrop-blur-md shadow-2xl transition-all duration-300 ${isDark
+                                            ? "bg-black/30 border-white/10 shadow-black/40"
+                                            : "bg-white/50 border-black/5 shadow-black/5"
+                                            } ${!isActive && (isFocusStarted || isBreakStarted) ? "opacity-60" : "opacity-100"}`}
+                                    >
+                                        <FlipDigit value={hours} label="Hours" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
+                                        <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
+                                        <FlipDigit value={minutes} label="Minutes" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
+                                        {settings.showZenSeconds && (
+                                            <>
+                                                <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
+                                                <FlipDigit value={seconds} label="Seconds" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
+                                            </>
                                         )}
                                     </div>
                                 </div>
-
-                                <div className={`relative flex items-center gap-4 mb-16 max-md:landscape:mb-8 p-8 md:p-12 rounded-[4rem] border backdrop-blur-3xl shadow-2xl transition-all duration-700 ${isDark
-                                    ? "bg-black/20 border-white/5 shadow-white/5"
-                                    : "bg-white/40 border-black/5 shadow-black/5"
-                                    } ${!isActive && (isFocusStarted || isBreakStarted) ? "opacity-60" : "opacity-100"}`}>
-                                    <FlipDigit value={hours} label="Hours" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
-                                    <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
-                                    <FlipDigit value={minutes} label="Minutes" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
-                                    {settings.showZenSeconds && (
-                                        <>
-                                            <span className={`text-6xl md:text-8xl font-light -mt-8 ${isDark ? "text-white/20" : "text-foreground/20"}`}>:</span>
-                                            <FlipDigit value={seconds} label="Seconds" isRetro={timerFont === "retro"} fontClass={fontClass} isDark={isDark} />
-                                        </>
-                                    )}
-                                </div>
                             </motion.div>
 
-                            {/* ── BOTTOM-CENTER: Primary play controls (auto-hide) ── */}
+                            {/* ── 8. BOTTOM-CENTER: PRIMARY CONTROLS (Auto-hide) ── */}
                             <AnimatePresence>
                                 {showZenControls && (
                                     <motion.div
@@ -1075,79 +1136,87 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                         initial={{ opacity: 0, y: 16 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 16 }}
-                                        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                                         className="absolute bottom-10 max-md:landscape:bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3"
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        {/* Play / Pause + Stop row */}
                                         <div className="flex items-center gap-3">
                                             {/* Play / Pause */}
-                                            <button
+                                            <motion.button
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.92 }}
                                                 onClick={(e) => { e.stopPropagation(); revealZenControls(); handleStart(); }}
                                                 disabled={isCompletingSession || isStarting}
-                                                className={`flex items-center justify-center w-14 h-14 rounded-full border backdrop-blur-xl transition-all duration-300 hover:scale-110 active:scale-95 shadow-2xl ${
+                                                className={`flex items-center justify-center w-14 h-14 rounded-full border backdrop-blur-sm transition-colors duration-300 shadow-2xl ${
                                                     isActive
                                                         ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
                                                         : "border-[var(--color-button)] text-[var(--color-button-foreground)] shadow-[0_0_30px_var(--color-button)]"
                                                 } ${isCompletingSession || isStarting ? "opacity-50 cursor-not-allowed" : ""}`}
                                                 style={!isActive ? { backgroundColor: 'var(--color-button)' } : {}}
-                                                title={isActive ? "Pause" : "Play"}
+                                                title={isActive ? "Pause (SPACE)" : "Play (SPACE)"}
                                             >
                                                 {isActive
                                                     ? <Pause size={20} fill="currentColor" />
                                                     : <Play size={20} fill="currentColor" className="ml-0.5" />
                                                 }
-                                            </button>
+                                            </motion.button>
 
-                                            {/* Stop & Log — focus/break session in progress */}
+                                            {/* Stop & Log Session */}
                                             {((mode === "FOCUS" && isFocusStarted) || (mode === "BREAK" && isBreakStarted)) && timeLeft > 0 && (
-                                                <button
+                                                <motion.button
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.92 }}
                                                     onClick={(e) => { e.stopPropagation(); completeSession(); }}
                                                     disabled={isCompletingSession}
-                                                    className="flex items-center justify-center w-10 h-10 rounded-full border backdrop-blur-xl border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:scale-110 active:scale-95 transition-all duration-200"
+                                                    className="flex items-center justify-center w-10 h-10 rounded-full border backdrop-blur-sm border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors duration-200"
                                                     title="Stop & Log Session"
                                                 >
                                                     {isCompletingSession
                                                         ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                                         : <Square size={13} fill="currentColor" />
                                                     }
-                                                </button>
+                                                </motion.button>
                                             )}
 
-                                            {/* Finish — stopwatch in progress */}
+                                            {/* Finish Stopwatch */}
                                             {mode === "STOPWATCH" && timeLeft > 0 && (
-                                                <button
+                                                <motion.button
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.92 }}
                                                     onClick={(e) => { e.stopPropagation(); completeSession(); }}
                                                     disabled={isCompletingSession}
-                                                    className="flex items-center justify-center w-10 h-10 rounded-full border backdrop-blur-xl border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 hover:scale-110 active:scale-95 transition-all duration-200"
+                                                    className="flex items-center justify-center w-10 h-10 rounded-full border backdrop-blur-sm border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors duration-200"
                                                     title="Finish Session"
                                                 >
                                                     {isCompletingSession
                                                         ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                                         : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                                     }
-                                                </button>
+                                                </motion.button>
                                             )}
                                         </div>
 
-                                        {/* Keyboard hint */}
-                                        <span className="text-[9px] font-mono tracking-[0.25em] text-white/25 uppercase select-none">
+                                        <span className="text-[9px] font-mono tracking-[0.25em] text-white/30 uppercase select-none">
                                             SPACE to {isActive ? "pause" : "play"} · ESC to exit
                                         </span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            {/* ── CORNER: SIZE + BRIGHTNESS controls (auto-hide) ── */}
+                            {/* ── 9. CORNER CONTROLS: SIZE + BRIGHTNESS (Auto-hide) ── */}
                             <AnimatePresence>
                                 {showZenControls && (
                                     <motion.div
                                         key="zen-corner-controls"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        style={{ willChange: 'opacity' }}
+                                        initial={{ opacity: 0, scale: 0.94 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.94 }}
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                        style={{ willChange: 'opacity, transform' }}
                                         className={`absolute z-50 flex flex-col gap-2 ${settings.zenControlsAlignment === "top-left" ? "top-8 left-8 max-md:landscape:top-4 max-md:landscape:left-4" :
                                             settings.zenControlsAlignment === "top-right" ? "top-20 right-8 max-md:landscape:top-16 max-md:landscape:right-4" :
                                                 settings.zenControlsAlignment === "bottom-left" ? "bottom-10 left-8 max-md:landscape:bottom-4 max-md:landscape:left-4" :
@@ -1155,10 +1224,10 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                             }`}
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        {/* Size Controls — hidden on mobile (use pinch gesture) */}
+                                        {/* Size Controls */}
                                         <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
-                                            : isDark ? "bg-white/5 border-transparent" : "bg-black/5 border-transparent"
+                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-sm" : "bg-white/40 border-black/10 backdrop-blur-sm")
+                                            : isDark ? "bg-white/5 border-transparent backdrop-blur-sm" : "bg-black/5 border-transparent backdrop-blur-sm"
                                             }`}>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setScale(s => Math.max(0.5, s - 0.1)); }}
@@ -1171,10 +1240,10 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                             >+</button>
                                         </div>
 
-                                        {/* Brightness Controls — hidden on mobile (use swipe gesture) */}
+                                        {/* Brightness Controls */}
                                         <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-md" : "bg-white/40 border-black/10 backdrop-blur-md")
-                                            : isDark ? "bg-white/5 border-transparent" : "bg-black/5 border-transparent"
+                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-sm" : "bg-white/40 border-black/10 backdrop-blur-sm")
+                                            : isDark ? "bg-white/5 border-transparent backdrop-blur-sm" : "bg-black/5 border-transparent backdrop-blur-sm"
                                             }`}>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setBrightness(b => Math.max(0.3, b - 0.1)); }}

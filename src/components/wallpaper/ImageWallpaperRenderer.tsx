@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useWallpaper } from "@/lib/WallpaperContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { useFocusTimer } from "@/hooks/useFocusTimer";
@@ -9,7 +8,7 @@ import { useFocusTimer } from "@/hooks/useFocusTimer";
 export function ImageWallpaperRenderer() {
     const { wallpaper, isLoaded } = useWallpaper();
     const { mode, isActive } = useFocusTimer();
-    const { isZenMode, autoDimWallpaper } = useSettings();
+    const { autoDimWallpaper } = useSettings();
 
     const containerRef = useRef<HTMLDivElement>(null);
     const [targetAspect, setTargetAspect] = useState(16 / 9);
@@ -25,12 +24,12 @@ export function ImageWallpaperRenderer() {
         });
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isZenMode]);
+    }, []);
 
     if (!isLoaded || !wallpaper || wallpaper.type !== "image") return null;
 
-    const filters = isZenMode ? wallpaper.zenFilters : wallpaper.timerFilters;
-    const crop = isZenMode ? wallpaper.zenCrop : wallpaper.timerCrop;
+    const filters = wallpaper.timerFilters;
+    const crop = wallpaper.timerCrop;
     const { src } = wallpaper;
     const isFocusActive = mode === "FOCUS" && isActive;
 
@@ -40,25 +39,22 @@ export function ImageWallpaperRenderer() {
     const hueRotate = filters.hueRotate ?? 0;
     const blur = filters.blur ?? 0;
 
-    let filterString = `brightness(${baseBrightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg) ${blur > 0 ? `blur(${blur}px)` : ''}`;
-
-    // Sync with Zen Mode Brightness Control
-    filterString += ` brightness(var(--zen-brightness, 1))`;
+    let filterString = `brightness(${baseBrightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg) ${blur > 0 ? `blur(${blur}px)` : ""}`;
 
     if (isFocusActive && autoDimWallpaper) {
-        filterString += ' brightness(60%)'; // Stack brightness reduction for dimming
+        filterString += " brightness(60%)"; // Stack brightness reduction for dimming
     }
 
-    const content = (
+    return (
         <div
             ref={containerRef}
             style={{
-                position: isZenMode ? "fixed" : "absolute",
+                position: "absolute",
                 inset: 0,
-                zIndex: isZenMode ? 999998 : 0,
+                zIndex: 0,
                 overflow: "hidden",
                 pointerEvents: "none",
-                borderRadius: isZenMode ? "0" : "1.5rem",
+                borderRadius: "1.5rem",
             }}
         >
             <img
@@ -88,20 +84,16 @@ export function ImageWallpaperRenderer() {
             />
 
             {filters.rgbTint && (
-                <div style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundColor: filters.rgbTint,
-                    pointerEvents: "none",
-                    transition: "background-color 0.8s ease"
-                }} />
+                <div
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        backgroundColor: filters.rgbTint,
+                        pointerEvents: "none",
+                        transition: "background-color 0.8s ease",
+                    }}
+                />
             )}
         </div>
     );
-
-    if (isZenMode && typeof document !== 'undefined') {
-        return createPortal(content, document.body);
-    }
-
-    return content;
 }

@@ -91,7 +91,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
 
   return (
     <>
-      <header className={`transition-all duration-500 fixed top-0 w-full z-[1000] px-4 md:px-6 pt-4 max-md:landscape:pt-2 ${isZenMode ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
+      <header className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] fixed top-0 w-full z-[1000] px-4 md:px-6 pt-4 max-md:landscape:pt-2 ${isZenMode ? "opacity-0 scale-90 pointer-events-none" : "opacity-100 scale-100"}`} style={{ transformOrigin: 'center center' }}>
         <div
           className={`mx-auto max-w-[1400px] flex relative items-center justify-between w-full h-[64px] max-md:landscape:h-[44px] px-4 md:px-6 max-md:landscape:pl-28 rounded-2xl border backdrop-blur-[24px] transition-all duration-500 shadow-2xl ${isDark
             ? "bg-background/60 border-white/20 text-foreground shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
@@ -193,11 +193,15 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                 <AnimatePresence>
                   {isMoreOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden z-[100] py-1"
+                      exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                      className={`absolute right-0 top-full mt-2 w-64 rounded-2xl border shadow-2xl overflow-hidden z-[100] py-1.5 before:content-[''] before:absolute before:-top-2.5 before:left-0 before:right-0 before:h-2.5 ${
+                        isDark
+                          ? "bg-[#0c0d12] border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-white"
+                          : "bg-white border-black/10 shadow-[0_20px_50px_rgba(0,0,0,0.14)] text-neutral-900"
+                      }`}
                     >
                       <div className="grid grid-cols-1">
                         {toolItems.map((item) => {
@@ -205,23 +209,28 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                           return (
                             <React.Fragment key={item.label}>
                               {item.label === "Settings" && (
-                                <div className="h-px bg-border mx-4 my-1" />
+                                <div className={`h-px mx-3 my-1 ${isDark ? "bg-white/10" : "bg-black/10"}`} />
                               )}
                               <Link
                                 href={item.href}
                                 prefetch={true}
-                                className={`flex items-center gap-3 px-4 py-3 transition-colors duration-150 group relative ${isItemActive
-                                  ? "bg-primary/10 border-l-2 border-primary text-foreground"
-                                  : "bg-transparent hover:bg-muted/50 text-foreground"
-                                  }`}
+                                className={`flex items-center gap-3 px-3.5 py-2.5 mx-1.5 rounded-xl transition-all duration-150 group relative ${
+                                  isItemActive
+                                    ? isDark
+                                      ? "bg-primary/20 text-white font-medium"
+                                      : "bg-primary/10 text-primary font-medium"
+                                    : isDark
+                                      ? "hover:bg-white/10 text-white/90"
+                                      : "hover:bg-black/5 text-neutral-800"
+                                }`}
                                 onClick={() => setIsMoreOpen(false)}
                               >
-                                <div className={`p-2 rounded-xl transition-all duration-150 ${item.tint} group-hover:opacity-100 opacity-80`}>
+                                <div className={`p-2 rounded-xl transition-all duration-150 ${item.tint} group-hover:scale-105 opacity-90`}>
                                   <item.icon size={16} />
                                 </div>
                                 <div className="flex flex-col">
-                                  <span className="text-[13.5px] font-medium leading-tight">{item.label}</span>
-                                  <span className="text-[11px] leading-tight text-muted-foreground">{item.desc}</span>
+                                  <span className={`text-[13.5px] font-semibold leading-tight ${isDark ? "text-white" : "text-neutral-900"}`}>{item.label}</span>
+                                  <span className={`text-[11px] leading-tight mt-0.5 ${isDark ? "text-white/50 group-hover:text-white/70" : "text-neutral-500 group-hover:text-neutral-700"}`}>{item.desc}</span>
                                 </div>
                               </Link>
                             </React.Fragment>
@@ -285,7 +294,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         </div>
 
         {/* Floating Bottom Dock (Visible only on Mobile/Tablet) */}
-        <div className={`md:hidden fixed bottom-6 left-0 right-0 landscape:bottom-auto landscape:top-1/2 landscape:-translate-y-1/2 landscape:left-4 landscape:right-auto landscape:w-auto z-[1001] px-4 landscape:px-0 pointer-events-none transition-all duration-500 ${isZenMode ? "translate-y-20 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
+        <div className={`md:hidden fixed bottom-6 left-0 right-0 landscape:bottom-auto landscape:top-1/2 landscape:-translate-y-1/2 landscape:left-4 landscape:right-auto landscape:w-auto z-[1001] px-4 landscape:px-0 pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isZenMode ? "opacity-0 scale-90 pointer-events-none" : "opacity-100 scale-100"}`} style={{ transformOrigin: 'center center' }}>
           <div className="flex justify-center max-w-md mx-auto pointer-events-auto">
             <nav
               className="flex items-center max-md:landscape:flex-col gap-1 p-2 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-500 bg-background/80 border-border text-foreground"
@@ -343,7 +352,11 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                     <span className="text-[9px] font-bold tracking-tighter uppercase mt-1 max-md:landscape:hidden">More</span>
                   </button>
                 </DrawerTrigger>
-                <DrawerContent className="rounded-t-[32px] rounded-b-[32px] mb-28 mx-4 max-md:landscape:mb-0 max-md:landscape:mx-0 max-md:landscape:rounded-l-[32px] max-md:landscape:rounded-r-none max-md:landscape:rounded-tr-none border border-border backdrop-blur-3xl bg-card/95 shadow-2xl transition-[background-color] duration-500 overflow-hidden">
+                <DrawerContent className={`rounded-t-[32px] rounded-b-[32px] mb-28 mx-4 max-md:landscape:mb-0 max-md:landscape:mx-0 max-md:landscape:rounded-l-[32px] max-md:landscape:rounded-r-none max-md:landscape:rounded-tr-none border shadow-2xl transition-[background-color] duration-500 overflow-hidden ${
+                  isDark
+                    ? "bg-[#0c0d12] border-white/15 text-white shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
+                    : "bg-white border-black/10 text-neutral-900 shadow-[0_20px_50px_rgba(0,0,0,0.14)]"
+                }`}>
                   <div className="mx-auto w-12 h-1.5 max-md:landscape:w-1.5 max-md:landscape:h-12 rounded-full bg-muted-foreground/30 mt-4 mb-4 max-md:landscape:my-auto max-md:landscape:ml-2 max-md:landscape:mr-4" />
                   <div className="max-md:landscape:flex-1 max-md:landscape:overflow-y-auto">
                     <DrawerHeader>
@@ -375,7 +388,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
         </div>
       </header>
       {/* Spacer to compensate for fixed header */}
-      <div className={`transition-all duration-500 w-full ${isZenMode ? "h-0" : "h-[80px] max-md:landscape:h-[52px]"}`} />
+      <div className="w-full h-[80px] max-md:landscape:h-[52px]" />
     </>
   );
 }

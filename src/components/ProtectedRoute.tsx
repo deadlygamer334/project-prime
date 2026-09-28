@@ -150,7 +150,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }, [router, pathname, isDeleting]);
 
     // Don't show loading screen if already authorized from cache
-    if (loading && !authorized) {
+    // Fix hydration mismatch by ensuring initial client render matches server render
+    if (!isMounted || (loading && !authorized)) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6 transition-colors duration-300">
                 <div className="relative">

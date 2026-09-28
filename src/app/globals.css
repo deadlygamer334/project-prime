@@ -606,14 +606,56 @@
   }
 }
 
-/* Immersion Fix: Completely hide all page content and global overlays when Zen Mode is active */
-.zen-mode .main-content-wrapper,
+/* ── Zen Mode High-Performance Composite Transition ── */
+.main-content-wrapper {
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center center;
+  will-change: opacity, transform;
+}
+
+.mobile-bottom-dock-spacer,
+footer,
+#floating-music-player {
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+
+.zen-mode .main-content-wrapper {
+  opacity: 0 !important;
+  transform: scale(0.92) !important;
+  pointer-events: none !important;
+}
+
 .zen-mode .mobile-bottom-dock-spacer,
 .zen-mode footer,
 .zen-mode #floating-music-player {
-  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .zen-mode {
   overflow: hidden !important;
+}
+
+@keyframes zen-pulse-slow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.18;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.28;
+  }
+}
+
+@keyframes zen-glow-ambient {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.98);
+  }
 }

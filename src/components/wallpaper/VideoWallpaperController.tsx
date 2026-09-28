@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useWallpaper } from "@/lib/WallpaperContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { useFocusTimer } from "@/hooks/useFocusTimer";
@@ -30,15 +29,14 @@ export function VideoWallpaperController() {
         });
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isZenMode]);
+    }, []);
 
-    // Safe playback utility to handle AbortError during portal/visibility transitions
+    // Safe playback utility to handle AbortError
     const safePlay = async (video: HTMLVideoElement) => {
         try {
             await video.play();
             setStatus("PLAYING");
         } catch (err: any) {
-            // AbortError (code 20) is expected when the DOM moves or the request is interrupted
             if (err.name !== "AbortError") {
                 console.error("Video playback error:", err);
                 setStatus("PAUSED");
@@ -65,7 +63,7 @@ export function VideoWallpaperController() {
             video.src = activeSrc;
 
             const handleCanPlay = () => {
-                if (!document.hidden && !reducedMotion) {
+                if (!document.hidden && !reducedMotion && !isZenMode) {
                     safePlay(video);
                 } else {
                     setStatus("PAUSED");
@@ -75,8 +73,7 @@ export function VideoWallpaperController() {
             video.addEventListener("canplay", handleCanPlay, { once: true });
             video.load();
         }
-
-    }, [activeSrc, reducedMotion, isLoaded]);
+    }, [activeSrc, reducedMotion, isLoaded, isZenMode]);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -86,7 +83,7 @@ export function VideoWallpaperController() {
             if (document.hidden) {
                 video.pause();
                 setStatus("PAUSED");
-            } else if (activeSrc && !reducedMotion) {
+            } else if (activeSrc && !reducedMotion && !isZenMode) {
                 safePlay(video);
             }
         };
@@ -105,22 +102,25 @@ export function VideoWallpaperController() {
             window.removeEventListener("focus", handleVisibilityChange);
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [activeSrc, reducedMotion]);
+    }, [activeSrc, reducedMotion, isZenMode]);
 
-    // Force playback trigger when entering Zen Mode or starting Focus
+    // In-card video pause during Zen Mode to save resources, resume on return
     useEffect(() => {
         const video = videoRef.current;
         if (!video || !activeSrc || reducedMotion) return;
 
-        if (isZenMode || isActive) {
+        if (isZenMode) {
+            video.pause();
+            setStatus("PAUSED");
+        } else if (isActive) {
             safePlay(video);
         }
     }, [isZenMode, isActive, activeSrc, reducedMotion]);
 
     if (!isLoaded || !wallpaper || wallpaper.type !== "video") return null;
 
-    const filters = isZenMode ? wallpaper.zenFilters : wallpaper.timerFilters;
-    const crop = isZenMode ? wallpaper.zenCrop : wallpaper.timerCrop;
+    const filters = wallpaper.timerFilters;
+    const crop = wallpaper.timerCrop;
     const isFocusActive = mode === "FOCUS" && isActive;
 
     const baseBrightness = (filters.brightness ?? 1) * 100;
@@ -129,30 +129,26 @@ export function VideoWallpaperController() {
     const hueRotate = filters.hueRotate ?? 0;
     const blur = filters.blur ?? 0;
 
-    // Base filter string
-    let filterString = `brightness(${baseBrightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg) ${blur > 0 ? `blur(${blur}px)` : ''}`;
-
-    // Sync with Zen Mode Brightness Control
-    filterString += ` brightness(var(--zen-brightness, 1))`;
+    let filterString = `brightness(${baseBrightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg) ${blur > 0 ? `blur(${blur}px)` : ""}`;
 
     if (isFocusActive && autoDimWallpaper) {
-        filterString += ' brightness(60%)';
+        filterString += " brightness(60%)";
     }
 
     const poster = wallpaper.poster || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
-    const content = (
+    return (
         <div
             ref={containerRef}
             style={{
-                position: isZenMode ? "fixed" : "absolute",
+                position: "absolute",
                 inset: 0,
-                zIndex: isZenMode ? 999998 : 0,
+                zIndex: 0,
                 overflow: "hidden",
                 pointerEvents: "none",
-                borderRadius: isZenMode ? "0" : "1.5rem",
-                opacity: isZenMode ? 1 : (isActive ? 1 : 0),
-                transition: "opacity 1s ease",
+                borderRadius: "1.5rem",
+                opacity: isActive ? 1 : 0,
+                transition: "opacity 0.6s ease",
             }}
         >
             {activeSrc && (
@@ -192,20 +188,16 @@ export function VideoWallpaperController() {
             )}
 
             {filters.rgbTint && (
-                <div style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundColor: filters.rgbTint,
-                    pointerEvents: "none",
-                    transition: "background-color 0.8s ease"
-                }} />
+                <div
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        backgroundColor: filters.rgbTint,
+                        pointerEvents: "none",
+                        transition: "background-color 0.8s ease",
+                    }}
+                />
             )}
         </div>
     );
-
-    if (isZenMode && typeof document !== 'undefined') {
-        return createPortal(content, document.body);
-    }
-
-    return content;
 }
