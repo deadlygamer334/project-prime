@@ -5,33 +5,8 @@ import { useSettings } from "@/lib/SettingsContext";
 import AppHeader from "@/components/sections/AppHeader";
 import Footer from "@/components/sections/Footer";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
-import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
-import dynamic from "next/dynamic";
-
-const DigitalClock = dynamic(() => import("@/components/sections/DigitalClock"), {
-    ssr: false,
-});
-
-const TodoPanel = dynamic(() => import("@/components/sections/TodoPanel"), {
-    ssr: false,
-    loading: () => (
-        <section className="todo-panel flex flex-col relative w-full lg:max-w-[912px] rounded-3xl p-4 md:p-8 border min-h-[500px] bg-white/5 border-white/10">
-            <div className="flex items-center justify-between gap-4 mb-6">
-                <PremiumSkeleton height="32px" width="120px" borderRadius="8px" />
-                <div className="flex gap-2">
-                    <PremiumSkeleton height="40px" width="100px" borderRadius="12px" />
-                    <PremiumSkeleton height="40px" width="140px" borderRadius="12px" />
-                </div>
-            </div>
-            <PremiumSkeleton height="12px" width="100%" borderRadius="6px" className="mb-8" />
-            <div className="space-y-4">
-                {[1, 2, 3, 4].map(i => (
-                    <PremiumSkeleton key={i} height="72px" width="100%" borderRadius="16px" />
-                ))}
-            </div>
-        </section>
-    )
-});
+import DigitalClock from "@/components/sections/DigitalClock";
+import TodoPanel from "@/components/sections/TodoPanel";
 
 /** 
  * HomePageClient — "use client" interactive shell for the homepage.

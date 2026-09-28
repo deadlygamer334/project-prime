@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -235,6 +234,8 @@
     border-radius: var(--radius-lg);
     padding: 24px;
     transition: transform 0.2s ease, border-color 0.2s ease;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   .glass-card:hover {
@@ -269,6 +270,8 @@
 
   /* Premium Card Surface */
   .card-premium {
+    transform: translateZ(0);
+    backface-visibility: hidden;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.07),
       0 1px 2px rgba(0, 0, 0, 0.4),
@@ -544,7 +547,7 @@
   }
 
   .font-digital {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: var(--font-digital), 'Share Tech Mono', monospace;
     letter-spacing: 0.15em;
   }
 

@@ -10,13 +10,12 @@ export default function Template({ children }: { children: React.ReactNode }) {
         <LazyMotion features={domAnimation}>
             <m.div
                 key={pathname}
-                initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{
-                    type: "spring",
-                    duration: 0.25,
-                    bounce: 0.2
+                    duration: 0.12,
+                    ease: "easeOut"
                 }}
                 className="flex-grow flex flex-col w-full h-full"
             >

@@ -35,7 +35,7 @@ export const useHomeTodo = () => {
     const tasks = useMemo(() => [...recentTasks, ...historyTasks], [recentTasks, historyTasks]);
 
     const [isLoaded, setIsLoaded] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(() => auth.currentUser);
 
     // Auth Listener
     useEffect(() => {

@@ -4,18 +4,9 @@ import PremiumSkeleton from "@/components/ui/PremiumSkeleton";
 
 export default function Loading() {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6 transition-colors duration-300">
-            <div className="relative">
-                <PremiumSkeleton width="64px" height="64px" borderRadius="16px" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                </div>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-                <PremiumSkeleton width="180px" height="20px" borderRadius="12px" />
-                <p className="text-muted-foreground text-xs font-mono uppercase tracking-widest opacity-80 animate-pulse">
-                    Loading System
-                </p>
+        <div className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none" aria-hidden="true">
+            <div className="h-[2.5px] w-full bg-primary/20 overflow-hidden relative">
+                <div className="h-full bg-gradient-to-r from-transparent via-primary to-transparent w-full animate-pulse" />
             </div>
         </div>
     );

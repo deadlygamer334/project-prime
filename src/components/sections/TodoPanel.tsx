@@ -433,7 +433,13 @@ export default function TodoPanel({ searchQuery = "" }: TodoPanelProps) {
         onReorder={handleReorder}
         className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar"
       >
-        {filteredTasks.length === 0 ? (
+        {!isLoaded ? (
+          <div className="space-y-3 py-2">
+            {[1, 2, 3].map((i) => (
+              <PremiumSkeleton key={i} height="68px" width="100%" borderRadius="16px" />
+            ))}
+          </div>
+        ) : filteredTasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p className="text-[14px]">No tasks found for this filter</p>
             {loadingHistory && (

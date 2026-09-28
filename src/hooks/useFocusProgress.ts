@@ -33,7 +33,7 @@ export const useFocusProgress = () => {
 
     const [totalMinutes, setTotalMinutes] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(() => auth.currentUser);
 
     // Auth Listener
     useEffect(() => {

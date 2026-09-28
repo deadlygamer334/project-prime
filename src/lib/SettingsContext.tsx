@@ -132,8 +132,18 @@ const defaultSettings: Settings = {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-    const [settings, setSettings] = useState<Settings>(defaultSettings);
-    const [user, setUser] = useState<User | null>(null);
+    const [settings, setSettings] = useState<Settings>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const cached = localStorage.getItem("prime_cached_settings");
+                if (cached) {
+                    return { ...defaultSettings, ...JSON.parse(cached) };
+                }
+            } catch {}
+        }
+        return defaultSettings;
+    });
+    const [user, setUser] = useState<User | null>(() => auth.currentUser);
     const [isLoaded, setIsLoaded] = useState(false);
     const [isZenMode, setIsZenMode] = useState(false);
     // Debounce ref: prevents 20+ DOM mutations on every rapid settings change (INP fix)
@@ -168,11 +178,20 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                         if (data.displayName && (!data.settings.userName || data.settings.userName === "User")) {
                             newSettings.userName = data.displayName;
                         }
+                        try {
+                            localStorage.setItem("prime_cached_settings", JSON.stringify(newSettings));
+                        } catch {}
                         return newSettings;
                     });
                 } else if (data.displayName) {
                     // Fallback for cases where settings don't exist yet but displayName does
-                    setSettings(prev => ({ ...prev, userName: data.displayName }));
+                    setSettings(prev => {
+                        const newSettings = { ...prev, userName: data.displayName };
+                        try {
+                            localStorage.setItem("prime_cached_settings", JSON.stringify(newSettings));
+                        } catch {}
+                        return newSettings;
+                    });
                 }
             }
             setIsLoaded(true);
@@ -500,6 +519,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                     console.error("Failed to save settings to cloud", err);
                 });
             }
+            try {
+                localStorage.setItem("prime_cached_settings", JSON.stringify(newSettings));
+            } catch {}
             return newSettings;
         });
     }, [user]);

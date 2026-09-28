@@ -10,14 +10,47 @@ import PremiumSkeleton from "./ui/PremiumSkeleton";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useSettings } from "@/lib/SettingsContext";
 
+
+// List of public paths that don't satisfy the protection rule
+const PUBLIC_PATHS = ["/login"];
+const BYPASS_AUTH = false;
+const AUTH_CACHE_KEY = "prime_cached_auth";
+
+interface CachedAuth {
+    uid: string;
+    hasDisplayName: boolean;
+    isGoogleUser: boolean;
+}
+
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [loading, setLoading] = useState(true);
-    const [authorized, setAuthorized] = useState(false);
+
+    // Check if we have cached auth state from a previous session for instant zero-buffer mount
+    const [initialAuthState] = useState(() => {
+        if (typeof window === "undefined") {
+            return { authorized: false, loading: true, userId: null as string | null, isGoogleUser: false };
+        }
+        if (PUBLIC_PATHS.includes(pathname)) {
+            return { authorized: true, loading: false, userId: null, isGoogleUser: false };
+        }
+        try {
+            const raw = localStorage.getItem(AUTH_CACHE_KEY);
+            if (raw) {
+                const parsed: CachedAuth = JSON.parse(raw);
+                if (parsed?.uid && parsed?.hasDisplayName) {
+                    return { authorized: true, loading: false, userId: parsed.uid, isGoogleUser: !!parsed.isGoogleUser };
+                }
+            }
+        } catch {}
+        return { authorized: false, loading: true, userId: null, isGoogleUser: false };
+    });
+
+    const [loading, setLoading] = useState(initialAuthState.loading);
+    const [authorized, setAuthorized] = useState(initialAuthState.authorized);
     const [showNameModal, setShowNameModal] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
-    const [isGoogleUser, setIsGoogleUser] = useState(false);
+    const [userId, setUserId] = useState<string | null>(initialAuthState.userId);
+    const [isGoogleUser, setIsGoogleUser] = useState(initialAuthState.isGoogleUser);
     const [isMounted, setIsMounted] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -28,12 +61,6 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         window.addEventListener('account-deletion-started', handleDeletionStart);
         return () => window.removeEventListener('account-deletion-started', handleDeletionStart);
     }, []);
-
-    // List of public paths that don't satisfy the protection rule
-    const PUBLIC_PATHS = ["/login"];
-
-    // Set to true to allow anyone to use the app without logging in temporarily.
-    const BYPASS_AUTH = false;
 
     useEffect(() => {
         // If on a public path, skip check
@@ -55,12 +82,17 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             if (!user) {
                 // Not logged in
                 setUserId(null); // Clear ID
+                try {
+                    localStorage.removeItem(AUTH_CACHE_KEY);
+                } catch {}
+
                 if (BYPASS_AUTH) {
                     setAuthorized(true);
                     setLoading(false);
                 } else {
-                    router.push("/login");
+                    setAuthorized(false);
                     setLoading(false);
+                    router.push("/login");
                 }
             } else {
                 setUserId(user.uid);
@@ -78,14 +110,23 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                         if (!userData.displayName || userData.displayName.trim() === "") {
                             setShowNameModal(true);
                             setAuthorized(false);
+                            try { localStorage.removeItem(AUTH_CACHE_KEY); } catch {}
                         } else {
                             setShowNameModal(false);
                             setAuthorized(true);
+                            try {
+                                localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({
+                                    uid: user.uid,
+                                    hasDisplayName: true,
+                                    isGoogleUser: isGoogle
+                                }));
+                            } catch {}
                         }
                     } else {
                         // Document deleted (could be account deletion in progress)
                         setShowNameModal(true);
                         setAuthorized(false);
+                        try { localStorage.removeItem(AUTH_CACHE_KEY); } catch {}
                     }
                     setLoading(false);
                 }, (error) => {
@@ -93,6 +134,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                     if (error.code === "permission-denied") {
                         // If we lose permission, typically it means a session expired or logout in progress
                         setAuthorized(false);
+                        try { localStorage.removeItem(AUTH_CACHE_KEY); } catch {}
                     }
                     setLoading(false);
                 });
@@ -107,9 +149,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         };
     }, [router, pathname, isDeleting]);
 
-    if (!isMounted) return null;
-
-    if (loading) {
+    // Don't show loading screen if already authorized from cache
+    if (loading && !authorized) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6 transition-colors duration-300">
                 <div className="relative">

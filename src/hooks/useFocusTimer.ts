@@ -15,7 +15,7 @@ interface UseFocusTimerProps {
 
 export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting }: UseFocusTimerProps = {}) => {
     // Auth State
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(() => auth.currentUser);
 
     // Persistent State
     const [mode, setMode] = useState<TimerMode>("FOCUS");

@@ -135,6 +135,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                   <Link
                     key={item.label}
                     href={item.href}
+                    prefetch={true}
                     className={`relative flex items-center justify-center px-4 h-[36px] text-[13.5px] font-medium rounded-xl transition-colors duration-300 whitespace-nowrap ${pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
                       ? isDark ? "text-white shadow-sm" : "text-foreground font-semibold"
                       : isDark ? "text-white/60 hover:text-white" : "text-foreground/60 hover:text-foreground"
@@ -208,6 +209,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                               )}
                               <Link
                                 href={item.href}
+                                prefetch={true}
                                 className={`flex items-center gap-3 px-4 py-3 transition-colors duration-150 group relative ${isItemActive
                                   ? "bg-primary/10 border-l-2 border-primary text-foreground"
                                   : "bg-transparent hover:bg-muted/50 text-foreground"
@@ -294,6 +296,7 @@ export default function AppHeader({ title, activePath, onSearch, onClearAll, sho
                   <Link
                     key={item.label}
                     href={item.href}
+                    prefetch={true}
                     className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ${isActive
                       ? isDark ? "text-white" : "text-black"
                       : isDark ? "text-white/40 hover:text-white/60" : "text-black/40 hover:text-black/60"

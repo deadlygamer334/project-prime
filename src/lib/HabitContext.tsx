@@ -48,7 +48,7 @@ const HabitContext = createContext<HabitContextType | undefined>(undefined);
 export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => auth.currentUser);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 

@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
-import dynamic from "next/dynamic";
+import PomodoroPanel from "@/components/sections/PomodoroPanel";
 import { useSettings } from "@/lib/SettingsContext";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 
-const PomodoroPanel = dynamic(() => import("@/components/sections/PomodoroPanel"), {
-    ssr: false,
-});
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export default function PomodoroLayoutWrapper() {
     const pathname = usePathname();
@@ -17,7 +15,7 @@ export default function PomodoroLayoutWrapper() {
     const isDashboard = pathname === "/";
     const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
-    useEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         if (!isDashboard) {
             setPortalTarget(null);
             return;

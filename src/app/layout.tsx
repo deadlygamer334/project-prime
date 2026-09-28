@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Merriweather, Roboto } from "next/font/google";
+import { Inter, JetBrains_Mono, Merriweather, Roboto, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
@@ -32,6 +32,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
 const merriweather = Merriweather({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-merriweather", display: "swap", preload: false });
 const robotoFont = Roboto({ weight: ["400", "500", "700"], subsets: ["latin"], variable: "--font-roboto", display: "swap", preload: false });
+const shareTechMono = Share_Tech_Mono({ weight: "400", subsets: ["latin"], variable: "--font-digital", display: "swap", preload: false });
 
 import { Viewport } from "next";
 
@@ -100,7 +101,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased ${inter.variable} ${mono.variable} ${merriweather.variable} ${robotoFont.variable}`}>
+      <body className={`antialiased ${inter.variable} ${mono.variable} ${merriweather.variable} ${robotoFont.variable} ${shareTechMono.variable}`}>
         <GlobalErrorBoundary>
           <QueryProvider>
             <SettingsProvider>
