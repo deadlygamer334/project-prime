@@ -113,15 +113,19 @@ export const useFocusProgress = () => {
     }, [user]);
 
     // AUTO-CLEANUP: One-time check for 1-second focus logs on load
+    // VUL-6: Use a ref so this only runs ONCE (on mount), not every time a session is added.
+    const hasRunCleanupRef = useRef(false);
     useEffect(() => {
         if (!isLoaded || !user || recentSessions.length === 0) return;
-        
+        if (hasRunCleanupRef.current) return;
+        hasRunCleanupRef.current = true;
+
         const cleanup = async () => {
-            const oneSecondInMins = 1.1 / 60; // 1.1s to be safe
-            const straySessions = recentSessions.filter(s => s.type === "focus" && s.duration <= oneSecondInMins);
-            
+            const oneSecondInMins = 1.5 / 60; // matches the logging floor in useFocusTimer
+            const straySessions = recentSessions.filter(s => s.type === "focus" && s.duration < oneSecondInMins);
+
             if (straySessions.length > 0) {
-                console.log(`Auto-cleaning ${straySessions.length} stray 1-second focus sessions...`);
+                console.log(`Auto-cleaning ${straySessions.length} stray sub-threshold focus sessions...`);
                 for (const session of straySessions) {
                     await deleteSession(session);
                 }
@@ -129,7 +133,7 @@ export const useFocusProgress = () => {
         };
 
         cleanup();
-    }, [isLoaded, user, recentSessions.length]); // Only trigger when recentSessions.length changes
+    }, [isLoaded, user]); // intentionally NOT depending on recentSessions — hasRunCleanupRef guards re-runs
 
 
     const loadMoreHistory = useCallback(async () => {
@@ -359,15 +363,18 @@ export const useFocusProgress = () => {
     }, [user]);
 
     const addSessionTransaction = useCallback(async (
-        transaction: any, // Using any for Transaction type to avoid import complexity in this snippet
+        transaction: any,
         type: "focus" | "break",
         duration: number,
-        subject?: string
+        subject?: string,
+        sessionId?: string // VUL-5: optional stable ID for idempotent retries
     ) => {
         if (!user) return;
         if (type === "break") return; // Do not log break sessions
 
-        const sessionRef = doc(collection(db, "users", user.uid, "focusSessions"));
+        const sessionRef = sessionId
+            ? doc(db, "users", user.uid, "focusSessions", sessionId) // idempotent: same ID = same doc
+            : doc(collection(db, "users", user.uid, "focusSessions")); // new random ID
         const userRef = doc(db, "users", user.uid);
 
         const newSession: any = {
@@ -377,12 +384,10 @@ export const useFocusProgress = () => {
         };
         if (subject) newSession.subject = subject;
 
-        // PREVENTION: Skip 1-second (or less) sessions
+        // PREVENTION: Skip sub-threshold sessions (matches floor in useFocusTimer)
         if (duration < (1.5 / 60)) {
-            // console.log("Skipping 1-second focus session log in transaction.");
             return;
         }
-
 
         // Perform Reads first
         if (type === "focus") {
@@ -415,6 +420,8 @@ export const useFocusProgress = () => {
         }
 
         // Perform Writes after all reads
+        // VUL-5: set() with the doc ref (not merge) is idempotent when sessionId is provided —
+        // re-running with the same ID overwrites the same doc instead of creating a duplicate.
         transaction.set(sessionRef, newSession);
     }, [user]);
 

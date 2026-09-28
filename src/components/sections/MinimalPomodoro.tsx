@@ -41,7 +41,7 @@ function ZenModeClock({ isDark, hasWallpaper }: { isDark: boolean, hasWallpaper:
 
 interface MinimalPomodoroProps {
     onComplete?: (mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => void;
-    addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string) => Promise<void>;
+    addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string, sessionId?: string) => Promise<void>;
     onTimerStateChange?: (state: "idle" | "focus" | "break") => void;
 }
 

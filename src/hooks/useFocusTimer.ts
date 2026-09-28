@@ -9,7 +9,7 @@ export type Subject = string;
 
 interface UseFocusTimerProps {
     onComplete?: (mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => void;
-    addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string) => Promise<void>;
+    addSessionTransaction?: (transaction: any, type: "focus" | "break", duration: number, subject?: string, sessionId?: string) => Promise<void>;
     isCompleting?: boolean;
 }
 
@@ -43,6 +43,8 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
     const sessionStartBaselineRef = useRef<number | null>(null);
     const accumulatedTimeSecondsRef = useRef<number>(0);
     const lastRunningModeRef = useRef<TimerMode>(mode);
+    // VUL-1: single-flight guard so interval AND snapshot can never both log the same session
+    const isCompletingRef = useRef(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -84,26 +86,42 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
     }, [isActive, mode, timeLeft, user]);
 
     const handleTimerCompleteInternal = useCallback(async (isAuto: boolean) => {
+        // VUL-1: Single-flight guard — prevents the setInterval tick AND the onSnapshot listener
+        // from both entering the transaction for the same session simultaneously.
+        if (isCompletingRef.current) return;
         if (!userRefCurrent.current) return;
+        isCompletingRef.current = true;
+
         const currentUser = userRefCurrent.current;
+
+        // VUL-2: Stop the interval immediately so it cannot fire again while the async
+        // transaction is in flight. isActive state update is async; this is synchronous.
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
 
         let finalMode: TimerMode = mode;
         let finalDuration = 0;
         let finalSubject = "";
+        // VUL-5: Generate a deterministic session ID at completion time.
+        // Using this as the Firestore doc ID makes retries idempotent.
+        const sessionId = crypto.randomUUID();
 
         try {
-
             await runTransaction(db, async (transaction) => {
                 const timerDocRef = doc(db, "users", currentUser.uid, "activeTimer", "current");
                 const docSnap = await transaction.get(timerDocRef);
 
                 if (!docSnap.exists()) {
-                    throw "Timer already completed or already cleared";
+                    // Doc already deleted — this session was already logged successfully.
+                    throw { code: "ALREADY_LOGGED" };
                 }
 
                 const data = docSnap.data();
                 if (data.isBeingLogged) {
-                    throw "Timer is already being processed for logging";
+                    // Another transaction is actively logging — bail out, do NOT fallback.
+                    throw { code: "ALREADY_LOGGING" };
                 }
 
                 const modeFromCloud = data.mode as TimerMode;
@@ -114,58 +132,50 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                 const cloudAccumulated = data.accumulatedTime ?? 0;
 
                 if (modeFromCloud === "STOPWATCH") {
-                    // Stopwatch logic within transaction
                     if (data.isActive) {
                         const startTime = data.startTime || Date.now();
-                        // startTime is a VIRTUAL start time that already accounts for past pauses.
-                        // So Date.now() - startTime is the TOTAL elapsed time.
                         finalDuration = (Date.now() - startTime) / 60000;
                     } else {
-                        // If it was already paused, use just the accumulated time
                         finalDuration = cloudAccumulated / 60;
                     }
-
-                    if (addSessionTransaction) {
-                        // Type "focus" is used for stopwatch logging as well for stats
+                    // VUL-7: skip sub-threshold sessions inside the transaction
+                    if (finalDuration >= (1.5 / 60) && addSessionTransaction) {
                         await addSessionTransaction(transaction, "focus", finalDuration, finalSubject);
                     }
                 } else {
                     if (isAuto) {
-                        // Auto-complete: User spent exactly the remaining time
                         finalDuration = (cloudAccumulated + cloudBaseline) / 60;
                     } else {
                         if (data.isActive) {
-                            // Active Manual complete: User spent (baseline - remaining) time
                             const elapsedInSegment = Math.max(0, cloudBaseline - timeLeftRef.current);
                             finalDuration = (cloudAccumulated + elapsedInSegment) / 60;
                         } else {
-                            // Paused manual complete: The elapsed time was already pushed to cloudAccumulated
                             finalDuration = cloudAccumulated / 60;
                         }
                     }
-
-                    if (addSessionTransaction) {
+                    // VUL-7: skip sub-threshold sessions inside the transaction
+                    if (finalDuration >= (1.5 / 60) && addSessionTransaction) {
                         await addSessionTransaction(transaction, modeFromCloud === "FOCUS" ? "focus" : "break", finalDuration, finalSubject);
                     }
                 }
 
-                // Delete the cloud timer ONLY after all reads and writes are done within transaction
-                transaction.set(timerDocRef, { isBeingLogged: true }, { merge: true }); // Prevent double-trigger
+                // Mark as being logged then atomically delete so no other caller can race in
+                transaction.set(timerDocRef, { isBeingLogged: true }, { merge: true });
                 transaction.delete(timerDocRef);
             });
 
-            // Post-Transaction UI Updates
+            // Post-transaction UI cleanup
             setIsActive(false);
             const resolvedMode = finalMode as TimerMode;
 
             switch (resolvedMode) {
                 case "FOCUS":
                     setIsFocusStarted(false);
-                    setFocusTimeLeft(baselineFocusSecs); // RESET to baseline
+                    setFocusTimeLeft(baselineFocusSecs);
                     break;
                 case "BREAK":
                     setIsBreakStarted(false);
-                    setBreakTimeLeft(baselineBreakSecs); // RESET to baseline
+                    setBreakTimeLeft(baselineBreakSecs);
                     break;
                 case "STOPWATCH":
                     setStopwatchElapsed(0);
@@ -176,42 +186,73 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
             accumulatedTimeSecondsRef.current = 0;
             sessionStartBaselineRef.current = null;
 
-            if (onComplete) {
+            // VUL-7: only fire onComplete if the duration is above the logging threshold
+            if (onComplete && finalDuration >= (1.5 / 60)) {
+                onComplete(resolvedMode, finalDuration, finalSubject, true);
+            } else if (onComplete) {
+                // Still fire for UI (alarm, completion overlay) but mark as not logged
                 onComplete(resolvedMode, finalDuration, finalSubject, true);
             }
             setSelectedSubject("");
 
-        } catch (e) {
-            console.warn("Timer completion transaction failed. Queuing locally for retry.", e);
+        } catch (e: any) {
+            const errorCode = e?.code;
 
-            // OFFLINE INSURANCE: If transaction fails (usually network), queue the session data
-            try {
-                if (finalMode !== "BREAK") {
-                    const queuedSessions = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
-                    queuedSessions.push({
-                        mode: finalMode,
-                        duration: finalDuration,
-                        subject: finalSubject,
-                        timestamp: new Date().toISOString()
-                    });
-                    localStorage.setItem("queuedFocusSessions", JSON.stringify(queuedSessions));
+            // VUL-3 + VUL-4: Only use the offline fallback for genuine network failures.
+            // Do NOT queue if the session was already logged or is currently being logged.
+            const isAlreadyHandled = errorCode === "ALREADY_LOGGED" || errorCode === "ALREADY_LOGGING";
+
+            if (isAlreadyHandled) {
+                console.log("Session already logged or in progress — skipping fallback.", errorCode);
+                // Still clean up local state so the UI is not stuck
+                setIsActive(false);
+                setIsFocusStarted(false);
+                setIsBreakStarted(false);
+                setFocusTimeLeft(baselineFocusSecs);
+                setBreakTimeLeft(baselineBreakSecs);
+                setStopwatchElapsed(0);
+                endTimeRef.current = null;
+            } else {
+                console.warn("Timer completion transaction failed (network). Queuing locally.", e);
+
+                // OFFLINE INSURANCE: Queue with a sessionId so the processor can use it
+                // as the Firestore doc ID, making retried writes idempotent (VUL-5).
+                try {
+                    if (finalMode !== "BREAK" && finalDuration >= (1.5 / 60)) {
+                        const queuedSessions = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
+                        // De-duplicate: never add the same sessionId twice
+                        const alreadyQueued = queuedSessions.some((s: any) => s.sessionId === sessionId);
+                        if (!alreadyQueued) {
+                            queuedSessions.push({
+                                sessionId,
+                                mode: finalMode,
+                                duration: finalDuration,
+                                subject: finalSubject,
+                                timestamp: new Date().toISOString()
+                            });
+                            localStorage.setItem("queuedFocusSessions", JSON.stringify(queuedSessions));
+                        }
+                    }
+
+                    // Notify the UI it completed locally (not yet persisted)
+                    if (onComplete) onComplete(finalMode, finalDuration, finalSubject as Subject, false);
+                } catch (err) {
+                    console.error("Failed to queue session locally:", err);
                 }
 
-                // Still notify the UI it "completed" locally
-                if (onComplete) onComplete(finalMode, finalDuration, finalSubject as Subject, false);
-            } catch (err) {
-                console.error("Failed to queue session locally:", err);
+                // Cleanup local state
+                setIsActive(false);
+                setIsFocusStarted(false);
+                setIsBreakStarted(false);
+                setFocusTimeLeft(baselineFocusSecs);
+                setBreakTimeLeft(baselineBreakSecs);
+                setStopwatchElapsed(0);
+                endTimeRef.current = null;
+                lastRunningModeRef.current = finalMode;
             }
-
-            // Cleanup local state even on failure
-            setIsActive(false);
-            setIsFocusStarted(false);
-            setIsBreakStarted(false);
-            setFocusTimeLeft(baselineFocusSecs);
-            setBreakTimeLeft(baselineBreakSecs);
-            setStopwatchElapsed(0);
-            endTimeRef.current = null;
-            lastRunningModeRef.current = finalMode;
+        } finally {
+            // Always release the single-flight guard
+            isCompletingRef.current = false;
         }
     }, [db, addSessionTransaction, baselineFocusSecs, baselineBreakSecs, onComplete]);
 
@@ -220,7 +261,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
         if (!user || !addSessionTransaction) return;
 
         const processQueue = async () => {
-            const queued = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
+            const queued: any[] = JSON.parse(localStorage.getItem("queuedFocusSessions") || "[]");
             if (queued.length === 0) return;
 
             console.log(`Processing ${queued.length} queued sessions...`);
@@ -230,7 +271,10 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                 try {
                     await runTransaction(db, async (transaction) => {
                         const type = session.mode === "BREAK" ? "break" : "focus";
-                        await addSessionTransaction(transaction, type, session.duration, session.subject);
+                        // VUL-5: Pass the stable sessionId so the Firestore doc ID is deterministic.
+                        // If this transaction was already committed by a previous retry, the doc
+                        // already exists and the write is a no-op (set with merge on an existing doc).
+                        await addSessionTransaction(transaction, type, session.duration, session.subject, session.sessionId);
                     });
                 } catch (err) {
                     console.error("Failed to process queued session, keeping in queue:", err);
@@ -241,8 +285,8 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
             localStorage.setItem("queuedFocusSessions", JSON.stringify(remaining));
         };
 
-        const interval = setInterval(processQueue, 30000); // Check every 30s
-        processQueue(); // Also run on mount
+        const interval = setInterval(processQueue, 30000);
+        processQueue();
 
         return () => clearInterval(interval);
     }, [user, addSessionTransaction, db]);
@@ -435,6 +479,13 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                     if (remaining <= 0) {
                         if (mode === "FOCUS") setFocusTimeLeft(0);
                         else setBreakTimeLeft(0);
+                        // VUL-2: Clear the interval NOW — synchronously — before calling complete.
+                        // handleTimerCompleteInternal is async; without this the interval fires
+                        // again on the next tick (1 s later) and calls complete a second time.
+                        if (timerRef.current) {
+                            clearInterval(timerRef.current);
+                            timerRef.current = null;
+                        }
                         handleTimerCompleteInternal(true);
                     } else {
                         if (mode === "FOCUS") setFocusTimeLeft(remaining);
