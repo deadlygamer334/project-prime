@@ -9,7 +9,15 @@ import NotificationEngine from "./NotificationEngine";
 export type AccentColor = "purple" | "blue" | "green" | "pink" | "orange";
 export type FontFamily = "inter" | "roboto" | "serif" | "mono";
 export type TimerFont = "inter" | "mono" | "digital" | "retro";
-export type BackgroundStyle = "aurora" | "mesh" | "particles" | "midnight";
+export type BackgroundStyle =
+  | "aurora"
+  | "mesh"
+  | "particles"
+  | "midnight"
+  | "radial"
+  | "bloom"
+  | "diagonal"
+  | "edge";
 export type TickSound = "mechanical" | "digital" | "none";
 export type AlarmSound = "bell" | "chime" | "digital";
 export type ThemeVibe = "midnight" | "oceanic" | "evergreen" | "solar" | "rose" | "minimal";

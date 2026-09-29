@@ -85,6 +85,83 @@ export default function SettingsPage() {
         { id: "digital", label: "Digital" },
     ];
 
+    const bgStyles: {
+        id: BackgroundStyle;
+        label: string;
+        desc: string;
+        preview: string; // CSS background shorthand for the thumbnail
+    }[] = [
+        {
+            id: "aurora",
+            label: "Aurora",
+            desc: "Floating orbs",
+            preview: `radial-gradient(circle at 20% 30%,
+                        var(--color-orb-purple) 0%, transparent 55%),
+                      radial-gradient(circle at 80% 20%,
+                        var(--color-orb-pink) 0%, transparent 50%),
+                      radial-gradient(circle at 50% 80%,
+                        var(--color-orb-green) 0%, transparent 55%)`,
+        },
+        {
+            id: "radial",
+            label: "Radial",
+            desc: "Centered glow",
+            preview: `radial-gradient(circle at 50% 50%,
+                        var(--color-orb-purple) 0%, transparent 70%)`,
+        },
+        {
+            id: "bloom",
+            label: "Bloom",
+            desc: "Top light bloom",
+            preview: `radial-gradient(ellipse 120% 60% at 50% -10%,
+                        var(--color-orb-purple) 0%, transparent 75%)`,
+        },
+        {
+            id: "diagonal",
+            label: "Diagonal",
+            desc: "Corner accents",
+            preview: `radial-gradient(circle at 0% 0%,
+                        var(--color-orb-purple) 0%, transparent 60%),
+                      radial-gradient(circle at 100% 100%,
+                        var(--color-orb-pink) 0%, transparent 60%)`,
+        },
+        {
+            id: "edge",
+            label: "Edge",
+            desc: "Framed glow",
+            preview: `radial-gradient(ellipse 80% 25% at 50% 0%,
+                        var(--color-orb-purple) 0%, transparent 100%),
+                      radial-gradient(ellipse 80% 25% at 50% 100%,
+                        var(--color-orb-purple) 0%, transparent 100%),
+                      radial-gradient(ellipse 25% 80% at 0% 50%,
+                        var(--color-orb-pink) 0%, transparent 100%),
+                      radial-gradient(ellipse 25% 80% at 100% 50%,
+                        var(--color-orb-pink) 0%, transparent 100%)`,
+        },
+        {
+            id: "mesh",
+            label: "Mesh",
+            desc: "Corner gradients",
+            preview: `radial-gradient(at 0% 0%,   var(--color-orb-purple) 0, transparent 60%),
+                      radial-gradient(at 50% 0%,  var(--color-orb-pink)   0, transparent 60%),
+                      radial-gradient(at 100% 0%, var(--color-orb-green)  0, transparent 60%)`,
+        },
+        {
+            id: "particles",
+            label: "Particles",
+            desc: "Subtle dot field",
+            preview: `radial-gradient(circle, rgba(255,255,255,0.15) 1px,
+                        transparent 1px)`,
+        },
+        {
+            id: "midnight",
+            label: "Midnight",
+            desc: "Deep dark",
+            preview: `radial-gradient(ellipse at 50% 100%,
+                        var(--color-orb-purple) 0%, transparent 60%)`,
+        },
+    ];
+
     return (
         <div className="min-h-screen flex flex-col transition-colors duration-300 text-foreground">
             <AppHeader title="Settings" activePath="/settings" />
@@ -241,6 +318,70 @@ export default function SettingsPage() {
                                                 />
                                             ))}
                                         </div>
+                                    </div>
+
+                                    {/* Background Style */}
+                                    <div className="py-3 border-b border-border">
+                                        <label className="text-xs font-bold uppercase tracking-wider text-foreground/50 mb-3 block">
+                                            Background Style
+                                        </label>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {bgStyles.map((style) => {
+                                                const isActive = settings.backgroundStyle === style.id;
+                                                return (
+                                                    <button
+                                                        key={style.id}
+                                                        type="button"
+                                                        onClick={() => settings.updateSetting("backgroundStyle", style.id)}
+                                                        className={`relative h-[72px] rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                                                            isActive
+                                                                ? "border-primary shadow-[0_0_12px_rgba(167,139,250,0.3)]"
+                                                                : "border-border hover:border-primary/40"
+                                                        }`}
+                                                    >
+                                                        {/* Live gradient preview using the same CSS variables — auto theme-aware */}
+                                                        <div
+                                                            className="absolute inset-0"
+                                                            style={{
+                                                                background: style.preview,
+                                                                opacity: 0.8,
+                                                            }}
+                                                        />
+
+                                                        {/* Dark scrim so text is readable */}
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+
+                                                        {/* Label */}
+                                                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                                                            <p className="text-white text-[11px] font-bold leading-none drop-shadow">
+                                                                {style.label}
+                                                            </p>
+                                                            <p className="text-white/60 text-[9px] mt-0.5 font-medium leading-none drop-shadow">
+                                                                {style.desc}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Active checkmark */}
+                                                        {isActive && (
+                                                            <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                                                                <svg viewBox="0 0 12 12" className="w-2.5 h-2.5" fill="none">
+                                                                    <path
+                                                                        d="M2 6L5 9L10 3"
+                                                                        stroke="white"
+                                                                        strokeWidth="1.8"
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                    />
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground mt-2">
+                                            Colors automatically match your active theme
+                                        </p>
                                     </div>
 
                                     {/* Typography */}

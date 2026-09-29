@@ -528,6 +528,104 @@
     background: linear-gradient(to bottom, #020617, #0f172a);
   }
 
+  /* ─── Radial Glow ─────────────────────────────────────────
+     Single large centered orb. One color. Slow breathing pulse.
+     The most versatile and cleanest of the new options.      */
+  .bg-radial {
+    background: radial-gradient(
+      circle at 50% 45%,
+      var(--color-orb-purple) 0%,
+      transparent 65%
+    );
+    animation: radial-breathe 10s ease-in-out infinite;
+  }
+
+  @keyframes radial-breathe {
+    0%, 100% { transform: scale(1);    opacity: 0.85; }
+    50%       { transform: scale(1.14); opacity: 1;    }
+  }
+
+  /* ─── Top Bloom ───────────────────────────────────────────
+     Wide elliptical glow blooming from the very top center.
+     Like the app is lit from above. Directional, architectural.
+     Works especially well in dark mode.                      */
+  .bg-bloom {
+    background: radial-gradient(
+      ellipse 110% 55% at 50% -5%,
+      var(--color-orb-purple) 0%,
+      transparent 70%
+    );
+    opacity: 0.95;
+    animation: bloom-breathe 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes bloom-breathe {
+    0%   { opacity: 0.80; transform: scaleX(1);    }
+    100% { opacity: 1.00; transform: scaleX(1.08); }
+  }
+
+  /* ─── Diagonal ────────────────────────────────────────────
+     Two corner gradient accents at opposite corners.
+     Top-left and bottom-right. Creates a diagonal visual flow.
+     Uses two orb colors for subtle depth without being busy.  */
+  .bg-diagonal {
+    background:
+      radial-gradient(
+        circle at 0% 0%,
+        var(--color-orb-purple) 0%,
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 100% 100%,
+        var(--color-orb-pink) 0%,
+        transparent 45%
+      );
+    animation: diagonal-breathe 18s ease-in-out infinite alternate;
+  }
+
+  @keyframes diagonal-breathe {
+    0%   { opacity: 0.75; }
+    100% { opacity: 1.00; }
+  }
+
+  /* ─── Edge Glow ───────────────────────────────────────────
+     Subtle glows on all four edges, completely transparent
+     center. Content area stays totally clean. The glowing
+     frame creates a premium "light box" effect.
+     The most sophisticated and subtle of the new options.    */
+  .bg-edge {
+    background:
+      radial-gradient(
+        ellipse 75% 18% at 50% 0%,
+        var(--color-orb-purple) 0%,
+        transparent 100%
+      ),
+      radial-gradient(
+        ellipse 75% 18% at 50% 100%,
+        var(--color-orb-purple) 0%,
+        transparent 100%
+      ),
+      radial-gradient(
+        ellipse 18% 65% at 0% 50%,
+        var(--color-orb-pink) 0%,
+        transparent 100%
+      ),
+      radial-gradient(
+        ellipse 18% 65% at 100% 50%,
+        var(--color-orb-pink) 0%,
+        transparent 100%
+      );
+    opacity: 0.90;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-radial,
+    .bg-bloom,
+    .bg-diagonal {
+      animation: none;
+    }
+  }
+
   /* Global Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;

@@ -54,6 +54,31 @@ export default function DynamicBackground() {
             {settings.backgroundStyle === "midnight" && (
                 <div className="absolute inset-0 bg-midnight opacity-90" />
             )}
+
+            {settings.backgroundStyle === "radial" && (
+                <div
+                    className="absolute inset-0 bg-radial"
+                    style={{ willChange: "transform" }}
+                />
+            )}
+
+            {settings.backgroundStyle === "bloom" && (
+                <div
+                    className="absolute inset-0 bg-bloom"
+                    style={{ willChange: "transform, opacity" }}
+                />
+            )}
+
+            {settings.backgroundStyle === "diagonal" && (
+                <div
+                    className="absolute inset-0 bg-diagonal"
+                    style={{ willChange: "opacity" }}
+                />
+            )}
+
+            {settings.backgroundStyle === "edge" && (
+                <div className="absolute inset-0 bg-edge" />
+            )}
         </div>
     );
 }
