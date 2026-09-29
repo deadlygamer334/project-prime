@@ -951,7 +951,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                 duration: 0.28,
                                 ease: [0.16, 1, 0.3, 1],
                             }}
-                            className={`fixed inset-0 ${currentWallpaper ? "bg-black" : (isDark ? "bg-[#08090d]" : "bg-[#f8fafc]")} flex flex-col items-center justify-center overflow-hidden touch-none select-none`}
+                            className={`fixed inset-0 ${currentWallpaper ? "bg-black" : "bg-background"} flex flex-col items-center justify-center overflow-hidden touch-none select-none`}
                             onMouseMove={revealZenControls}
                             onTouchStart={handleTouchStart}
                             onTouchMove={handleTouchMove}

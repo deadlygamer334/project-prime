@@ -79,6 +79,44 @@ const HabitTrackerMain = () => {
     setEditingName("");
   };
 
+  const spawnParticles = (e: React.MouseEvent) => {
+    const x = e.clientX;
+    const y = e.clientY;
+    const count = 8;
+
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * 2 * Math.PI;
+      const distance = 28 + Math.random() * 16;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+
+      const dot = document.createElement("div");
+      dot.className = "particle";
+      dot.style.setProperty("--tx", `${tx}px`);
+      dot.style.setProperty("--ty", `${ty}px`);
+      dot.style.left = `${x - 3}px`;
+      dot.style.top = `${y - 3}px`;
+
+      // Vary colors for visual richness
+      const colors = [
+        "var(--color-primary)",
+        "rgba(167,139,250,0.7)",
+        "rgba(255,255,255,0.6)"
+      ];
+      dot.style.background = colors[i % colors.length];
+
+      document.body.appendChild(dot);
+      setTimeout(() => dot.remove(), 460);
+    }
+  };
+
+  const handleToggleCell = (e: React.MouseEvent, habitId: string, dayDate: number, isCompleted: boolean) => {
+    if (!isCompleted) {
+      spawnParticles(e);
+    }
+    toggleHabitCompletion(habitId, dayDate);
+  };
+
   const today = new Date().getDate();
 
   if (!isLoaded) return null;
@@ -281,7 +319,7 @@ const HabitTrackerMain = () => {
                         className={`min-w-[36px] max-w-[36px] p-1 border-b border-border text-center transition-colors ${day.date === today ? 'bg-primary/5' : ''}`}
                       >
                         <button
-                          onClick={() => toggleHabitCompletion(habit.id, day.date)}
+                          onClick={(e) => handleToggleCell(e, habit.id, day.date, !!habit.completions[`${currentYear}-${currentMonth}`]?.[day.date])}
                           className={`w-[36px] h-[36px] min-w-[36px] min-h-[36px] rounded-lg border transition-all duration-150 flex items-center justify-center mx-auto active:scale-90 hover:bg-primary/10 ${habit.completions[`${currentYear}-${currentMonth}`]?.[day.date]
                             ? "bg-primary border-primary text-primary-foreground shadow-sm"
                             : "bg-muted/20 border-border hover:border-primary text-transparent"
@@ -384,9 +422,9 @@ const HabitTrackerMain = () => {
                           </div>
 
                           <button
-                            onClick={() => toggleHabitCompletion(habit.id, item.date)}
+                            onClick={(e) => handleToggleCell(e, habit.id, item.date, !!habit.completions[`${currentYear}-${currentMonth}`]?.[item.date])}
                             className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center ${habit.completions[`${currentYear}-${currentMonth}`]?.[item.date]
-                              ? "bg-primary border-primary text-primary-foreground shadow-[0_0_12px_rgba(var(--primary),0.4)]"
+                              ? "bg-primary border-primary text-primary-foreground shadow-[0_0_12px_rgba(167,139,250,0.4)]"
                               : "bg-background border-border text-transparent active:border-primary"
                               }`}
                           >

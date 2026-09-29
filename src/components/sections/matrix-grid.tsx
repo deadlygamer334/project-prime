@@ -44,7 +44,7 @@ const quadrantColors: Record<QuadrantId, {
     border: "border-blue-200 dark:border-blue-500/20",
     text: "text-blue-700 dark:text-blue-400",
     countBg: "bg-blue-100 dark:bg-blue-500/20",
-    countText: "text-blue-700 dark:text-blue-300"
+    countText: "text-foreground/60"
   },
   "urgent-not-important": {
     bg: "bg-orange-500/5 dark:bg-orange-500/10",

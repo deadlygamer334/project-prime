@@ -42,9 +42,9 @@ export default function SoundCard({
 
     return (
         <div
-            className={`sound-card relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all duration-300 group ${isActive
-                ? "border-primary/60 bg-primary/10 shadow-[0_0_20px_rgba(var(--primary),0.3)] animate-pulse-border"
-                : "border-border bg-card hover:border-border/80"
+            className={`sound-card card-premium relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all duration-300 group ${isActive
+                ? "border-primary/60 bg-primary/10 timer-active-glow gradient-border"
+                : "border-border bg-card hover:border-primary/30 shimmer-hover transition-colors duration-300"
                 }`}
         >
             {/* Focus Type Badge */}
@@ -64,10 +64,12 @@ export default function SoundCard({
             {/* Icon and Name */}
             <div className="flex flex-col items-center mb-3">
                 <div
-                    className={`text-4xl mb-2 transition-transform ${isActive ? "scale-110" : "scale-100"
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-2 transition-all duration-300 ${isActive
+                        ? "bg-primary/10 border border-primary/20 scale-110"
+                        : "bg-muted/50 border border-border scale-100"
                         }`}
                 >
-                    {icon}
+                    <span className="text-3xl">{icon}</span>
                 </div>
                 <h3
                     className={`text-sm font-bold text-center text-foreground`}
@@ -138,29 +140,6 @@ export default function SoundCard({
                     </span>
                 )}
             </button>
-
-            <style jsx>{`
-                .vertical-slider::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: ${isActive ? '#a855f7' : '#8e8e93'};
-                    cursor: pointer;
-                    border: 2px solid white;
-                    box-shadow: 0 0 5px rgba(0,0,0,0.2);
-                }
-                .vertical-slider::-moz-range-thumb {
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: ${isActive ? '#a855f7' : '#8e8e93'};
-                    cursor: pointer;
-                    border: 2px solid white;
-                    box-shadow: 0 0 5px rgba(0,0,0,0.2);
-                }
-            `}</style>
         </div>
     );
 }

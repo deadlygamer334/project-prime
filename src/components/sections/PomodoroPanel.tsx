@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useTheme } from "@/lib/ThemeContext";
 import { useFocusProgress } from "@/hooks/useFocusProgress";
 import { useSettings } from "@/lib/SettingsContext";
@@ -17,6 +18,16 @@ export default function PomodoroPanel() {
   const { addSession, addSessionTransaction } = useFocusProgress();
   const settings = useSettings();
   const [timerState, setTimerState] = useState<"idle" | "focus" | "break">("idle");
+  const [showFlash, setShowFlash] = useState(false);
+
+  const prevTimerState = useRef(timerState);
+  useEffect(() => {
+    if (prevTimerState.current === "focus" && timerState === "idle") {
+      setShowFlash(true);
+      setTimeout(() => setShowFlash(false), 750);
+    }
+    prevTimerState.current = timerState;
+  }, [timerState]);
 
   const handleComplete = useCallback((mode: TimerMode, duration: number, subject: Subject, isLogged?: boolean) => {
     if (isLogged) return; // Already logged by useFocusTimer transaction
@@ -44,6 +55,12 @@ export default function PomodoroPanel() {
       {settings.showQuotes && <QuoteBlock />}
       <MinimalPomodoro onComplete={handleComplete} addSessionTransaction={addSessionTransaction} onTimerStateChange={setTimerState} />
       <div /> {/* Spacer for balance */}
+
+      <AnimatePresence>
+        {showFlash && (
+          <div className="panel-flash-ring" key="flash" />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

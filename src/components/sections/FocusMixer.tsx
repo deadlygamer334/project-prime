@@ -154,12 +154,15 @@ export default function FocusMixer() {
     return (
         <section className="w-full max-w-[1400px] mx-auto pb-20">
             {/* Header */}
-            <div className="header mb-8">
-                <h2 className="text-[32px] md:text-[40px] font-bold mb-2 tracking-tight text-foreground">
-                    Focus Mixer
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                    Layer {sounds.length} scientifically-curated sounds for optimal focus
+            <div className="mb-8">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                    Sound Environment
+                </p>
+                <h1 className="text-3xl font-black tracking-tight text-foreground">
+                    Acoustic Mixer
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Layer sounds to build your perfect focus environment
                 </p>
             </div>
 
@@ -203,23 +206,20 @@ export default function FocusMixer() {
                     </button>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar mb-2">
                     {Object.entries(FOCUS_PRESETS).map(([key, preset]) => (
                         <button
                             key={key}
                             onClick={() => handlePresetClick(key)}
-                            className={`preset-btn flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${selectedPreset === key
-                                ? "border-primary bg-primary/20 text-foreground"
-                                : "border-border bg-card text-foreground hover:border-primary/50"
-                                }`}
+                            className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold 
+                                       border transition-all duration-200 whitespace-nowrap flex items-center gap-1.5
+                                       ${selectedPreset === key
+                                         ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_rgba(167,139,250,0.3)]"
+                                         : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                                       }`}
                         >
-                            <span className="text-xl">{preset.icon}</span>
-                            <div className="text-left">
-                                <div className="text-sm font-bold">{preset.name}</div>
-                                <div className="text-[10px] text-muted-foreground">
-                                    {preset.description}
-                                </div>
-                            </div>
+                            <span>{preset.icon}</span>
+                            <span>{preset.name}</span>
                         </button>
                     ))}
                 </div>

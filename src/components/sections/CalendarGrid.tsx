@@ -36,12 +36,10 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, isToday, isCurrentMonth
   return (
     <div
       className={cn(
-        "calendar-day flex flex-col w-full min-h-[220px] p-3 rounded-xl transition-all duration-200 ease-in-out border group",
-        isDark
-          ? (isCurrentMonth ? "bg-background/80" : "bg-background opacity-40")
-          : (isCurrentMonth ? "bg-white" : "bg-card opacity-40"),
+        "calendar-day card-light flex flex-col w-full min-h-[220px] p-3 rounded-xl transition-all duration-200 ease-in-out border group",
+        isCurrentMonth ? "bg-card/80" : "bg-card/30",
         isToday
-          ? "border-primary ring-1 ring-primary"
+          ? "gradient-border ring-1 ring-primary"
           : "border-border hover:border-primary/50",
       )}
     >
@@ -215,6 +213,17 @@ const CalendarGrid: React.FC = () => {
 
   return (
     <section className="calendar-grid-container w-full max-w-[1400px] mx-auto px-6 py-4">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+            Your Schedule
+          </p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">
+            Calendar
+          </h1>
+        </div>
+      </div>
+
       {/* --- DESKTOP VIEW (Visible on tablet and laptop) --- */}
       <div className="hidden md:block">
         <div className="calendar-header-wrapper flex items-center justify-between mb-10">
