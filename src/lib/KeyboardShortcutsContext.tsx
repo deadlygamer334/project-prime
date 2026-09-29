@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useSettings } from "@/lib/SettingsContext";
 
 interface KeyboardShortcutsContextType {
     isShortcutsModalOpen: boolean;
@@ -16,6 +17,7 @@ const KeyboardShortcutsContext = createContext<KeyboardShortcutsContextType | un
 export function KeyboardShortcutsProvider({ children }: { children: React.ReactNode }) {
     const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
     const [deviceType, setDeviceType] = useState<"desktop" | "mobile">("desktop");
+    const { isZenMode, setIsZenMode } = useSettings();
 
     useEffect(() => {
         const checkDevice = () => {
@@ -34,6 +36,18 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
 
     const router = useRouter();
     const pathname = usePathname();
+
+    const navigateWithZenExit = useCallback((targetPath: string) => {
+        if (isZenMode) {
+            setIsZenMode(false);
+            // Smooth delay allows Framer Motion exit animation to complete before route change
+            setTimeout(() => {
+                router.push(targetPath);
+            }, 300);
+        } else {
+            router.push(targetPath);
+        }
+    }, [isZenMode, setIsZenMode, router]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,26 +69,22 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
             // Navigation Shortcuts (Shift + Key)
             if (e.shiftKey) {
                 switch (e.key.toLowerCase()) {
-                    case "h": router.push("/"); break;           // Home
-                    case "c": router.push("/calendar"); break;   // Calendar
-                    case "m": router.push("/matrix"); break;     // Matrix
-                    case "t": router.push("/habit-tracker"); break; // Tracker (Habits)
-                    case "s": router.push("/settings"); break;   // Settings
-                    case "l": router.push("/leaderboard"); break;// Leaderboard
+                    case "h": navigateWithZenExit("/"); break;           // Home
+                    case "c": navigateWithZenExit("/calendar"); break;   // Calendar
+                    case "m": navigateWithZenExit("/matrix"); break;     // Matrix
+                    case "t": navigateWithZenExit("/habit-tracker"); break; // Tracker (Habits)
+                    case "s": navigateWithZenExit("/settings"); break;   // Settings
+                    case "l": navigateWithZenExit("/leaderboard"); break;// Leaderboard
                 }
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isShortcutsModalOpen, toggleShortcutsModal, closeShortcutsModal, router]);
+    }, [isShortcutsModalOpen, toggleShortcutsModal, closeShortcutsModal, navigateWithZenExit]);
 
     // Touch Gesture Logic
     useEffect(() => {
-        // We allow touch gestures even on desktop if they have touch capability, 
-        // but primarily for mobile.
-        // if (deviceType !== "mobile") return; 
-
         let touchStartX = 0;
         let touchStartY = 0;
 
@@ -101,10 +111,10 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
                     if (currentIndex !== -1) {
                         if (diffX > 0) { // Swipe Left (Next)
                             const nextIndex = (currentIndex + 1) % pages.length;
-                            router.push(pages[nextIndex]);
+                            navigateWithZenExit(pages[nextIndex]);
                         } else { // Swipe Right (Prev)
                             const prevIndex = (currentIndex - 1 + pages.length) % pages.length;
-                            router.push(pages[prevIndex]);
+                            navigateWithZenExit(pages[prevIndex]);
                         }
                     }
                 }
@@ -123,7 +133,7 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
             window.removeEventListener("touchstart", handleTouchStart);
             window.removeEventListener("touchend", handleTouchEnd);
         };
-    }, [deviceType, toggleShortcutsModal, router, pathname]);
+    }, [deviceType, toggleShortcutsModal, navigateWithZenExit, pathname]);
 
     return (
         <KeyboardShortcutsContext.Provider

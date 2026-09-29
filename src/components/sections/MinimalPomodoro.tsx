@@ -212,18 +212,12 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
         return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, [isFullScreen, setIsZenMode]);
 
-    // Auto-exit Zen Mode/PiP ONLY when a session is fully reset — NOT when merely paused.
+    // Auto-close PiP when a session is fully reset — NOT when merely paused.
+    // Zen Mode is never auto-exited; the user explicitly exits via Escape, F key, or the exit button.
     // isFocusStarted / isBreakStarted remain true while paused; they become false only on reset.
     const wasActiveRef = useRef(isActive);
     useEffect(() => {
-        const sessionStillInProgress = isFocusStarted || isBreakStarted;
-        if (wasActiveRef.current && !isActive && isFullScreen && !sessionStillInProgress) {
-            setIsFullScreen(false);
-            setIsZenMode(false);
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(() => { });
-            }
-        }
+        const sessionStillInProgress = isFocusStarted || isBreakStarted || (mode === "STOPWATCH" && timeLeft > 0);
 
         if (wasActiveRef.current && !isActive && pipWindow && !sessionStillInProgress) {
             pipWindow.close();
@@ -231,7 +225,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
         }
 
         wasActiveRef.current = isActive;
-    }, [isActive, isFocusStarted, isBreakStarted, isFullScreen, setIsZenMode, pipWindow]);
+    }, [isActive, isFocusStarted, isBreakStarted, isFullScreen, setIsZenMode, pipWindow, mode, timeLeft]);
 
     // Sync Zen Brightness with Backgrounds
     useEffect(() => {

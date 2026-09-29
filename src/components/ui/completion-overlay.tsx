@@ -30,7 +30,7 @@ export const CompletionOverlay = ({ show, duration, mode }: CompletionOverlayPro
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                        className={`bg-[var(--color-button)] text-[var(--color-button-foreground)] p-6 rounded-full shadow-[0_0_50px_rgba(var(--primary-rgb),0.5)] mb-6`}
+                        className={`bg-[var(--color-button)] text-[var(--color-button-foreground)] p-6 rounded-full shadow-[0_0_50px_var(--color-button)] mb-6`}
                     >
                         <CheckCircle size={64} strokeWidth={3} />
                     </motion.div>

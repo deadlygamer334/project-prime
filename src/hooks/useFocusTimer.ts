@@ -89,7 +89,6 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
         // VUL-1: Single-flight guard — prevents the setInterval tick AND the onSnapshot listener
         // from both entering the transaction for the same session simultaneously.
         if (isCompletingRef.current) return;
-        if (!userRefCurrent.current) return;
         isCompletingRef.current = true;
 
         const currentUser = userRefCurrent.current;
@@ -107,6 +106,42 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
         // VUL-5: Generate a deterministic session ID at completion time.
         // Using this as the Firestore doc ID makes retries idempotent.
         const sessionId = crypto.randomUUID();
+
+        // ─── FIX VUL-A: Guest / unauthenticated user path ───
+        // If there's no authenticated user, skip Firestore entirely but still
+        // calculate duration from local state and fire the UI completion pipeline
+        // (alarm, overlay, notification).
+        if (!currentUser) {
+            if (mode === "STOPWATCH") {
+                finalDuration = stopwatchElapsed / 60;
+            } else if (isAuto) {
+                finalDuration = (accumulatedTimeSecondsRef.current + (sessionStartBaselineRef.current ?? (mode === "FOCUS" ? baselineFocusSecs : baselineBreakSecs))) / 60;
+            } else {
+                const loggedBaseline = sessionStartBaselineRef.current ?? (mode === "FOCUS" ? baselineFocusSecs : baselineBreakSecs);
+                const elapsedInSegment = Math.max(0, loggedBaseline - timeLeftRef.current);
+                finalDuration = (accumulatedTimeSecondsRef.current + elapsedInSegment) / 60;
+            }
+            finalMode = mode;
+            finalSubject = selectedSubject;
+
+            // Clean up local state
+            setIsActive(false);
+            if (mode === "FOCUS") { setIsFocusStarted(false); setFocusTimeLeft(baselineFocusSecs); }
+            else if (mode === "BREAK") { setIsBreakStarted(false); setBreakTimeLeft(baselineBreakSecs); }
+            else { setStopwatchElapsed(0); }
+            endTimeRef.current = null;
+            startTimeRef.current = null;
+            accumulatedTimeSecondsRef.current = 0;
+            sessionStartBaselineRef.current = null;
+            setSelectedSubject("");
+
+            // Fire onComplete so alarm + overlay + notification still trigger.
+            // isLogged = false because nothing was persisted to Firestore.
+            if (onComplete) onComplete(finalMode, finalDuration, finalSubject, false);
+            isCompletingRef.current = false;
+            return;
+        }
+        // ─── END FIX VUL-A ───
 
         try {
             await runTransaction(db, async (transaction) => {
@@ -186,12 +221,13 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
             accumulatedTimeSecondsRef.current = 0;
             sessionStartBaselineRef.current = null;
 
-            // VUL-7: only fire onComplete if the duration is above the logging threshold
+            // FIX VUL-C: Sub-threshold sessions pass isLogged: false so PomodoroPanel doesn't
+            // try to double-log them, while above-threshold pass true.
             if (onComplete && finalDuration >= (1.5 / 60)) {
                 onComplete(resolvedMode, finalDuration, finalSubject, true);
             } else if (onComplete) {
                 // Still fire for UI (alarm, completion overlay) but mark as not logged
-                onComplete(resolvedMode, finalDuration, finalSubject, true);
+                onComplete(resolvedMode, finalDuration, finalSubject, false);
             }
             setSelectedSubject("");
 
@@ -212,6 +248,14 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
                 setBreakTimeLeft(baselineBreakSecs);
                 setStopwatchElapsed(0);
                 endTimeRef.current = null;
+
+                // FIX VUL-B: Even when the session was already logged by another tab/device,
+                // still fire the completion UI so the current tab plays the alarm and shows
+                // the overlay. Mark isLogged: true since data IS persisted (by another caller).
+                if (onComplete) {
+                    const resolvedMode = finalMode as TimerMode;
+                    onComplete(resolvedMode, finalDuration, finalSubject, true);
+                }
             } else {
                 console.warn("Timer completion transaction failed (network). Queuing locally.", e);
 
@@ -254,7 +298,7 @@ export const useFocusTimer = ({ onComplete, addSessionTransaction, isCompleting 
             // Always release the single-flight guard
             isCompletingRef.current = false;
         }
-    }, [db, addSessionTransaction, baselineFocusSecs, baselineBreakSecs, onComplete]);
+    }, [mode, selectedSubject, stopwatchElapsed, db, addSessionTransaction, baselineFocusSecs, baselineBreakSecs, onComplete]);
 
     // OFFLINE INSURANCE: Process queued sessions when online/mount
     useEffect(() => {
