@@ -138,7 +138,10 @@ export async function registerFCMToken(token: string): Promise<boolean> {
 }
 
 /**
- * Unregister FCM token from user's Firestore document
+ * Unregister FCM token from user's Firestore document.
+ * H1 fix: arrayRemove requires an exact deep-equal match. We fetch the stored
+ * token array, find the full FCMToken object whose `token` field matches, and
+ * remove that exact object — otherwise the Firestore call silently does nothing.
  */
 export async function unregisterFCMToken(token: string): Promise<boolean> {
     try {
@@ -149,18 +152,25 @@ export async function unregisterFCMToken(token: string): Promise<boolean> {
 
         const userRef = doc(db, "users", user.uid);
 
-        // We need to remove the entire token object, not just the token string
-        // This is a simplified approach - in production, you'd query and remove the exact object
-        await updateDoc(userRef, {
-            fcmTokens: arrayRemove({ token }),
-        });
+        // Fetch current tokens so we can find the exact stored object
+        const { getDoc } = await import("firebase/firestore");
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.data();
+        const storedTokens: FCMToken[] = userData?.fcmTokens || [];
 
-        // Delete token from Firebase
+        // Find the full FCMToken object whose `token` field matches
+        const tokenObj = storedTokens.find((t) => t.token === token);
+        if (tokenObj) {
+            await updateDoc(userRef, {
+                fcmTokens: arrayRemove(tokenObj),
+            });
+        }
+
+        // Delete token from Firebase Messaging
         if (messaging) {
             await deleteToken(messaging);
         }
 
-        console.log("FCM token unregistered successfully");
         return true;
     } catch (error) {
         console.error("Error unregistering FCM token:", error);

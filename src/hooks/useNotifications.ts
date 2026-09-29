@@ -23,9 +23,11 @@ export function useNotifications() {
 
         init();
 
-        return () => {
-            notificationManager.cleanup();
-        };
+        // C2 fix: do NOT call notificationManager.cleanup() here.
+        // The manager is a singleton — calling cleanup() from one hook's unmount
+        // would break notifications for every other component that relies on it.
+        // Cleanup is handled globally on sign-out.
+        return () => { /* intentionally empty */ };
     }, []);
 
     // Update permission status when it changes

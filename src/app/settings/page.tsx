@@ -1050,7 +1050,7 @@ function NotificationSettings() {
         }
     };
 
-    const getDeviceCapability = () => {
+    const deviceCapability = React.useMemo(() => {
         if (typeof window === "undefined") return "Unknown";
 
         const userAgent = navigator.userAgent.toLowerCase();
@@ -1069,7 +1069,9 @@ function NotificationSettings() {
         } else {
             return "✅ Desktop: Full support";
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only needs to run once — UA doesn't change mid-session
+
 
     return (
         <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
@@ -1152,7 +1154,7 @@ function NotificationSettings() {
                 {/* Device Capability */}
                 <div className="p-3 rounded-xl bg-muted/10 border border-border/50">
                     <div className="text-xs font-medium text-muted-foreground mb-1">Device Capability</div>
-                    <div className="text-sm">{getDeviceCapability()}</div>
+                    <div className="text-sm">{deviceCapability}</div>
                 </div>
 
                 {/* Test Notification Button */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, ReactNode, useMemo } from "react";
+import React, { useState, useCallback, ReactNode, useMemo, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import NotificationContext, { Toast, ToastType, DialogOptions } from "@/lib/NotificationContext";
@@ -24,16 +24,34 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         resolve?: (value: boolean) => void;
     } | null>(null);
 
+    // C3 fix: track all pending toast timeouts so we can clear them on unmount
+    const toastTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
     const { theme } = useTheme();
     const isDark = theme === "dark";
 
+    // C3 fix: clear all pending timers on unmount to prevent setState-after-unmount
+    useEffect(() => {
+        return () => {
+            toastTimersRef.current.forEach((timer) => clearTimeout(timer));
+            toastTimersRef.current.clear();
+        };
+    }, []);
+
     const showToast = useCallback((message: string, type: ToastType = "info", duration = 3000) => {
-        const id = Math.random().toString(36).substring(2, 9);
+        // M3 fix: use crypto.randomUUID() for guaranteed uniqueness
+        const id = typeof crypto !== "undefined" && crypto.randomUUID
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2, 11);
+
         setToasts((prev) => [...prev, { id, message, type, duration }]);
 
-        setTimeout(() => {
+        // C3 fix: store the timer ID so it can be cleared on unmount
+        const timer = setTimeout(() => {
             setToasts((prev) => prev.filter((t) => t.id !== id));
+            toastTimersRef.current.delete(id);
         }, duration);
+        toastTimersRef.current.set(id, timer);
     }, []);
 
     const showAlert = useCallback((title: string, description: string) => {
