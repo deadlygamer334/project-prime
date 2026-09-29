@@ -163,9 +163,25 @@ export default function SettingsPage() {
                             <WallpaperManagerBtn className="w-full h-14 !rounded-2xl !bg-primary !text-primary-foreground !shadow-lg !shadow-primary/20 hover:!scale-[1.02] active:!scale-[0.98] transition-all !text-base !font-bold">
                                 Change Wallpaper
                             </WallpaperManagerBtn>
+                            {wallpaper?.type === "dynamic-aurora" && (
+                                <div className="w-full flex items-center justify-between mt-1 px-4 py-3 rounded-2xl bg-primary/10 border border-primary/20">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                                        <span className="text-sm font-medium text-foreground">
+                                            Northern Lights active
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => setWallpaper(null)}
+                                        className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
                             <p className="text-[10px] text-muted-foreground font-medium">Browse 1000+ premium assets</p>
 
-                            {wallpaper && (
+                            {wallpaper && wallpaper.type !== "dynamic-aurora" && (
                                 <button
                                     onClick={() => setWallpaper(null)}
                                     className="mt-2 w-full h-10 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"

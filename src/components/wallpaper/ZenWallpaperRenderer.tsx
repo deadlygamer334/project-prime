@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { WallpaperState } from "@/lib/WallpaperContext";
 import { useFocusTimer } from "@/hooks/useFocusTimer";
 import { useSettings } from "@/lib/SettingsContext";
+import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
 
 interface ZenWallpaperRendererProps {
     wallpaper: WallpaperState;
@@ -30,6 +31,19 @@ export function ZenWallpaperRenderer({ wallpaper, brightness = 1 }: ZenWallpaper
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
+
+    // Dynamic aurora — render canvas, skip all image/video logic
+    if (wallpaper.type === "dynamic-aurora") {
+        // In zen mode, use zenFilters with reduced brightness
+        const zenBrightness = wallpaper.zenFilters?.brightness ?? 0.85;
+        return (
+            <AuroraWallpaperRenderer
+                filters={wallpaper.zenFilters}
+                borderRadius="0"    // zen is full-screen, no rounding
+                dimness={zenBrightness}
+            />
+        );
+    }
 
     const filters = wallpaper.zenFilters;
     const crop = wallpaper.zenCrop;

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { get, set } from "idb-keyval";
 
-export type WallpaperType = "image" | "video";
+export type WallpaperType = "image" | "video" | "dynamic-aurora";
 
 export interface WallpaperFilters {
     blur: number;
@@ -42,6 +42,22 @@ export interface WallpaperState {
     filters?: WallpaperFilters;
     crop?: WallpaperCrop;
 }
+
+export const AURORA_WALLPAPER: WallpaperState = {
+    id: "dynamic-aurora-v1",
+    type: "dynamic-aurora",
+    src: "dynamic://aurora",
+    timerFilters: {
+        blur: 0, brightness: 1, contrast: 1,
+        grayscale: 0, hueRotate: 0, invert: 0, saturation: 1, sepia: 0
+    },
+    timerCrop: { x: 0, y: 0, scale: 1, rotate: 0 },
+    zenFilters: {
+        blur: 0, brightness: 0.85, contrast: 1,
+        grayscale: 0, hueRotate: 0, invert: 0, saturation: 1, sepia: 0
+    },
+    zenCrop: { x: 0, y: 0, scale: 1, rotate: 0 },
+};
 
 interface WallpaperContextType {
     wallpaper: WallpaperState | null;

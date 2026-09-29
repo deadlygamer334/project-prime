@@ -4,8 +4,9 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Check, Search, Settings2, X } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import wallpapersDataRaw from "@/../data/wallpapers.json";
-import { WallpaperState, useWallpaper } from "@/lib/WallpaperContext";
+import { WallpaperState, useWallpaper, AURORA_WALLPAPER } from "@/lib/WallpaperContext";
 import { WallpaperEditor } from "./WallpaperEditor";
+import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
 
 const fallbackImage = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZiIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+RXJyb3I8L3RleHQ+PC9zdmc+";
 
@@ -86,6 +87,86 @@ export function WallpaperGallery() {
 
     return (
         <div className="flex flex-col w-full h-full">
+            {/* ── Live Backgrounds ─────────────────────────────── */}
+            <div className="mb-6 shrink-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                    Live Backgrounds
+                </p>
+                <div className="flex gap-3">
+                    {/* Northern Lights Card */}
+                    <button
+                        onClick={() => {
+                            if (currentWallpaper?.type === "dynamic-aurora") {
+                                setWallpaper(null); // Toggle off if already active
+                            } else {
+                                setWallpaper(AURORA_WALLPAPER);
+                            }
+                        }}
+                        className={`relative w-48 aspect-video rounded-2xl overflow-hidden border-2 transition-all duration-300 group shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50 hover:scale-[1.02] ${
+                            currentWallpaper?.type === "dynamic-aurora"
+                                ? "border-primary shadow-[0_0_20px_rgba(167,139,250,0.3)]"
+                                : "border-border hover:border-primary/40"
+                        }`}
+                        title="Northern Lights — Live Background"
+                    >
+                        {/* Live canvas preview (small, same renderer) */}
+                        <div className="absolute inset-0">
+                            <AuroraWallpaperRenderer
+                                borderRadius="0"
+                                dimness={1}
+                            />
+                        </div>
+                        
+                        {/* Label overlay */}
+                        <div className="absolute inset-0 flex flex-col items-start justify-end p-3 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+                            <p className="text-white text-[11px] font-black tracking-wide leading-none">
+                                Northern Lights
+                            </p>
+                            <p className="text-white/60 text-[9px] mt-0.5 font-medium">
+                                Live · Theme-aware
+                            </p>
+                        </div>
+                        
+                        {/* Active checkmark & Adjust */}
+                        {currentWallpaper?.type === "dynamic-aurora" && (
+                            <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                                <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsEditing(true);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setIsEditing(true);
+                                        }
+                                    }}
+                                    className="bg-black/60 hover:bg-black/80 text-white px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors shadow-sm flex items-center gap-1 cursor-pointer pointer-events-auto border border-white/20"
+                                    title="Adjust Northern Lights Filters"
+                                >
+                                    <Settings2 className="w-3 h-3" /> Adjust
+                                </div>
+                                <div className="bg-primary text-primary-foreground p-1 rounded-full shadow-lg">
+                                    <Check className="w-3 h-3" />
+                                </div>
+                            </div>
+                        )}
+                    </button>
+                    
+                    {/* Placeholder for future live backgrounds */}
+                    <div className="w-48 aspect-video rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 shrink-0 opacity-40">
+                        <div className="text-lg">✦</div>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                            More soon
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {/* ── / Live Backgrounds ───────────────────────────── */}
+
             {/* Toolbar */}
             <div className="flex flex-wrap items-center gap-4 mb-6">
                 {/* Filter Toolbar */}

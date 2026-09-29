@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { WallpaperState, WallpaperFilters, WallpaperCrop, useWallpaper } from "@/lib/WallpaperContext";
 import { SlidersHorizontal, Settings2, RotateCcw, Image as ImageIcon, Video, BoxSelect, Maximize, MousePointer2 } from "lucide-react";
 import { useSettings } from "@/lib/SettingsContext";
+import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
 
 interface WallpaperEditorProps {
     wallpaper: WallpaperState;
@@ -296,7 +297,15 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                             height: renderedDimensions.height,
                         }}
                     >
-                        {initialWallpaper.type === "video" ? (
+                        {initialWallpaper.type === "dynamic-aurora" ? (
+                            <div className="absolute inset-0 w-full h-full overflow-hidden rounded-2xl">
+                                <AuroraWallpaperRenderer
+                                    filters={localFilters}
+                                    borderRadius="1rem"
+                                    dimness={localFilters.brightness ?? 1}
+                                />
+                            </div>
+                        ) : initialWallpaper.type === "video" ? (
                             <video
                                 ref={mediaRef as any}
                                 src={initialWallpaper.preview || initialWallpaper.src}
