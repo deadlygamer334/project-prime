@@ -394,9 +394,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                     border: "rgba(255, 255, 255, 0.05)",
                     muted: "#a1a1aa",
                     accent: "rgba(255, 255, 255, 0.05)",
-                    orb1: "transparent",
-                    orb2: "transparent",
-                    orb3: "transparent"
+                    orb1: "rgba(148, 163, 184, 0.10)",
+                    orb2: "rgba(100, 116, 139, 0.07)",
+                    orb3: "rgba(71, 85, 105, 0.05)"
                 },
                 light: {
                     background: "#ffffff",
@@ -408,9 +408,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                     border: "#e4e4e7",
                     muted: "#71717a",
                     accent: "#f4f4f5",
-                    orb1: "transparent",
-                    orb2: "transparent",
-                    orb3: "transparent"
+                    orb1: "rgba(148, 163, 184, 0.12)",
+                    orb2: "rgba(100, 116, 139, 0.08)",
+                    orb3: "rgba(71, 85, 105, 0.06)"
                 }
             }
         };

@@ -1218,36 +1218,112 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                             }`}
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        {/* Size Controls */}
-                                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-sm" : "bg-white/40 border-black/10 backdrop-blur-sm")
-                                            : isDark ? "bg-white/5 border-transparent backdrop-blur-sm" : "bg-black/5 border-transparent backdrop-blur-sm"
-                                            }`}>
+                                        {/* Size control */}
+                                        <div className={`hidden md:flex items-center gap-1 p-1
+                                                         rounded-2xl transition-all duration-300
+                                                         ${currentWallpaper
+                                                             ? "bg-black/20 backdrop-blur-md"
+                                                             : isDark
+                                                                 ? "bg-white/[0.06]"
+                                                                 : "bg-black/[0.06]"
+                                                         }`}>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); setScale(s => Math.max(0.5, s - 0.1)); }}
-                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
-                                            >-</button>
-                                            <span className={`text-[10px] font-mono font-bold tracking-widest ${isDark ? "text-white/40" : "text-black/40"}`}>SIZE</span>
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setScale(s => Math.max(0.5, s - 0.1));
+                                                }}
+                                                className={`p-2 rounded-xl transition-all duration-150
+                                                           hover:scale-110 active:scale-95
+                                                           ${isDark
+                                                               ? "text-white/30 hover:text-white/80 hover:bg-white/10"
+                                                               : "text-black/30 hover:text-black/70 hover:bg-black/10"
+                                                           }`}
+                                                title="Decrease size"
+                                            >
+                                                {/* Minimise icon — two inward arrows */}
+                                                <svg width="14" height="14" viewBox="0 0 14 14"
+                                                     fill="none" stroke="currentColor"
+                                                     strokeWidth="1.6" strokeLinecap="round">
+                                                    <path d="M9 1h4v4M5 13H1V9M14 5l-4 4M5 9l-4 4"/>
+                                                </svg>
+                                            </button>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); setScale(s => Math.min(2, s + 0.1)); }}
-                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
-                                            >+</button>
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setScale(s => Math.min(2, s + 0.1));
+                                                }}
+                                                className={`p-2 rounded-xl transition-all duration-150
+                                                           hover:scale-110 active:scale-95
+                                                           ${isDark
+                                                               ? "text-white/30 hover:text-white/80 hover:bg-white/10"
+                                                               : "text-black/30 hover:text-black/70 hover:bg-black/10"
+                                                           }`}
+                                                title="Increase size"
+                                            >
+                                                {/* Maximise icon — two outward arrows */}
+                                                <svg width="14" height="14" viewBox="0 0 14 14"
+                                                     fill="none" stroke="currentColor"
+                                                     strokeWidth="1.6" strokeLinecap="round">
+                                                    <path d="M1 9H5V13M9 1V5H13M1 13l4-4M9 5l4-4"/>
+                                                </svg>
+                                            </button>
                                         </div>
 
-                                        {/* Brightness Controls */}
-                                        <div className={`hidden md:flex items-center gap-4 px-4 py-2 rounded-full border shadow-xl transition-all ${currentWallpaper
-                                            ? (isDark ? "bg-black/40 border-white/20 backdrop-blur-sm" : "bg-white/40 border-black/10 backdrop-blur-sm")
-                                            : isDark ? "bg-white/5 border-transparent backdrop-blur-sm" : "bg-black/5 border-transparent backdrop-blur-sm"
-                                            }`}>
+                                        {/* Brightness control */}
+                                        <div className={`hidden md:flex items-center gap-1 p-1
+                                                         rounded-2xl transition-all duration-300
+                                                         ${currentWallpaper
+                                                             ? "bg-black/20 backdrop-blur-md"
+                                                             : isDark
+                                                                 ? "bg-white/[0.06]"
+                                                                 : "bg-black/[0.06]"
+                                                         }`}>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); setBrightness(b => Math.max(0.3, b - 0.1)); }}
-                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
-                                            >-</button>
-                                            <span className={`text-[10px] font-mono font-bold tracking-widest ${isDark ? "text-white/40" : "text-black/40"}`}>BRIGHTNESS</span>
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setBrightness(b => Math.max(0.3, b - 0.1));
+                                                }}
+                                                className={`p-2 rounded-xl transition-all duration-150
+                                                           hover:scale-110 active:scale-95
+                                                           ${isDark
+                                                               ? "text-white/30 hover:text-white/80 hover:bg-white/10"
+                                                               : "text-black/30 hover:text-black/70 hover:bg-black/10"
+                                                           }`}
+                                                title="Decrease brightness"
+                                            >
+                                                {/* Dim sun icon */}
+                                                <svg width="14" height="14" viewBox="0 0 14 14"
+                                                     fill="none" stroke="currentColor"
+                                                     strokeWidth="1.6" strokeLinecap="round">
+                                                    <circle cx="7" cy="7" r="2.5"/>
+                                                    <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13
+                                                             M2.9 2.9l1 1M10.1 10.1l1 1
+                                                             M10.1 2.9l-1 1M3.9 10.1l-1 1"/>
+                                                </svg>
+                                            </button>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); setBrightness(b => Math.min(1.5, b + 0.1)); }}
-                                                className={`px-2 font-mono text-xl font-bold transition-all ${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"}`}
-                                            >+</button>
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setBrightness(b => Math.min(1.5, b + 0.1));
+                                                }}
+                                                className={`p-2 rounded-xl transition-all duration-150
+                                                           hover:scale-110 active:scale-95
+                                                           ${isDark
+                                                               ? "text-white/30 hover:text-white/80 hover:bg-white/10"
+                                                               : "text-black/30 hover:text-black/70 hover:bg-black/10"
+                                                           }`}
+                                                title="Increase brightness"
+                                            >
+                                                {/* Full sun icon */}
+                                                <svg width="14" height="14" viewBox="0 0 14 14"
+                                                     fill="none" stroke="currentColor"
+                                                     strokeWidth="1.6" strokeLinecap="round">
+                                                    <circle cx="7" cy="7" r="3"/>
+                                                    <path d="M7 0.5V2M7 12V13.5M0.5 7H2M12 7h1.5
+                                                             M2.4 2.4l1.1 1.1M10.5 10.5l1.1 1.1
+                                                             M10.5 2.4l-1.1 1.1M3.5 10.5l-1.1 1.1"/>
+                                                </svg>
+                                            </button>
                                         </div>
                                     </motion.div>
                                 )}

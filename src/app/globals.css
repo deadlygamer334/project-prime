@@ -525,7 +525,22 @@
 
   /* Midnight (Deep Dark) */
   .bg-midnight {
-    background: linear-gradient(to bottom, #020617, #0f172a);
+    background:
+      radial-gradient(
+        ellipse 90% 50% at 50% 105%,
+        var(--color-orb-purple) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 35% at 5% 95%,
+        var(--color-orb-pink) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 60% 35% at 95% 90%,
+        var(--color-orb-green) 0%,
+        transparent 65%
+      );
   }
 
   /* ─── Radial Glow ─────────────────────────────────────────

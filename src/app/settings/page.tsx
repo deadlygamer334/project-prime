@@ -1,23 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import AppHeader from "@/components/sections/AppHeader";
 import Footer from "@/components/sections/Footer";
-import { useTheme } from "@/lib/ThemeContext";
 import { useNotification } from "@/lib/NotificationContext";
-import { useSettings, AccentColor, FontFamily, BackgroundStyle, TickSound, AlarmSound } from "@/lib/SettingsContext";
+import { useSettings, FontFamily, BackgroundStyle, TickSound, AlarmSound } from "@/lib/SettingsContext";
 import { useKeyboardShortcuts } from "@/lib/KeyboardShortcutsContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import {
-    Moon, Sun, Layout, Palette, ArrowLeft, Music, PartyPopper,
-    Clock, Shield, Download, LogOut, Keyboard, Command,
+    Layout, Music, PartyPopper, Clock, Shield, Download, LogOut,
     Lock, ArrowRight, X, CheckCircle2, AlertCircle, Loader2, Bell,
-    Sparkles, Image as ImageIcon, Trash2
+    Image as ImageIcon, Trash2, Check, Keyboard, Command
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth, db, googleProvider } from "@/lib/firebase";
-import { signOut, updatePassword, deleteUser, reauthenticateWithPopup, GoogleAuthProvider, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { signOut, updatePassword, deleteUser, reauthenticateWithPopup, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { collection, doc, deleteDoc, writeBatch, getDocs } from "firebase/firestore";
 import useSoundEffects from "@/hooks/useSoundEffects";
 import { useHabitContext } from "@/lib/HabitContext";
@@ -26,16 +23,15 @@ import { WallpaperManagerBtn } from "@/components/wallpaper/WallpaperManagerModa
 import { useWallpaper } from "@/lib/WallpaperContext";
 
 export default function SettingsPage() {
-    const { theme, toggleTheme } = useTheme();
     const { showToast, showConfirm } = useNotification();
-    const isDark = theme === "dark";
     const settings = useSettings();
     const { wallpaper, setWallpaper } = useWallpaper();
-    const { playTick, playAlarm } = useSoundEffects();
+    const { playAlarm } = useSoundEffects();
     const router = useRouter();
     const { habits } = useHabitContext();
-    const [showPasswordModal, setShowPasswordModal] = React.useState(false);
-    const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+    const [activeSection, setActiveSection] = useState("appearance");
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const handleSignOut = async () => {
         try {
@@ -85,672 +81,677 @@ export default function SettingsPage() {
         { id: "digital", label: "Digital" },
     ];
 
-    const bgStyles: {
-        id: BackgroundStyle;
-        label: string;
-        desc: string;
-        preview: string; // CSS background shorthand for the thumbnail
-    }[] = [
+    const implementedClockStyles = [
+        { value: "standard", label: "Standard" },
+        { value: "minimal",  label: "Minimal" },
+        { value: "bold",     label: "Bold" },
+        { value: "neon",     label: "Neon" },
+        { value: "elegant",  label: "Elegant" },
+        { value: "outline",  label: "Outline" },
+        { value: "pill",     label: "Pill" },
+        { value: "glitch",   label: "Glitch" },
+        { value: "vertical", label: "Vertical" },
+    ];
+
+    const ALL_BG_STYLES: { id: BackgroundStyle; label: string; preview: string }[] = [
         {
             id: "aurora",
             label: "Aurora",
-            desc: "Floating orbs",
-            preview: `radial-gradient(circle at 20% 30%,
-                        var(--color-orb-purple) 0%, transparent 55%),
-                      radial-gradient(circle at 80% 20%,
-                        var(--color-orb-pink) 0%, transparent 50%),
-                      radial-gradient(circle at 50% 80%,
-                        var(--color-orb-green) 0%, transparent 55%)`,
+            preview: `radial-gradient(circle at 20% 30%, var(--color-orb-purple) 0%, transparent 55%), radial-gradient(circle at 80% 20%, var(--color-orb-pink) 0%, transparent 50%), radial-gradient(circle at 50% 80%, var(--color-orb-green) 0%, transparent 55%)`
         },
         {
             id: "radial",
             label: "Radial",
-            desc: "Centered glow",
-            preview: `radial-gradient(circle at 50% 50%,
-                        var(--color-orb-purple) 0%, transparent 70%)`,
+            preview: `radial-gradient(circle at 50% 50%, var(--color-orb-purple) 0%, transparent 70%)`
         },
         {
             id: "bloom",
             label: "Bloom",
-            desc: "Top light bloom",
-            preview: `radial-gradient(ellipse 120% 60% at 50% -10%,
-                        var(--color-orb-purple) 0%, transparent 75%)`,
+            preview: `radial-gradient(ellipse 120% 60% at 50% -10%, var(--color-orb-purple) 0%, transparent 75%)`
         },
         {
             id: "diagonal",
             label: "Diagonal",
-            desc: "Corner accents",
-            preview: `radial-gradient(circle at 0% 0%,
-                        var(--color-orb-purple) 0%, transparent 60%),
-                      radial-gradient(circle at 100% 100%,
-                        var(--color-orb-pink) 0%, transparent 60%)`,
+            preview: `radial-gradient(circle at 0% 0%, var(--color-orb-purple) 0%, transparent 60%), radial-gradient(circle at 100% 100%, var(--color-orb-pink) 0%, transparent 60%)`
         },
         {
             id: "edge",
             label: "Edge",
-            desc: "Framed glow",
-            preview: `radial-gradient(ellipse 80% 25% at 50% 0%,
-                        var(--color-orb-purple) 0%, transparent 100%),
-                      radial-gradient(ellipse 80% 25% at 50% 100%,
-                        var(--color-orb-purple) 0%, transparent 100%),
-                      radial-gradient(ellipse 25% 80% at 0% 50%,
-                        var(--color-orb-pink) 0%, transparent 100%),
-                      radial-gradient(ellipse 25% 80% at 100% 50%,
-                        var(--color-orb-pink) 0%, transparent 100%)`,
+            preview: `radial-gradient(ellipse 80% 25% at 50% 0%, var(--color-orb-purple) 0%, transparent 100%), radial-gradient(ellipse 80% 25% at 50% 100%, var(--color-orb-purple) 0%, transparent 100%), radial-gradient(ellipse 25% 80% at 0% 50%, var(--color-orb-pink) 0%, transparent 100%), radial-gradient(ellipse 25% 80% at 100% 50%, var(--color-orb-pink) 0%, transparent 100%)`
         },
         {
             id: "mesh",
             label: "Mesh",
-            desc: "Corner gradients",
-            preview: `radial-gradient(at 0% 0%,   var(--color-orb-purple) 0, transparent 60%),
-                      radial-gradient(at 50% 0%,  var(--color-orb-pink)   0, transparent 60%),
-                      radial-gradient(at 100% 0%, var(--color-orb-green)  0, transparent 60%)`,
+            preview: `radial-gradient(at 0% 0%, var(--color-orb-purple) 0, transparent 60%), radial-gradient(at 50% 0%, var(--color-orb-pink) 0, transparent 60%), radial-gradient(at 100% 0%, var(--color-orb-green) 0, transparent 60%)`
         },
         {
             id: "particles",
             label: "Particles",
-            desc: "Subtle dot field",
-            preview: `radial-gradient(circle, rgba(255,255,255,0.15) 1px,
-                        transparent 1px)`,
+            preview: `radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)`
         },
         {
             id: "midnight",
             label: "Midnight",
-            desc: "Deep dark",
-            preview: `radial-gradient(ellipse at 50% 100%,
-                        var(--color-orb-purple) 0%, transparent 60%)`,
-        },
+            preview: `radial-gradient(ellipse at 50% 100%, var(--color-orb-purple) 0%, transparent 60%)`
+        }
+    ];
+
+    const SECTIONS = [
+        { id: "appearance",    label: "Appearance",    icon: Layout },
+        { id: "background",    label: "Background",    icon: ImageIcon },
+        { id: "timer",         label: "Timer",         icon: Clock },
+        { id: "acoustics",     label: "Acoustics",     icon: Music },
+        { id: "notifications", label: "Notifications", icon: Bell },
+        { id: "effects",       label: "Effects",       icon: PartyPopper },
+        { id: "security",      label: "Security",      icon: Shield },
+        { id: "data",          label: "Data",          icon: Download },
     ];
 
     return (
-        <div className="min-h-screen flex flex-col transition-colors duration-300 text-foreground">
+        <div className="min-h-screen bg-background">
             <AppHeader title="Settings" activePath="/settings" />
 
-            <main className="container mx-auto flex-grow py-8 px-4 md:px-6 relative z-10">
-                <div className="max-w-5xl mx-auto">
-                    {/* Header Section */}
-                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-                        <div>
-                            <Link href="/" className="inline-flex items-center gap-2 mb-4 text-xs font-semibold uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity">
-                                <ArrowLeft size={14} /> Back to Dashboard
-                            </Link>
-                            <h1 
-                                className="text-3xl md:text-4xl font-black tracking-tight mb-2"
-                                style={{
-                                    background: 'linear-gradient(135deg, #ffffff 0%, rgba(167,139,250,0.8) 100%)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent'
-                                }}
-                            >
-                                Settings
-                            </h1>
-                            <p className="text-sm text-muted-foreground">Customize your Prime experience</p>
+            <main className="max-w-6xl mx-auto px-4 pt-24 pb-16">
 
-                            {/* Productivity Reminder */}
-                            <div className="mt-4 p-4 rounded-2xl bg-foreground/[0.03] border border-border max-w-2xl">
-                                <p className="text-sm text-foreground/50 font-medium leading-relaxed">
-                                    <span className="mr-2 opacity-50">💡</span>
-                                    Don't spend too much time here—your best work happens when you focus.
-                                    Configure quickly and get back to your flow.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* User Greeting Input */}
-                        <div className="flex items-center gap-3 bg-card p-3 rounded-2xl border border-border">
-                            <span className="text-sm font-medium text-muted-foreground">Hello,</span>
-                            <input
-                                type="text"
-                                value={settings.userName}
-                                onChange={(e) => settings.updateSetting("userName", e.target.value)}
-                                className="bg-transparent border-b border-dashed border-border outline-none w-[120px] text-base font-bold focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground/50"
-                                placeholder="Enter Name"
-                            />
-                        </div>
+                {/* Page title & User Greeting */}
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tight"
+                            style={{
+                                background: "linear-gradient(135deg, var(--foreground) 0%, color-mix(in srgb, var(--foreground) 60%, transparent) 100%)",
+                                WebkitBackgroundClip: "text",
+                                WebkitTextFillColor: "transparent"
+                            }}>
+                            Settings
+                        </h1>
+                        <p className="text-muted-foreground text-sm mt-1">
+                            Customize your Prime experience
+                        </p>
                     </div>
-
-                    <div className="gradient-border card-premium rounded-2xl p-6 mb-6">
-                        <SectionHeading icon={Palette} title="Visual Theme" desc="Select a curated theme palette" />
-                        <VibeGallery />
+                    <div className="flex items-center gap-3 bg-card px-3 py-2 rounded-2xl border border-border self-start sm:self-auto">
+                        <span className="text-sm font-medium text-muted-foreground">Hello,</span>
+                        <input
+                            type="text"
+                            value={settings.userName}
+                            onChange={(e) => settings.updateSetting("userName", e.target.value)}
+                            className="bg-transparent border-b border-dashed border-border outline-none w-[120px] text-base font-bold focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground/50"
+                            placeholder="Enter Name"
+                        />
                     </div>
+                </div>
 
-                    {/* Immersive Background Section */}
-                    <section className="gradient-border card-premium rounded-2xl p-6 mb-6 bg-card border border-border flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
-                        {/* Background Decoration */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+                <div className="flex flex-col md:flex-row gap-8 items-start">
 
-                        <div className="relative z-10 flex-grow">
-                            <SectionHeading icon={ImageIcon} title="Immersive Background" desc="Custom cinematic wallpapers and stills" />
-                            <p className="text-muted-foreground max-w-xl text-sm">
-                                Transform your focus workspace with 4K cinematic loop videos and high-resolution stills.
-                                Custom wallpapers help reduce digital eye strain and maintain focus deep into your sessions.
-                            </p>
-
-                            <div className="mt-4 flex flex-wrap gap-4 items-center">
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
-                                    <Sparkles size={12} /> Live Wallpapers
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
-                                    <Clock size={12} /> Auto-Dimming Enabled
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="relative z-10 flex flex-col items-center gap-3 min-w-[200px]">
-                            <WallpaperManagerBtn className="w-full h-14 !rounded-2xl !bg-primary !text-primary-foreground !shadow-lg !shadow-primary/20 hover:!scale-[1.02] active:!scale-[0.98] transition-all !text-base !font-bold">
-                                Change Wallpaper
-                            </WallpaperManagerBtn>
-                            {wallpaper?.type === "dynamic-aurora" && (
-                                <div className="w-full flex items-center justify-between mt-1 px-4 py-3 rounded-2xl bg-primary/10 border border-primary/20">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                        <span className="text-sm font-medium text-foreground">
-                                            Northern Lights active
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => setWallpaper(null)}
-                                        className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            )}
-                            <p className="text-[10px] text-muted-foreground font-medium">Browse 1000+ premium assets</p>
-
-                            {wallpaper && wallpaper.type !== "dynamic-aurora" && (
+                    {/* ── Sidebar nav (desktop) ───────── */}
+                    <nav className="hidden md:flex flex-col gap-1 w-[200px] shrink-0 sticky top-24">
+                        {SECTIONS.map(s => {
+                            const Icon = s.icon;
+                            const isActive = activeSection === s.id;
+                            return (
                                 <button
-                                    onClick={() => setWallpaper(null)}
-                                    className="mt-2 w-full h-10 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                                    key={s.id}
+                                    onClick={() => setActiveSection(s.id)}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left w-full ${
+                                        isActive
+                                            ? "bg-primary/10 text-primary border border-primary/20"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    }`}
                                 >
-                                    <Trash2 className="w-4 h-4" /> Remove Wallpaper
+                                    <Icon size={15} className={isActive ? "text-primary" : "text-muted-foreground"} />
+                                    {s.label}
                                 </button>
-                            )}
-                        </div>
-                    </section>
+                            );
+                        })}
+                    </nav>
 
-                    {/* Main Settings Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* ── Mobile section pills ─────────── */}
+                    <div className="md:hidden flex gap-2 overflow-x-auto pb-3 hide-scrollbar mb-6 w-full shrink-0">
+                        {SECTIONS.map(s => {
+                            const Icon = s.icon;
+                            const isActive = activeSection === s.id;
+                            return (
+                                <button
+                                    key={s.id}
+                                    onClick={() => setActiveSection(s.id)}
+                                    className={`flex items-center gap-1.5 px-3 py-2 shrink-0 rounded-full text-xs font-bold border transition-all ${
+                                        isActive
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "border-border text-muted-foreground hover:border-primary/40"
+                                    }`}
+                                >
+                                    <Icon size={11} />
+                                    {s.label}
+                                </button>
+                            );
+                        })}
+                    </div>
 
-                        {/* LEFT COLUMN */}
-                        <div className="space-y-6">
+                    {/* ── Content panel ───────────────── */}
+                    <div className="flex-1 min-w-0 w-full">
 
-                            {/* Appearance Section */}
-                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
-                                <SectionHeading icon={Layout} title="Appearance" desc="Customize the look and feel" />
-
-                                <div className="space-y-6">
-                                    <ToggleRow
-                                        label="Reverse Desktop Layout"
-                                        desc="Swap Timer and Todo columns"
+                        {activeSection === "appearance" && (
+                            <SettingsCard
+                                icon={Layout}
+                                title="Appearance"
+                                desc="Visual style, typography, layout">
+                                {/* Theme Vibe picker — show VibeGallery here */}
+                                <div className="mb-6">
+                                    <SectionLabel>Theme Vibe</SectionLabel>
+                                    <VibeGallery />
+                                </div>
+                                {/* Note about accent color */}
+                                <div className="mb-4 p-3 rounded-xl bg-muted/40 border border-border">
+                                    <p className="text-xs text-muted-foreground">
+                                        Accent color and primary palette are defined by your Theme Vibe selection above.
+                                    </p>
+                                </div>
+                                <FormRow
+                                    label="Reverse Desktop Layout"
+                                    desc="Swap Timer and Todo columns">
+                                    <Toggle
                                         value={settings.dashboardLayout === "reversed"}
-                                        onChange={(v) => settings.updateSetting("dashboardLayout", v ? "reversed" : "standard")}
-                                    />
+                                        onChange={v => settings.updateSetting(
+                                            "dashboardLayout",
+                                            v ? "reversed" : "standard")} />
+                                </FormRow>
+                                <FormRow label="Typography" desc="Font style">
+                                    <SegmentedControl
+                                        options={fonts.map(f => ({
+                                            value: f.id, label: f.label }))}
+                                        value={settings.fontFamily}
+                                        onChange={v => settings.updateSetting(
+                                            "fontFamily", v as FontFamily)} />
+                                </FormRow>
+                                <FormRow label="Clock Style" desc="Dashboard clock variant">
+                                    <GridPicker
+                                        cols={3}
+                                        options={implementedClockStyles}
+                                        value={settings.clockStyle}
+                                        onChange={v => settings.updateSetting(
+                                            "clockStyle", v as any)} />
+                                </FormRow>
+                                <FormRow label="Density" desc="UI spacing scale">
+                                    <SegmentedControl
+                                        options={[
+                                            { value: "compact",  label: "Compact"  },
+                                            { value: "normal",   label: "Normal"   },
+                                            { value: "spacious", label: "Spacious" },
+                                        ]}
+                                        value={settings.paddingScale}
+                                        onChange={v => settings.updateSetting(
+                                            "paddingScale", v as any)} />
+                                </FormRow>
+                                <FormRow label="Corners" desc="Border radius style">
+                                    <SegmentedControl
+                                        options={[
+                                            { value: "sharp",  label: "Sharp"  },
+                                            { value: "smooth", label: "Smooth" },
+                                        ]}
+                                        value={settings.borderRadius}
+                                        onChange={v => settings.updateSetting(
+                                            "borderRadius", v as any)} />
+                                </FormRow>
+                            </SettingsCard>
+                        )}
 
-                                    <ToggleRow
-                                        label="Auto-Dim Background"
-                                        desc="Darken wallpaper during Focus sessions"
-                                        value={settings.autoDimWallpaper}
-                                        onChange={(v) => settings.updateSetting("autoDimWallpaper", v)}
-                                    />
-
-                                    {/* Accent Color Selector */}
-                                    <div className="py-3 border-b border-border">
-                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block text-foreground/70">Accent Color</label>
-                                        <div className="flex items-center gap-3">
-                                            {([
-                                                { id: "purple", label: "Purple", bgClass: "bg-primary" },
-                                                { id: "blue", label: "Blue", bgClass: "bg-sky-400" },
-                                                { id: "green", label: "Green", bgClass: "bg-emerald-400" },
-                                                { id: "pink", label: "Pink", bgClass: "bg-pink-400" },
-                                                { id: "orange", label: "Orange", bgClass: "bg-amber-400" },
-                                            ] as const).map(color => (
-                                                <button
-                                                    key={color.id}
-                                                    type="button"
-                                                    onClick={() => settings.updateSetting("accentColor", color.id)}
-                                                    title={color.label}
-                                                    className={`w-8 h-8 rounded-full ${color.bgClass} hover:scale-110 transition-all ${
-                                                        settings.accentColor === color.id
-                                                            ? "ring-2 ring-white ring-offset-2 ring-offset-background scale-105"
-                                                            : "opacity-80 hover:opacity-100"
-                                                    }`}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Background Style */}
-                                    <div className="py-3 border-b border-border">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-foreground/50 mb-3 block">
-                                            Background Style
-                                        </label>
-                                        <div className="grid grid-cols-4 gap-2">
-                                            {bgStyles.map((style) => {
-                                                const isActive = settings.backgroundStyle === style.id;
-                                                return (
-                                                    <button
-                                                        key={style.id}
-                                                        type="button"
-                                                        onClick={() => settings.updateSetting("backgroundStyle", style.id)}
-                                                        className={`relative h-[72px] rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                                                            isActive
-                                                                ? "border-primary shadow-[0_0_12px_rgba(167,139,250,0.3)]"
-                                                                : "border-border hover:border-primary/40"
-                                                        }`}
-                                                    >
-                                                        {/* Live gradient preview using the same CSS variables — auto theme-aware */}
-                                                        <div
-                                                            className="absolute inset-0"
-                                                            style={{
-                                                                background: style.preview,
-                                                                opacity: 0.8,
-                                                            }}
-                                                        />
-
-                                                        {/* Dark scrim so text is readable */}
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-
-                                                        {/* Label */}
-                                                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                                                            <p className="text-white text-[11px] font-bold leading-none drop-shadow">
-                                                                {style.label}
-                                                            </p>
-                                                            <p className="text-white/60 text-[9px] mt-0.5 font-medium leading-none drop-shadow">
-                                                                {style.desc}
-                                                            </p>
-                                                        </div>
-
-                                                        {/* Active checkmark */}
-                                                        {isActive && (
-                                                            <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                                                                <svg viewBox="0 0 12 12" className="w-2.5 h-2.5" fill="none">
-                                                                    <path
-                                                                        d="M2 6L5 9L10 3"
-                                                                        stroke="white"
-                                                                        strokeWidth="1.8"
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                    />
-                                                                </svg>
-                                                            </div>
-                                                        )}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground mt-2">
-                                            Colors automatically match your active theme
-                                        </p>
-                                    </div>
-
-                                    {/* Typography */}
-                                    <div className="py-3 border-b border-border">
-                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block text-foreground/70">Typography</label>
-                                        <div className="grid grid-cols-4 gap-2">
-                                            {fonts.map(font => (
-                                                <button
-                                                    key={font.id}
-                                                    onClick={() => settings.updateSetting("fontFamily", font.id)}
-                                                    className={`px-2 py-2 text-xs rounded-xl border transition-all ${settings.fontFamily === font.id
-                                                        ? "bg-primary text-primary-foreground border-primary"
-                                                        : "border-border hover:bg-muted text-foreground/70"
-                                                        }`}
-                                                >
-                                                    {font.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Clock Style */}
-                                    <div className="py-3 border-b border-border">
-                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block text-foreground/70">Clock Style</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {[
-                                                { id: "standard", label: "Standard" },
-                                                { id: "minimal", label: "Minimal" },
-                                                { id: "bold", label: "Bold" },
-                                                { id: "neon", label: "Neon" },
-                                                { id: "elegant", label: "Elegant" },
-                                                { id: "outline", label: "Outline" },
-                                                { id: "pill", label: "Pill" },
-                                                { id: "glitch", label: "Glitch" },
-                                                { id: "vertical", label: "Vertical" },
-                                            ].map((style) => (
-                                                <button
-                                                    key={style.id}
-                                                    // @ts-ignore
-                                                    onClick={() => settings.updateSetting("clockStyle", style.id)}
-                                                    className={`px-2 py-2 text-xs rounded-xl border transition-all truncate ${settings.clockStyle === style.id
-                                                        ? "bg-primary text-primary-foreground border-primary"
-                                                        : "border-border hover:bg-muted text-foreground/70"
-                                                        }`}
-                                                >
+                        {activeSection === "background" && (
+                            <SettingsCard
+                                icon={ImageIcon}
+                                title="Background"
+                                desc="Global atmosphere and wallpapers">
+                                <SectionLabel className="mb-3">
+                                    Background Style
+                                </SectionLabel>
+                                <div className="grid grid-cols-4 gap-2 mb-6">
+                                    {ALL_BG_STYLES.map(style => (
+                                        <button
+                                            key={style.id}
+                                            onClick={() => settings.updateSetting(
+                                                "backgroundStyle", style.id)}
+                                            className={`relative h-[72px] rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] ${
+                                                settings.backgroundStyle === style.id
+                                                    ? "border-primary shadow-[0_0_12px_rgba(167,139,250,0.25)]"
+                                                    : "border-border hover:border-primary/40"
+                                            }`}
+                                        >
+                                            <div
+                                                className="absolute inset-0 opacity-75"
+                                                style={{ background: style.preview }} />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                                            <div className="absolute bottom-0 left-0 right-0 p-2">
+                                                <p className="text-white text-[11px] font-bold leading-none drop-shadow">
                                                     {style.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Visual Density */}
-                                    <div className="py-3 border-b border-border">
-                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Density</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {(["compact", "normal", "spacious"] as const).map(scale => (
-                                                <button
-                                                    key={scale}
-                                                    onClick={() => settings.updateSetting("paddingScale", scale)}
-                                                    className={`px-3 py-2 text-xs rounded-xl border transition-all ${settings.paddingScale === scale
-                                                        ? "bg-primary/20 border-primary/50 text-foreground"
-                                                        : "border-transparent bg-muted/50 hover:bg-muted text-muted-foreground"
-                                                        }`}
-                                                >
-                                                    {scale.charAt(0).toUpperCase() + scale.slice(1)}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Corner Radius */}
-                                    <div className="pt-1">
-                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Corners</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {(["sharp", "smooth"] as const).map(radius => (
-                                                <button
-                                                    key={radius}
-                                                    onClick={() => settings.updateSetting("borderRadius", radius)}
-                                                    className={`px-3 py-2 text-xs rounded-xl border transition-all ${settings.borderRadius === radius
-                                                        ? "bg-primary/20 border-primary/50 text-foreground"
-                                                        : "border-transparent bg-muted/50 hover:bg-muted text-muted-foreground"
-                                                        }`}
-                                                >
-                                                    {radius.charAt(0).toUpperCase() + radius.slice(1)}
-                                                </button>
-                                            ))}
-                                        </div>
+                                                </p>
+                                            </div>
+                                            {settings.backgroundStyle === style.id && (
+                                                <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                                {/* Immersive wallpaper section */}
+                                <div className="border-t border-border pt-5">
+                                    <SectionLabel className="mb-3">
+                                        Immersive Wallpaper
+                                    </SectionLabel>
+                                    <p className="text-xs text-muted-foreground mb-4">
+                                        Custom wallpapers display behind your Pomodoro timer and in Zen Mode.
+                                    </p>
+                                    <div className="flex flex-col gap-3">
+                                        <WallpaperManagerBtn
+                                            className="h-11 w-full !rounded-xl !bg-primary !text-primary-foreground !font-bold hover:opacity-90 transition-opacity">
+                                            Browse Wallpapers
+                                        </WallpaperManagerBtn>
+                                        {wallpaper && (
+                                            <button
+                                                onClick={() => setWallpaper(null)}
+                                                className="h-10 w-full rounded-xl border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                                Remove Wallpaper
+                                            </button>
+                                        )}
+                                        <FormRow
+                                            label="Auto-Dim Wallpaper"
+                                            desc="Darken during Focus sessions">
+                                            <Toggle
+                                                value={settings.autoDimWallpaper}
+                                                onChange={v => settings.updateSetting(
+                                                    "autoDimWallpaper", v)} />
+                                        </FormRow>
                                     </div>
                                 </div>
-                            </section>
+                            </SettingsCard>
+                        )}
 
-                            {/* Acoustics Section */}
-                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
-                                <SectionHeading icon={Music} title="Acoustics" desc="Configure sound effects and audio feedback" />
+                        {activeSection === "timer" && (
+                            <SettingsCard
+                                icon={Clock}
+                                title="Timer & Clock"
+                                desc="Pomodoro, clock display, Zen Mode">
+                                <FormRow label="Show Seconds"
+                                    desc="Display seconds in all clocks">
+                                    <Toggle value={settings.showSeconds}
+                                        onChange={v => settings.updateSetting(
+                                            "showSeconds", v)} />
+                                </FormRow>
+                                <FormRow label="24-Hour Format"
+                                    desc="Military time">
+                                    <Toggle
+                                        value={settings.clockFormat === "24h"}
+                                        onChange={v => settings.updateSetting(
+                                            "clockFormat", v ? "24h" : "12h")} />
+                                </FormRow>
+                                <FormRow label="Large Dashboard Clock"
+                                    desc="Show big digital clock on home">
+                                    <Toggle value={settings.showClock}
+                                        onChange={v => settings.updateSetting(
+                                            "showClock", v)} />
+                                </FormRow>
+                                <FormRow label="Daily Quotes"
+                                    desc="Motivation quote in timer area">
+                                    <Toggle value={settings.showQuotes}
+                                        onChange={v => settings.updateSetting(
+                                            "showQuotes", v)} />
+                                </FormRow>
+                                <div className="border-t border-border pt-5 mt-2">
+                                    <SectionLabel className="mb-3">
+                                        Zen Mode
+                                    </SectionLabel>
+                                    <FormRow label="Show Clock in Zen"
+                                        desc="Small ambient clock overlay">
+                                        <Toggle value={settings.showZenClock}
+                                            onChange={v => settings.updateSetting(
+                                                "showZenClock", v)} />
+                                    </FormRow>
+                                    <FormRow label="Zen Seconds"
+                                        desc="Show seconds in Zen Mode">
+                                        <Toggle value={settings.showZenSeconds}
+                                            onChange={v => settings.updateSetting(
+                                                "showZenSeconds", v)} />
+                                    </FormRow>
+                                    <FormRow label="Controls Position"
+                                        desc="Where Zen controls appear">
+                                        <GridPicker
+                                            cols={2}
+                                            options={[
+                                                { value: "top-left",
+                                                  label: "Top Left" },
+                                                { value: "top-right",
+                                                  label: "Top Right" },
+                                                { value: "bottom-left",
+                                                  label: "Bottom Left" },
+                                                { value: "bottom-right",
+                                                  label: "Bottom Right" },
+                                            ]}
+                                            value={settings.zenControlsAlignment}
+                                            onChange={v => settings.updateSetting(
+                                                "zenControlsAlignment", v as any)} />
+                                    </FormRow>
+                                </div>
+                            </SettingsCard>
+                        )}
 
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
-                                        <span className="font-medium text-sm text-foreground">Master Sound</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => settings.updateSetting("soundEnabled", !settings.soundEnabled)}
-                                            className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${settings.soundEnabled ? 'bg-primary' : 'bg-muted border border-border'}`}
-                                        >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-primary-foreground transition-transform ${settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                        {activeSection === "acoustics" && (
+                            <SettingsCard icon={Music}
+                                title="Acoustics"
+                                desc="Sound effects and audio feedback">
+                                <FormRow label="Enable Sounds"
+                                    desc="Master sound switch">
+                                    <Toggle value={settings.soundEnabled}
+                                        onChange={v => settings.updateSetting(
+                                            "soundEnabled", v)} />
+                                </FormRow>
+                                <div className="grid grid-cols-2 gap-6 mt-4">
+                                    <div>
+                                        <SectionLabel className="mb-2">
+                                            Timer Tick
+                                        </SectionLabel>
+                                        <div className="flex flex-col gap-1">
+                                            {tickSounds.map(s => (
+                                                <button key={s.id}
+                                                    onClick={() =>
+                                                        settings.updateSetting(
+                                                            "tickSound", s.id)}
+                                                    className={`px-3 py-2 text-xs text-left rounded-lg transition-all ${
+                                                        settings.tickSound === s.id
+                                                            ? "bg-primary/10 text-primary font-semibold"
+                                                            : "text-muted-foreground hover:bg-muted/50"
+                                                    }`}>
+                                                    {s.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <SectionLabel className="mb-2">
+                                            Alarm Tone
+                                        </SectionLabel>
+                                        <div className="flex flex-col gap-1">
+                                            {alarmSounds.map(s => (
+                                                <button key={s.id}
+                                                    onClick={() =>
+                                                        settings.updateSetting(
+                                                            "alarmSound", s.id)}
+                                                    className={`px-3 py-2 text-xs text-left rounded-lg transition-all ${
+                                                        settings.alarmSound === s.id
+                                                            ? "bg-primary/10 text-primary font-semibold"
+                                                            : "text-muted-foreground hover:bg-muted/50"
+                                                    }`}>
+                                                    {s.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button onClick={playAlarm}
+                                            className="mt-3 text-[10px] flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider font-bold">
+                                            <PlayCircle size={11} /> Test Sound
                                         </button>
                                     </div>
+                                </div>
+                            </SettingsCard>
+                        )}
 
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Timer Tick</label>
-                                            <div className="flex flex-col gap-2">
-                                                {tickSounds.map(sound => (
-                                                    <button
-                                                        key={sound.id}
-                                                        onClick={() => settings.updateSetting("tickSound", sound.id)}
-                                                        className={`px-3 py-2 text-xs text-left rounded-lg transition-all ${settings.tickSound === sound.id
-                                                            ? "bg-primary/10 text-primary font-medium"
-                                                            : "text-muted-foreground hover:bg-muted/50"
-                                                            }`}
-                                                    >
-                                                        {sound.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Alarm Tone</label>
-                                            <div className="flex flex-col gap-2">
-                                                {alarmSounds.map(sound => (
-                                                    <button
-                                                        key={sound.id}
-                                                        onClick={() => settings.updateSetting("alarmSound", sound.id)}
-                                                        className={`px-3 py-2 text-xs text-left rounded-lg transition-all ${settings.alarmSound === sound.id
-                                                            ? "bg-primary/10 text-primary font-medium"
-                                                            : "text-muted-foreground hover:bg-muted/50"
-                                                            }`}
-                                                    >
-                                                        {sound.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <button onClick={playAlarm} className="mt-4 text-[10px] flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity uppercase tracking-wider font-bold">
-                                                <PlayCircle size={12} /> Test Sound
-                                            </button>
+                        {activeSection === "notifications" && (
+                            <NotificationSettings />
+                        )}
+
+                        {activeSection === "effects" && (
+                            <SettingsCard icon={PartyPopper}
+                                title="Visual Effects"
+                                desc="Animations, motion, and visual polish">
+                                <FormRow label="Confetti on Completion"
+                                    desc="Celebrate finished sessions">
+                                    <Toggle value={settings.confettiEnabled}
+                                        onChange={v => settings.updateSetting(
+                                            "confettiEnabled", v)} />
+                                </FormRow>
+                                <FormRow label="Glassmorphism"
+                                    desc="Blur effects on floating surfaces">
+                                    <Toggle value={settings.enableGlassmorphism}
+                                        onChange={v => settings.updateSetting(
+                                            "enableGlassmorphism", v)} />
+                                </FormRow>
+                                <FormRow label="Reduced Motion"
+                                    desc="Minimise all UI animations">
+                                    <Toggle value={settings.reducedMotion}
+                                        onChange={v => settings.updateSetting(
+                                            "reducedMotion", v)} />
+                                </FormRow>
+                                <FormRow label="Public Leaderboard Profile"
+                                    desc="Appear on the weekly leaderboard">
+                                    <Toggle value={settings.leaderboardPublic}
+                                        onChange={v => settings.updateSetting(
+                                            "leaderboardPublic", v)} />
+                                </FormRow>
+                            </SettingsCard>
+                        )}
+
+                        {activeSection === "security" && (
+                            <SettingsCard icon={Shield}
+                                title="Security"
+                                desc="Account credentials and access">
+                                <button
+                                    onClick={() => setShowPasswordModal(true)}
+                                    className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all group">
+                                    <div className="flex items-center gap-3">
+                                        <Lock size={16}
+                                            className="text-muted-foreground group-hover:text-primary transition-colors" />
+                                        <div className="text-left">
+                                            <p className="text-sm font-medium">
+                                                Change Password
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Update your account credentials
+                                            </p>
                                         </div>
                                     </div>
+                                    <ArrowRight size={14} className="opacity-30" />
+                                </button>
+                                <div className="mt-4">
+                                    <ShortcutsSection />
                                 </div>
-                            </section>
+                            </SettingsCard>
+                        )}
 
-                            {/* Security */}
-                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
-                                <SectionHeading icon={Shield} title="Security" desc="Manage account security and credentials" />
-                                <div className="space-y-4">
+                        {activeSection === "data" && (
+                            <SettingsCard icon={Download}
+                                title="Data & Privacy"
+                                desc="Export, sign out, account management">
+                                <p className="text-sm text-muted-foreground mb-5">
+                                    All data is stored securely and belongs to you.
+                                </p>
+                                <div className="flex flex-col gap-3">
                                     <button
-                                        onClick={() => setShowPasswordModal(true)}
-                                        className="w-full flex items-center justify-between p-4 rounded-xl border transition-all group bg-muted/20 border-border hover:bg-muted/50 hover:border-primary/30"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Lock size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                                            <div className="text-left">
-                                                <span className="block text-sm font-medium text-foreground">Change Password</span>
-                                                <span className="block text-xs text-muted-foreground">Update your account security</span>
-                                            </div>
-                                        </div>
-                                        <ArrowRight size={14} className="opacity-30" />
+                                        onClick={handleDownloadData}
+                                        className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border border-border bg-card hover:bg-muted transition-all active:scale-95 w-full">
+                                        <Download size={15} /> Export Data as JSON
+                                    </button>
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border border-border bg-card hover:bg-muted transition-all active:scale-95 w-full">
+                                        <LogOut size={15} /> Sign Out
+                                    </button>
+                                    <button
+                                        onClick={() => setShowDeleteModal(true)}
+                                        className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-all active:scale-95 w-full">
+                                        <AlertCircle size={15} /> Delete Account
                                     </button>
                                 </div>
-                            </section>
-
-                            {/* System */}
-                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
-                                <SectionHeading icon={Command} title="System" desc="Shortcuts and profile visibility" />
-                                <div className="space-y-4">
-                                    <ShortcutsSection />
-                                    <div className="pt-4 border-t border-border mt-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => settings.updateSetting("leaderboardPublic", !settings.leaderboardPublic)}
-                                            className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors group text-left"
-                                        >
-                                            <div>
-                                                <div className="text-sm font-medium text-foreground">Public Profile</div>
-                                                <div className="text-xs text-muted-foreground">Manage leaderboard visibility</div>
-                                            </div>
-                                            <div className={`w-10 h-6 rounded-full transition-colors flex items-center ${settings.leaderboardPublic ? "bg-primary" : "bg-muted border border-border"}`}>
-                                                <div className={`h-4 w-4 rounded-full bg-primary-foreground transition-transform ${settings.leaderboardPublic ? "translate-x-5" : "translate-x-1"}`} />
-                                            </div>
-                                        </button>
-                                    </div>
+                                <div className="mt-8 pt-5 border-t border-border text-center">
+                                    <button
+                                        onClick={async () => {
+                                            const confirmed = await showConfirm({
+                                                title: "Reset Settings",
+                                                description: "Reset all settings to defaults? Cannot be undone.",
+                                                confirmText: "Reset",
+                                                cancelText: "Cancel"
+                                            });
+                                            if (confirmed) {
+                                                settings.resetSettings();
+                                                showToast("Settings reset", "success");
+                                            }
+                                        }}
+                                        className="text-xs text-muted-foreground hover:text-destructive transition-colors">
+                                        Reset all settings to default
+                                    </button>
                                 </div>
-                            </section>
-                        </div>
+                            </SettingsCard>
+                        )}
 
-                        {/* RIGHT COLUMN */}
-                        <div className="space-y-6">
-
-                            {/* Clock & Timer Preferences */}
-                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
-                                <SectionHeading icon={Clock} title="Clock & Timer" desc="Customize time displays and timer preferences" />
-                                <div className="space-y-2">
-                                    <ToggleRow
-                                        label="Show Seconds"
-                                        desc="Display seconds in all clocks"
-                                        value={settings.showSeconds}
-                                        onChange={(v) => settings.updateSetting("showSeconds", v)}
-                                    />
-                                    <ToggleRow
-                                        label="Zen Mode Seconds"
-                                        desc="Show seconds while in Zen Mode"
-                                        value={settings.showZenSeconds}
-                                        onChange={(v) => settings.updateSetting("showZenSeconds", v)}
-                                    />
-                                    <ToggleRow
-                                        label="Show Zen Mode Clock"
-                                        desc="Display a small clock in Zen Mode"
-                                        value={settings.showZenClock}
-                                        onChange={(v) => settings.updateSetting("showZenClock", v)}
-                                    />
-                                    <ToggleRow
-                                        label="24-Hour Clock"
-                                        desc="Use military time format"
-                                        value={settings.clockFormat === "24h"}
-                                        onChange={(v) => settings.updateSetting("clockFormat", v ? "24h" : "12h")}
-                                    />
-                                    <ToggleRow
-                                        label="Large Dashboard Clock"
-                                        desc="Show big digital clock on home"
-                                        value={settings.showClock}
-                                        onChange={(v) => settings.updateSetting("showClock", v)}
-                                    />
-                                    <ToggleRow
-                                        label="Daily Quotes"
-                                        desc="Show motivation in timer"
-                                        value={settings.showQuotes}
-                                        onChange={(v) => settings.updateSetting("showQuotes", v)}
-                                    />
-
-                                    <div className="pt-4 border-t border-border mt-4">
-                                        <label className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 block">Zen Controls Alignment</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {[
-                                                { id: "top-left", label: "Top Left" },
-                                                { id: "top-right", label: "Top Right" },
-                                                { id: "bottom-left", label: "Bottom Left" },
-                                                { id: "bottom-right", label: "Bottom Right" },
-                                            ].map((pos) => (
-                                                <button
-                                                    key={pos.id}
-                                                    // @ts-ignore
-                                                    onClick={() => settings.updateSetting("zenControlsAlignment", pos.id)}
-                                                    className={`px-3 py-2 text-xs rounded-xl border transition-all ${settings.zenControlsAlignment === pos.id
-                                                        ? "bg-primary/20 border-primary/50 text-foreground"
-                                                        : "border-transparent bg-muted/50 hover:bg-muted text-muted-foreground"
-                                                        }`}
-                                                >
-                                                    {pos.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Notifications Section */}
-                            <NotificationSettings />
-
-                            {/* Visual Effects */}
-                            <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
-                                <SectionHeading icon={PartyPopper} title="Visual Effects" desc="Configure animations and visual effects" />
-                                <div className="space-y-2">
-                                    <ToggleRow
-                                        label="Confetti Celebration"
-                                        desc="Explosions on task completion"
-                                        value={settings.confettiEnabled}
-                                        onChange={(v) => settings.updateSetting("confettiEnabled", v)}
-                                    />
-                                    <ToggleRow
-                                        label="Glassmorphism"
-                                        desc="Enable blur effects on floating surfaces"
-                                        value={settings.enableGlassmorphism}
-                                        onChange={(v) => settings.updateSetting("enableGlassmorphism", v)}
-                                    />
-                                    <ToggleRow
-                                        label="Reduced Motion"
-                                        desc="Minimize UI animations"
-                                        value={settings.reducedMotion}
-                                        onChange={(v) => settings.updateSetting("reducedMotion", v)}
-                                    />
-                                </div>
-                            </section>
-                        </div>
                     </div>
-
-                    {/* Data & Privacy (Full Width Footer) */}
-                    <div className="gradient-border card-premium rounded-2xl p-6 mb-6 bg-card border border-border">
-                        <SectionHeading icon={Download} title="Data & Privacy" desc="Manage your personal data and account" />
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                            <div>
-                                <p className="text-sm text-muted-foreground max-w-md">
-                                    Manage your personal data. All data is stored securely in the cloud.
-                                </p>
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                                <button
-                                    onClick={handleDownloadData}
-                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border border-border bg-card hover:bg-muted transition-all active:scale-95"
-                                >
-                                    <Download size={14} /> Export JSON
-                                </button>
-                                <button
-                                    onClick={handleSignOut}
-                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-card border border-border hover:bg-muted transition-all active:scale-95 shadow-sm"
-                                >
-                                    <LogOut size={14} /> Sign Out
-                                </button>
-                                <button
-                                    onClick={() => setShowDeleteModal(true)}
-                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-all active:scale-95"
-                                >
-                                    <AlertCircle size={14} /> Delete Account
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 pt-6 border-t border-border flex justify-center">
-                            <button
-                                onClick={async () => {
-                                    const confirmed = await showConfirm({
-                                        title: "Reset Settings",
-                                        description: "Are you sure you want to reset all settings to default? This cannot be undone.",
-                                        confirmText: "Reset",
-                                        cancelText: "Cancel"
-                                    });
-                                    if (confirmed) {
-                                        settings.resetSettings();
-                                        showToast("Settings reset to defaults", "success");
-                                    }
-                                }}
-                                className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                            >
-                                Reset all settings to default
-                            </button>
-                        </div>
-                    </div>
-
                 </div>
             </main>
 
             {settings.showFooter && <Footer />}
+            {showPasswordModal && <PasswordChangeModal onClose={() => setShowPasswordModal(false)} />}
+            {showDeleteModal && <AccountDeletionModal onClose={() => setShowDeleteModal(false)} />}
+        </div>
+    );
+}
 
-            {/* Password Change Modal */}
-            {showPasswordModal && (
-                <PasswordChangeModal onClose={() => setShowPasswordModal(false)} />
-            )}
+function SettingsCard({
+    icon: Icon, title, desc, children
+}: {
+    icon: React.ElementType;
+    title: string;
+    desc: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="gradient-border card-premium rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-6 pb-5 border-b border-border">
+                <div className="p-2.5 rounded-xl bg-primary/10">
+                    <Icon size={17} className="text-primary" />
+                </div>
+                <div>
+                    <h2 className="text-base font-bold text-foreground">
+                        {title}
+                    </h2>
+                    <p className="text-xs text-muted-foreground">{desc}</p>
+                </div>
+            </div>
+            <div className="space-y-1">{children}</div>
+        </div>
+    );
+}
 
-            {/* Account Deletion Modal */}
-            {showDeleteModal && (
-                <AccountDeletionModal onClose={() => setShowDeleteModal(false)} />
-            )}
+function FormRow({
+    label, desc, children
+}: {
+    label: string;
+    desc?: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="flex items-center justify-between py-3 border-b border-border/60 last:border-0 gap-4">
+            <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">
+                    {label}
+                </p>
+                {desc && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                        {desc}
+                    </p>
+                )}
+            </div>
+            <div className="shrink-0">{children}</div>
+        </div>
+    );
+}
+
+function SectionLabel({
+    children, className = ""
+}: {
+    children: React.ReactNode;
+    className?: string;
+}) {
+    return (
+        <p className={`text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground ${className}`}>
+            {children}
+        </p>
+    );
+}
+
+function Toggle({
+    value, onChange
+}: { value: boolean; onChange: (v: boolean) => void }) {
+    return (
+        <button
+            type="button"
+            role="switch"
+            aria-checked={value}
+            onClick={() => onChange(!value)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                value ? "bg-primary" : "bg-muted border border-border"
+            }`}>
+            <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${
+                value ? "translate-x-6" : "translate-x-1"
+            }`} />
+        </button>
+    );
+}
+
+function SegmentedControl({
+    options, value, onChange
+}: {
+    options: { value: string; label: string }[];
+    value: string;
+    onChange: (v: string) => void;
+}) {
+    return (
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50 border border-border">
+            {options.map(opt => (
+                <button
+                    key={opt.value}
+                    onClick={() => onChange(opt.value)}
+                    className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all duration-150 ${
+                        value === opt.value
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                    {opt.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+function GridPicker({
+    options, value, onChange, cols = 3
+}: {
+    options: { value: string; label: string }[];
+    value: string;
+    onChange: (v: string) => void;
+    cols?: number;
+}) {
+    return (
+        <div className={`grid gap-1.5`}
+             style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+            {options.map(opt => (
+                <button
+                    key={opt.value}
+                    onClick={() => onChange(opt.value)}
+                    className={`px-2 py-2 text-xs rounded-xl border transition-all font-medium ${
+                        value === opt.value
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border text-muted-foreground hover:bg-muted"
+                    }`}
+                >
+                    {opt.label}
+                </button>
+            ))}
         </div>
     );
 }
 
 function PasswordChangeModal({ onClose }: { onClose: () => void }) {
-    const [newPassword, setNewPassword] = React.useState("");
-    const [confirmPassword, setConfirmPassword] = React.useState("");
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState("");
-    const [success, setSuccess] = React.useState(false);
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -850,12 +851,12 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
 }
 
 function AccountDeletionModal({ onClose }: { onClose: () => void }) {
-    const [confirmText, setConfirmText] = React.useState("");
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState("");
-    const [isReauthenticating, setIsReauthenticating] = React.useState(false);
-    const [reauthPassword, setReauthPassword] = React.useState("");
-    const [authProvider, setAuthProvider] = React.useState<string | null>(null);
+    const [confirmText, setConfirmText] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [isReauthenticating, setIsReauthenticating] = useState(false);
+    const [reauthPassword, setReauthPassword] = useState("");
+    const [authProvider, setAuthProvider] = useState<string | null>(null);
     const router = useRouter();
 
     React.useEffect(() => {
@@ -876,7 +877,7 @@ function AccountDeletionModal({ onClose }: { onClose: () => void }) {
         const sessionsRef = collection(db, "users", uid, "focusSessions");
         const sessionsSnap = await getDocs(sessionsRef);
         const batch1 = writeBatch(db);
-        sessionsSnap.docs.forEach(doc => batch1.delete(doc.ref));
+        sessionsSnap.docs.forEach(d => batch1.delete(d.ref));
         await batch1.commit();
 
         // 2. Delete Habits and History
@@ -1012,10 +1013,11 @@ function AccountDeletionModal({ onClose }: { onClose: () => void }) {
                             <button
                                 type="submit"
                                 disabled={confirmText !== "DELETE" || loading}
-                                className={`flex-1 py-3 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all ${confirmText === "DELETE"
-                                    ? "bg-destructive text-destructive-foreground hover:scale-[1.01] active:scale-[0.98] shadow-red-500/20"
-                                    : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                                    }`}
+                                className={`flex-1 py-3 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all ${
+                                    confirmText === "DELETE"
+                                        ? "bg-destructive text-destructive-foreground hover:scale-[1.01] active:scale-[0.98] shadow-red-500/20"
+                                        : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                                }`}
                             >
                                 {loading && <Loader2 size={18} className="animate-spin" />}
                                 Delete Forever
@@ -1082,38 +1084,6 @@ function AccountDeletionModal({ onClose }: { onClose: () => void }) {
     );
 }
 
-function SectionHeading({ icon: Icon, title, desc, color }: { icon: any, title: string, desc?: string, color?: string }) {
-    return (
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-            <div className={`p-2 rounded-xl ${color || "bg-primary/10 text-primary"}`}>
-                <Icon size={18} />
-            </div>
-            <div>
-                <h2 className="text-base font-semibold text-foreground">{title}</h2>
-                {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
-            </div>
-        </div>
-    );
-}
-
-function ToggleRow({ label, desc, value, onChange }: { label: string, desc: string, value: boolean, onChange: (v: boolean) => void }) {
-    return (
-        <div className="flex items-center justify-between py-3 border-b border-border last:border-0 group">
-            <div className="pr-4">
-                <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</div>
-                <div className="text-xs text-muted-foreground">{desc}</div>
-            </div>
-            <button
-                type="button"
-                onClick={() => onChange(!value)}
-                className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${value ? 'bg-primary' : 'bg-muted border border-border'}`}
-            >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-primary-foreground transition-transform ${value ? 'translate-x-5' : 'translate-x-1'}`} />
-            </button>
-        </div>
-    );
-}
-
 function ShortcutsSection() {
     const { openShortcutsModal } = useKeyboardShortcuts();
     return (
@@ -1122,10 +1092,10 @@ function ShortcutsSection() {
             className="flex items-center justify-between w-full p-4 rounded-xl border transition-all group bg-muted/20 border-border hover:bg-muted/50 hover:border-primary/30"
         >
             <div className="flex items-center gap-3">
-                <Keyboard size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                <Keyboard size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
                 <div className="text-left">
                     <span className="block text-sm font-medium text-foreground">Shortcuts & Gestures</span>
-                    <span className="block text-xs text-muted-foreground dark:text-neutral-400">View cheat sheet</span>
+                    <span className="block text-xs text-muted-foreground">View cheat sheet</span>
                 </div>
             </div>
             <Command size={14} className="opacity-30" />
@@ -1143,8 +1113,8 @@ function NotificationSettings() {
         sendNotification,
         fcmToken
     } = useNotifications();
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [testSent, setTestSent] = React.useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [testSent, setTestSent] = useState(false);
 
     const handleToggleNotifications = async (enabled: boolean) => {
         setIsLoading(true);
@@ -1154,7 +1124,6 @@ function NotificationSettings() {
                 if (granted) {
                     settings.updateSetting("notificationsEnabled", true);
                 } else {
-                    // Permission denied
                     settings.updateSetting("notificationsEnabled", false);
                 }
             } else {
@@ -1170,7 +1139,6 @@ function NotificationSettings() {
 
     const handleTestNotification = async () => {
         setTestSent(false);
-        // Use a unique tag to ensure it's not grouped or suppressed by the OS
         const uniqueTag = `test-${Date.now()}`;
 
         await sendNotification({
@@ -1226,73 +1194,65 @@ function NotificationSettings() {
         } else {
             return "✅ Desktop: Full support";
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only needs to run once — UA doesn't change mid-session
-
+    }, []);
 
     return (
-        <section className="gradient-border card-premium rounded-2xl p-6 mb-6">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                        <Bell size={18} />
-                    </div>
-                    <div>
-                        <h2 className="text-base font-semibold text-foreground">Push Notifications</h2>
-                        <p className="text-xs text-muted-foreground">Alerts for timer completion and goals</p>
-                    </div>
-                </div>
+        <SettingsCard icon={Bell} title="Notifications" desc="Push notifications and smart reminders">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+                <span className="text-xs font-medium text-muted-foreground">Status</span>
                 {getPermissionBadge()}
             </div>
 
             <div className="space-y-4">
-                {/* Main Toggle */}
-                <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20">
-                    <div>
-                        <div className="text-sm font-medium text-foreground">Enable Notifications</div>
-                        <div className="text-xs text-muted-foreground">Get alerts for timer completion</div>
-                    </div>
+                <FormRow label="Enable Notifications" desc="Get alerts for timer completion">
                     <button
                         type="button"
                         onClick={() => handleToggleNotifications(!settings.notificationsEnabled)}
                         disabled={isLoading}
-                        className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${settings.notificationsEnabled ? 'bg-primary' : 'bg-muted border border-border'
-                            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                            settings.notificationsEnabled ? "bg-primary" : "bg-muted border border-border"
+                        } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                         {isLoading ? (
                             <Loader2 size={14} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-primary-foreground" />
                         ) : (
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-primary-foreground transition-transform ${settings.notificationsEnabled ? 'translate-x-5' : 'translate-x-1'
-                                }`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                settings.notificationsEnabled ? "translate-x-6" : "translate-x-1"
+                            }`} />
                         )}
                     </button>
-                </div>
+                </FormRow>
 
-                {/* Granular Toggles */}
                 {isEnabled && (
-                    <div className="pt-4 border-t border-border/50 space-y-3">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground opacity-60 mb-2">Notification Types</div>
+                    <div className="pt-2 border-t border-border/50 space-y-1">
+                        <SectionLabel className="mb-2">Notification Types</SectionLabel>
 
-                        <ToggleRow
+                        <FormRow
                             label="Achievements"
-                            desc="Trophies for focused time"
-                            value={settings.notifyAchievements}
-                            onChange={(v) => settings.updateSetting("notifyAchievements", v)}
-                        />
+                            desc="Trophies for focused time">
+                            <Toggle
+                                value={settings.notifyAchievements}
+                                onChange={(v) => settings.updateSetting("notifyAchievements", v)}
+                            />
+                        </FormRow>
 
-                        <ToggleRow
+                        <FormRow
                             label="Streak Milestones"
-                            desc="Celebrate consistency goals"
-                            value={settings.notifyStreaks}
-                            onChange={(v) => settings.updateSetting("notifyStreaks", v)}
-                        />
+                            desc="Celebrate consistency goals">
+                            <Toggle
+                                value={settings.notifyStreaks}
+                                onChange={(v) => settings.updateSetting("notifyStreaks", v)}
+                            />
+                        </FormRow>
 
-                        <ToggleRow
+                        <FormRow
                             label="Daily Reminders"
-                            desc="Morning nudges and tips"
-                            value={settings.notifyReminders}
-                            onChange={(v) => settings.updateSetting("notifyReminders", v)}
-                        />
+                            desc="Morning nudges and tips">
+                            <Toggle
+                                value={settings.notifyReminders}
+                                onChange={(v) => settings.updateSetting("notifyReminders", v)}
+                            />
+                        </FormRow>
 
                         {settings.notifyReminders && (
                             <div className="flex items-center justify-between py-2 pl-4 border-l-2 border-primary/20 ml-2">
@@ -1308,13 +1268,11 @@ function NotificationSettings() {
                     </div>
                 )}
 
-                {/* Device Capability */}
                 <div className="p-3 rounded-xl bg-muted/10 border border-border/50">
                     <div className="text-xs font-medium text-muted-foreground mb-1">Device Capability</div>
                     <div className="text-sm">{deviceCapability}</div>
                 </div>
 
-                {/* Test Notification Button */}
                 {isEnabled && (
                     <button
                         onClick={handleTestNotification}
@@ -1334,7 +1292,6 @@ function NotificationSettings() {
                     </button>
                 )}
 
-                {/* FCM Token Status (for debugging) */}
                 {fcmToken && (
                     <div className="p-3 rounded-xl bg-muted/10 border border-border/50">
                         <div className="text-xs font-medium text-muted-foreground mb-1">FCM Token Status</div>
@@ -1347,7 +1304,6 @@ function NotificationSettings() {
                     </div>
                 )}
 
-                {/* Permission Denied Help */}
                 {permissionStatus === "denied" && (
                     <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
                         <div className="text-xs text-red-500">
@@ -1356,7 +1312,7 @@ function NotificationSettings() {
                     </div>
                 )}
             </div>
-        </section>
+        </SettingsCard>
     );
 }
 
@@ -1366,5 +1322,5 @@ function PlayCircle({ size }: { size: number }) {
             <circle cx="12" cy="12" r="10" />
             <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" opacity="0.5" />
         </svg>
-    )
+    );
 }

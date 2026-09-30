@@ -49,12 +49,14 @@ export const AURORA_WALLPAPER: WallpaperState = {
     src: "dynamic://aurora",
     timerFilters: {
         blur: 0, brightness: 1, contrast: 1,
-        grayscale: 0, hueRotate: 0, invert: 0, saturation: 1, sepia: 0
+        grayscale: 0, hueRotate: 0, invert: 0,
+        saturation: 1, sepia: 0
     },
     timerCrop: { x: 0, y: 0, scale: 1, rotate: 0 },
     zenFilters: {
-        blur: 0, brightness: 0.85, contrast: 1,
-        grayscale: 0, hueRotate: 0, invert: 0, saturation: 1, sepia: 0
+        blur: 0, brightness: 0.8, contrast: 1,
+        grayscale: 0, hueRotate: 0, invert: 0,
+        saturation: 1, sepia: 0
     },
     zenCrop: { x: 0, y: 0, scale: 1, rotate: 0 },
 };

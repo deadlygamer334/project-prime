@@ -87,85 +87,81 @@ export function WallpaperGallery() {
 
     return (
         <div className="flex flex-col w-full h-full">
-            {/* ── Live Backgrounds ─────────────────────────────── */}
-            <div className="mb-6 shrink-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            {/* ── Live Backgrounds ─────────────────── */}
+            <div className="mb-5 shrink-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em]
+                              text-muted-foreground mb-3">
                     Live Backgrounds
                 </p>
                 <div className="flex gap-3">
-                    {/* Northern Lights Card */}
+
+                    {/* Northern Lights card */}
                     <button
-                        onClick={() => {
-                            if (currentWallpaper?.type === "dynamic-aurora") {
-                                setWallpaper(null); // Toggle off if already active
-                            } else {
-                                setWallpaper(AURORA_WALLPAPER);
-                            }
-                        }}
-                        className={`relative w-48 aspect-video rounded-2xl overflow-hidden border-2 transition-all duration-300 group shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50 hover:scale-[1.02] ${
+                        type="button"
+                        onClick={() =>
                             currentWallpaper?.type === "dynamic-aurora"
-                                ? "border-primary shadow-[0_0_20px_rgba(167,139,250,0.3)]"
-                                : "border-border hover:border-primary/40"
-                        }`}
+                                ? setWallpaper(null)
+                                : setWallpaper(AURORA_WALLPAPER)
+                        }
+                        className={`
+                            relative w-44 shrink-0 overflow-hidden rounded-2xl
+                            border-2 transition-all duration-250
+                            hover:scale-[1.03] active:scale-[0.98]
+                            focus:outline-none focus:ring-2 focus:ring-primary/50
+                            ${currentWallpaper?.type === "dynamic-aurora"
+                                ? "border-primary shadow-[0_0_18px_rgba(167,139,250,0.30)]"
+                                : "border-border hover:border-primary/40"}
+                        `}
+                        style={{ aspectRatio: "16/9" }}
                         title="Northern Lights — Live Background"
                     >
-                        {/* Live canvas preview (small, same renderer) */}
+                        {/* Live canvas preview */}
                         <div className="absolute inset-0">
-                            <AuroraWallpaperRenderer
-                                borderRadius="0"
-                                dimness={1}
-                            />
+                            <AuroraWallpaperRenderer borderRadius="0.875rem" />
                         </div>
-                        
-                        {/* Label overlay */}
-                        <div className="absolute inset-0 flex flex-col items-start justify-end p-3 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-                            <p className="text-white text-[11px] font-black tracking-wide leading-none">
+
+                        {/* Bottom label */}
+                        <div className="absolute inset-x-0 bottom-0 p-2.5
+                                        bg-gradient-to-t from-black/75
+                                        via-black/25 to-transparent">
+                            <p className="text-white text-[11px] font-black
+                                          tracking-wide leading-none">
                                 Northern Lights
                             </p>
-                            <p className="text-white/60 text-[9px] mt-0.5 font-medium">
+                            <p className="text-white/55 text-[9px] mt-0.5
+                                          font-medium">
                                 Live · Theme-aware
                             </p>
                         </div>
-                        
-                        {/* Active checkmark & Adjust */}
+
+                        {/* Active checkmark */}
                         {currentWallpaper?.type === "dynamic-aurora" && (
-                            <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
-                                <div
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsEditing(true);
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                            setIsEditing(true);
-                                        }
-                                    }}
-                                    className="bg-black/60 hover:bg-black/80 text-white px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors shadow-sm flex items-center gap-1 cursor-pointer pointer-events-auto border border-white/20"
-                                    title="Adjust Northern Lights Filters"
-                                >
-                                    <Settings2 className="w-3 h-3" /> Adjust
-                                </div>
-                                <div className="bg-primary text-primary-foreground p-1 rounded-full shadow-lg">
-                                    <Check className="w-3 h-3" />
-                                </div>
+                            <div className="absolute top-2 right-2 bg-primary
+                                            text-primary-foreground p-1
+                                            rounded-full shadow-lg">
+                                <Check className="w-3 h-3" />
                             </div>
                         )}
                     </button>
-                    
-                    {/* Placeholder for future live backgrounds */}
-                    <div className="w-48 aspect-video rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 shrink-0 opacity-40">
-                        <div className="text-lg">✦</div>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+
+                    {/* "More soon" placeholder */}
+                    <div
+                        className="shrink-0 rounded-2xl border-2 border-dashed
+                                   border-border flex flex-col items-center
+                                   justify-center gap-1.5 opacity-35
+                                   pointer-events-none"
+                        style={{ width: "7rem", aspectRatio: "16/9" }}
+                    >
+                        <span className="text-base text-foreground">✦</span>
+                        <p className="text-[8px] font-black text-muted-foreground
+                                      uppercase tracking-widest">
                             More soon
                         </p>
                     </div>
+
                 </div>
             </div>
-            {/* ── / Live Backgrounds ───────────────────────────── */}
+            {/* ── / Live Backgrounds ─────────────────── */}
 
             {/* Toolbar */}
             <div className="flex flex-wrap items-center gap-4 mb-6">
