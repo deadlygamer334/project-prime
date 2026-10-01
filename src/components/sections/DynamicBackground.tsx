@@ -1,16 +1,38 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useSettings } from "@/lib/SettingsContext";
 import { useTheme } from "@/lib/ThemeContext";
+import { useWallpaperState, isLiveWallpaper } from "@/lib/WallpaperContext";
 
 export default function DynamicBackground() {
     const settings = useSettings();
     const { theme } = useTheme();
     const isDark = theme === "dark";
+    const { wallpaper } = useWallpaperState();
+    const hasLiveCanvas = isLiveWallpaper(wallpaper);
+
+    // Root Cause 7: Suppress CSS animations when a canvas live wallpaper is active.
+    // There's no point animating the global background AND a full-panel canvas wallpaper
+    // simultaneously. Pause orb animations via a body class and restore on unmount/change.
+    useEffect(() => {
+        if (hasLiveCanvas) {
+            document.body.classList.add("live-wallpaper-active");
+        } else {
+            document.body.classList.remove("live-wallpaper-active");
+        }
+        return () => {
+            document.body.classList.remove("live-wallpaper-active");
+        };
+    }, [hasLiveCanvas]);
 
     // Return simpler background if reduced motion is on
     if (settings.reducedMotion) {
+        return null;
+    }
+
+    // When a live canvas wallpaper is active, skip rendering the CSS orbs entirely
+    if (hasLiveCanvas && settings.backgroundStyle === "aurora") {
         return null;
     }
 

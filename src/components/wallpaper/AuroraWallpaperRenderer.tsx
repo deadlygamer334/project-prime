@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useId } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
+import { registerCallback, unregisterCallback } from "./canvasScheduler";
+import type { RenderContext } from "./LiveWallpaperRenderer";
 
 export interface AuroraWallpaperRendererProps {
     palette?: [string, string, string];
@@ -13,6 +15,9 @@ export interface AuroraWallpaperRendererProps {
     reducedMotion?: boolean;
     /** Backward compatibility */
     paletteKey?: string;
+    dprCap?: number;
+    maxFps?: number;
+    context?: RenderContext;
 }
 
 // 5 aurora curtain bands — each has independent motion parameters
@@ -25,33 +30,70 @@ const BANDS = [
     [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
 ];
 
+interface CachedStar {
+    x: number; // normalised 0–1
+    y: number; // normalised 0–0.45
+    radius: number; // base radius multiplier
+    twinkleSpeed: number;
+    twinklePhase: number;
+}
+
 export function AuroraWallpaperRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
+    dprCap = 2,
+    maxFps = 30,
+    context = "panel",
 }: AuroraWallpaperRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const rafRef = useRef<number>(0);
     const tRef = useRef<number>(0);
-    const lastRef = useRef<number>(0);
+    const lastFrameRef = useRef<number>(0);
     const dprRef = useRef<number>(1);
     const isDark = theme === "dark";
-    const FPS = 30;
-    const INTERVAL = 1000 / FPS;
 
     const palette = passedPalette ?? getColorThemePalette("Violet");
     const paletteRef = useRef(palette);
     const isDarkRef = useRef(isDark);
 
+    // Pre-computed star positions (Root Cause 4)
+    const starsRef = useRef<CachedStar[]>([]);
+    const starsCountRef = useRef<number>(0);
+    const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const isVisibleRef = useRef(true);
+    const schedulerId = useId();
+
     useEffect(() => {
         paletteRef.current = palette;
         isDarkRef.current = isDark;
     }, [palette, isDark]);
+
+    // Rebuild star cache when canvas size changes
+    const rebuildStars = useCallback((W: number, H: number, dpr: number) => {
+        let seed = W * 31337 + H * 1337;
+        const rand = () => {
+            seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
+            return seed / 0xFFFFFFFF;
+        };
+        const count = Math.floor((W * H) / 5500);
+        const stars: CachedStar[] = new Array(count);
+        for (let i = 0; i < count; i++) {
+            stars[i] = {
+                x: rand(),
+                y: rand() * 0.45,
+                radius: (rand() * 0.9 + 0.2) * dpr,
+                twinkleSpeed: 0.6 + rand(),
+                twinklePhase: rand() * 6.28,
+            };
+        }
+        starsRef.current = stars;
+        starsCountRef.current = count;
+    }, []);
 
     const draw = useCallback((canvas: HTMLCanvasElement, t: number) => {
         const ctx = canvas.getContext("2d");
@@ -64,13 +106,17 @@ export function AuroraWallpaperRenderer({
 
         ctx.clearRect(0, 0, W, H);
 
-        // Paint a base background
+        // Paint a base background using offscreen 1×1 canvas
         ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
-        ctx.fillRect(0, 0, W, H);
+        if (bgCanvasRef.current) {
+            ctx.drawImage(bgCanvasRef.current, 0, 0, W, H);
+        } else {
+            ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
+            ctx.fillRect(0, 0, W, H);
+        }
 
         // Aurora bands:
-        // dark mode  → "screen" adds light glow
+        // dark mode  → "screen" adds light glow (kept — essential for aurora effect)
         // light mode → "source-over" layers soft pastels
         ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
 
@@ -102,23 +148,17 @@ export function AuroraWallpaperRenderer({
 
         ctx.globalCompositeOperation = "source-over";
 
-        // Stars — upper 45%, dark mode only, seeded deterministically
+        // Stars — upper 45%, dark mode only, read from pre-computed cache
         if (currentIsDark) {
-            let seed = W * 31337 + H * 1337;
-            const rand = () => {
-                seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
-                return seed / 0xFFFFFFFF;
-            };
-            const count = Math.floor((W * H) / 5500);
+            const stars = starsRef.current;
+            const count = starsCountRef.current;
             for (let i = 0; i < count; i++) {
-                const sx = rand() * W;
-                const sy = rand() * H * 0.45;
-                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
-                const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
+                const star = stars[i];
+                const tw = 0.5 + 0.5 * Math.sin(t * star.twinkleSpeed + star.twinklePhase);
                 ctx.globalAlpha = tw * 0.28;
                 ctx.fillStyle = toRgba(currentPalette[2], 0.9); // accent tinted stars
                 ctx.beginPath();
-                ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+                ctx.arc(star.x * W, star.y * H, star.radius, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.globalAlpha = 1;
@@ -142,7 +182,7 @@ export function AuroraWallpaperRenderer({
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
         dprRef.current = dpr;
 
         const resize = () => {
@@ -170,6 +210,20 @@ export function AuroraWallpaperRenderer({
             canvas.style.width = `${width}px`;
             canvas.style.height = `${height}px`;
 
+            // Rebuild star cache on resize
+            rebuildStars(canvas.width, canvas.height, dpr);
+
+            // Rebuild offscreen background canvas
+            const bg = document.createElement("canvas");
+            bg.width = 1;
+            bg.height = 1;
+            const bgCtx = bg.getContext("2d");
+            if (bgCtx) {
+                bgCtx.fillStyle = getCanvasBaseBackground(isDarkRef.current);
+                bgCtx.fillRect(0, 0, 1, 1);
+            }
+            bgCanvasRef.current = bg;
+
             if (reducedMotion) draw(canvas, 0);
         };
 
@@ -180,32 +234,62 @@ export function AuroraWallpaperRenderer({
         resize();
 
         if (reducedMotion) {
-            return () => {
-                if (rafRef.current) cancelAnimationFrame(rafRef.current);
-                ro.disconnect();
-            };
+            return () => { ro.disconnect(); };
         }
 
-        const animate = (ts: number) => {
-            const elapsed = ts - lastRef.current;
+        // Frame-rate limited callback for the shared scheduler
+        const INTERVAL = 1000 / maxFps;
+        const animateCallback = (ts: number) => {
+            if (!isVisibleRef.current) return;
+            const elapsed = ts - lastFrameRef.current;
             if (elapsed >= INTERVAL) {
                 tRef.current += elapsed / 1000;
-                lastRef.current = ts - (elapsed % INTERVAL);
+                lastFrameRef.current = ts - (elapsed % INTERVAL);
                 draw(canvas, tRef.current);
             }
-            rafRef.current = requestAnimationFrame(animate);
         };
 
-        rafRef.current = requestAnimationFrame(animate);
+        registerCallback(schedulerId, animateCallback);
+
         return () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            unregisterCallback(schedulerId);
             ro.disconnect();
         };
-    }, [draw, reducedMotion, INTERVAL]);
+    }, [draw, reducedMotion, dprCap, maxFps, schedulerId, rebuildStars]);
+
+    // IntersectionObserver pause for gallery previews (Root Cause 6)
+    useEffect(() => {
+        if (context !== "gallery-preview" || reducedMotion) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    isVisibleRef.current = true;
+                } else {
+                    isVisibleRef.current = false;
+                }
+            },
+            { threshold: 0 }
+        );
+        observer.observe(canvas);
+        return () => observer.disconnect();
+    }, [context, reducedMotion]);
 
     // Redraw static frame on palette/theme change when in reduced motion
     useEffect(() => {
         if (reducedMotion && canvasRef.current) {
+            // Refresh offscreen bg for theme change
+            const bg = document.createElement("canvas");
+            bg.width = 1;
+            bg.height = 1;
+            const bgCtx = bg.getContext("2d");
+            if (bgCtx) {
+                bgCtx.fillStyle = getCanvasBaseBackground(isDark);
+                bgCtx.fillRect(0, 0, 1, 1);
+            }
+            bgCanvasRef.current = bg;
             draw(canvasRef.current, tRef.current);
         }
     }, [palette, isDark, reducedMotion, draw]);

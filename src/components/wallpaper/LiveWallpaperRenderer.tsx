@@ -11,6 +11,8 @@ import { StarWarpRenderer } from "./StarWarpRenderer";
 import { MeshWaveRenderer } from "./MeshWaveRenderer";
 import { LightRainRenderer } from "./LightRainRenderer";
 
+export type RenderContext = "gallery-preview" | "panel" | "zen";
+
 export interface LiveWallpaperRendererProps {
     pattern?: string;
     colorTheme?: string;
@@ -18,6 +20,30 @@ export interface LiveWallpaperRendererProps {
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
+    /** Rendering context — controls DPR cap and default FPS limit */
+    context?: RenderContext;
+    /** Override maximum frames-per-second (otherwise derived from context) */
+    maxFps?: number;
+}
+
+/** DPR caps by rendering context */
+function getDprCap(context: RenderContext): number {
+    switch (context) {
+        case "gallery-preview": return 1;
+        case "panel": return 1.5;
+        case "zen": return 1;
+        default: return 1.5;
+    }
+}
+
+/** Default FPS limits by rendering context */
+function getDefaultMaxFps(context: RenderContext): number {
+    switch (context) {
+        case "gallery-preview": return 15;
+        case "panel": return 20;
+        case "zen": return 24;
+        default: return 20;
+    }
 }
 
 export function LiveWallpaperRenderer({
@@ -27,85 +53,51 @@ export function LiveWallpaperRenderer({
     filters,
     borderRadius = "0",
     reducedMotion,
+    context = "panel",
+    maxFps: propMaxFps,
 }: LiveWallpaperRendererProps) {
     const palette = useMemo(() => {
         return propPalette ?? getColorThemePalette(colorTheme);
     }, [propPalette, colorTheme]);
 
+    const dprCap = getDprCap(context);
+    const maxFps = propMaxFps ?? getDefaultMaxFps(context);
+
     const normPattern = (pattern || "aurora-curtains").toLowerCase().replace(/^live-/, "");
+
+    const commonProps = {
+        palette,
+        filters,
+        borderRadius,
+        reducedMotion,
+        dprCap,
+        maxFps,
+        context,
+    } as const;
 
     switch (normPattern) {
         case "rings":
         case "pulse-rings":
-            return (
-                <PulseRingsRenderer
-                    palette={palette}
-                    filters={filters}
-                    borderRadius={borderRadius}
-                    reducedMotion={reducedMotion}
-                />
-            );
+            return <PulseRingsRenderer {...commonProps} />;
         case "nebula":
         case "nebula-drift":
-            return (
-                <NebulaDriftRenderer
-                    palette={palette}
-                    filters={filters}
-                    borderRadius={borderRadius}
-                    reducedMotion={reducedMotion}
-                />
-            );
+            return <NebulaDriftRenderer {...commonProps} />;
         case "lava":
         case "lava-flow":
-            return (
-                <LavaFlowRenderer
-                    palette={palette}
-                    filters={filters}
-                    borderRadius={borderRadius}
-                    reducedMotion={reducedMotion}
-                />
-            );
+            return <LavaFlowRenderer {...commonProps} />;
         case "warp":
         case "star-warp":
-            return (
-                <StarWarpRenderer
-                    palette={palette}
-                    filters={filters}
-                    borderRadius={borderRadius}
-                    reducedMotion={reducedMotion}
-                />
-            );
+            return <StarWarpRenderer {...commonProps} />;
         case "mesh":
         case "mesh-wave":
-            return (
-                <MeshWaveRenderer
-                    palette={palette}
-                    filters={filters}
-                    borderRadius={borderRadius}
-                    reducedMotion={reducedMotion}
-                />
-            );
+            return <MeshWaveRenderer {...commonProps} />;
         case "rain":
         case "light-rain":
-            return (
-                <LightRainRenderer
-                    palette={palette}
-                    filters={filters}
-                    borderRadius={borderRadius}
-                    reducedMotion={reducedMotion}
-                />
-            );
+            return <LightRainRenderer {...commonProps} />;
         case "aurora":
         case "aurora-curtains":
         default:
-            return (
-                <AuroraWallpaperRenderer
-                    palette={palette}
-                    filters={filters}
-                    borderRadius={borderRadius}
-                    reducedMotion={reducedMotion}
-                />
-            );
+            return <AuroraWallpaperRenderer {...commonProps} />;
     }
 }
 

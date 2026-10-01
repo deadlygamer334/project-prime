@@ -61,6 +61,7 @@ export default function PomodoroPanel() {
           colorTheme={wallpaper?.colorTheme || "Violet"}
           filters={wallpaper?.timerFilters}
           borderRadius="1.5rem"
+          context="panel"
         />
       )}
 

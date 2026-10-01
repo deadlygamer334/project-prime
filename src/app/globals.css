@@ -861,3 +861,12 @@ body.zen-mode,
   animation: panel-flash 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   z-index: 20;
 }
+
+/* Root Cause 7: Pause CSS background animations when a live canvas wallpaper is active */
+body.live-wallpaper-active .animate-\[float_18s_ease-in-out_infinite\],
+body.live-wallpaper-active .animate-\[float_22s_ease-in-out_infinite_-7s\],
+body.live-wallpaper-active .animate-\[float_25s_ease-in-out_infinite_-12s\],
+body.live-wallpaper-active .animate-\[float_20s_ease-in-out_infinite_-4s\],
+body.live-wallpaper-active .animate-\[float_15s_ease-in-out_infinite_-9s\] {
+  animation-play-state: paused !important;
+}

@@ -165,6 +165,7 @@ export function WallpaperGallery() {
                                         pattern={p.id}
                                         colorTheme={effectiveColorTheme}
                                         borderRadius="0"
+                                        context="gallery-preview"
                                     />
                                 </div>
 

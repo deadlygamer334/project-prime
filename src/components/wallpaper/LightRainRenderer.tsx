@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useId } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
+import { registerCallback, unregisterCallback } from "./canvasScheduler";
+import type { RenderContext } from "./LiveWallpaperRenderer";
 
 export interface LightRainRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
+    dprCap?: number;
+    maxFps?: number;
+    context?: RenderContext;
 }
 
 interface ColumnConfig {
@@ -40,23 +45,26 @@ export function LightRainRenderer({
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
+    dprCap = 2,
+    maxFps = 30,
+    context = "panel",
 }: LightRainRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const rafRef = useRef<number>(0);
     const tRef = useRef<number>(0);
-    const lastRef = useRef<number>(0);
+    const lastFrameRef = useRef<number>(0);
     const dprRef = useRef<number>(1);
     const isDark = theme === "dark";
-    const FPS = 30;
-    const INTERVAL = 1000 / FPS;
 
     const palette = passedPalette ?? getColorThemePalette("Violet");
     const paletteRef = useRef(palette);
     const isDarkRef = useRef(isDark);
+    const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const isVisibleRef = useRef(true);
+    const schedulerId = useId();
 
     useEffect(() => {
         paletteRef.current = palette;
@@ -74,12 +82,16 @@ export function LightRainRenderer({
 
         ctx.clearRect(0, 0, W, H);
 
-        // Base fill
+        // Base fill using offscreen canvas
         ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
-        ctx.fillRect(0, 0, W, H);
+        if (bgCanvasRef.current) {
+            ctx.drawImage(bgCanvasRef.current, 0, 0, W, H);
+        } else {
+            ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        // Always source-over blending for soft overlapping curtain bands
+        // Always source-over blending for soft overlapping curtain bands (RC5: already source-over)
         ctx.globalCompositeOperation = "source-over";
 
         COLUMNS.forEach((col) => {
@@ -165,7 +177,7 @@ export function LightRainRenderer({
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
         dprRef.current = dpr;
 
         const resize = () => {
@@ -193,6 +205,17 @@ export function LightRainRenderer({
             canvas.style.width = `${width}px`;
             canvas.style.height = `${height}px`;
 
+            // Rebuild offscreen background canvas
+            const bg = document.createElement("canvas");
+            bg.width = 1;
+            bg.height = 1;
+            const bgCtx = bg.getContext("2d");
+            if (bgCtx) {
+                bgCtx.fillStyle = getCanvasBaseBackground(isDarkRef.current);
+                bgCtx.fillRect(0, 0, 1, 1);
+            }
+            bgCanvasRef.current = bg;
+
             if (reducedMotion) draw(canvas, 0);
         };
 
@@ -203,32 +226,54 @@ export function LightRainRenderer({
         resize();
 
         if (reducedMotion) {
-            return () => {
-                if (rafRef.current) cancelAnimationFrame(rafRef.current);
-                ro.disconnect();
-            };
+            return () => { ro.disconnect(); };
         }
 
-        const animate = (ts: number) => {
-            const elapsed = ts - lastRef.current;
+        const INTERVAL = 1000 / maxFps;
+        const animateCallback = (ts: number) => {
+            if (!isVisibleRef.current) return;
+            const elapsed = ts - lastFrameRef.current;
             if (elapsed >= INTERVAL) {
                 tRef.current += elapsed / 1000;
-                lastRef.current = ts - (elapsed % INTERVAL);
+                lastFrameRef.current = ts - (elapsed % INTERVAL);
                 draw(canvas, tRef.current);
             }
-            rafRef.current = requestAnimationFrame(animate);
         };
 
-        rafRef.current = requestAnimationFrame(animate);
+        registerCallback(schedulerId, animateCallback);
+
         return () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            unregisterCallback(schedulerId);
             ro.disconnect();
         };
-    }, [draw, reducedMotion, INTERVAL]);
+    }, [draw, reducedMotion, dprCap, maxFps, schedulerId]);
+
+    // IntersectionObserver pause for gallery previews
+    useEffect(() => {
+        if (context !== "gallery-preview" || reducedMotion) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+            { threshold: 0 }
+        );
+        observer.observe(canvas);
+        return () => observer.disconnect();
+    }, [context, reducedMotion]);
 
     // Redraw static frame on palette/theme change when in reduced motion
     useEffect(() => {
         if (reducedMotion && canvasRef.current) {
+            const bg = document.createElement("canvas");
+            bg.width = 1;
+            bg.height = 1;
+            const bgCtx = bg.getContext("2d");
+            if (bgCtx) {
+                bgCtx.fillStyle = getCanvasBaseBackground(isDark);
+                bgCtx.fillRect(0, 0, 1, 1);
+            }
+            bgCanvasRef.current = bg;
             draw(canvasRef.current, tRef.current);
         }
     }, [palette, isDark, reducedMotion, draw]);

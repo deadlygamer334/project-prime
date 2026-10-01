@@ -52,6 +52,7 @@ export function ZenWallpaperRenderer({ wallpaper, brightness = 1, timerState = "
                     colorTheme={wallpaper.colorTheme || "Violet"}
                     filters={wallpaper.zenFilters}
                     borderRadius="0"
+                    context="zen"
                 />
             </div>
         );

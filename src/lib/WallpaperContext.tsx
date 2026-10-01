@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { get, set } from "idb-keyval";
 
 export type WallpaperType = "image" | "video" | "dynamic-aurora" | "dynamic-canvas";
@@ -100,17 +100,29 @@ export const AURORA_SOLAR: WallpaperState = createLiveWallpaperState("aurora", "
 export const AURORA_ROSE: WallpaperState = createLiveWallpaperState("aurora", "Rose");
 export const AURORA_ARCTIC: WallpaperState = createLiveWallpaperState("aurora", "Arctic");
 
-interface WallpaperContextType {
+// ─── Split Context: State vs Actions ──────────────────────────────────────
+// Components that only call setters (buttons) subscribe to ActionsContext only.
+// Only components displaying current wallpaper subscribe to StateContext.
+// This prevents setter-only components from re-rendering on every state change.
+
+interface WallpaperStateContextType {
     wallpaper: WallpaperState | null;
+    isLoaded: boolean;
+}
+
+interface WallpaperActionsContextType {
     setWallpaper: (ws: Partial<WallpaperState> | null) => void;
     setLiveWallpaperPattern: (pattern: string) => void;
     setLiveWallpaperColorTheme: (colorTheme: string) => void;
     updateWallpaperFilters: (mode: "timer" | "zen", filters: Partial<WallpaperFilters>) => void;
     updateWallpaperCrop: (mode: "timer" | "zen", crop: Partial<WallpaperCrop>) => void;
-    isLoaded: boolean;
 }
 
-const WallpaperContext = createContext<WallpaperContextType | undefined>(undefined);
+// Legacy combined type for backward compat with useWallpaper()
+interface WallpaperContextType extends WallpaperStateContextType, WallpaperActionsContextType {}
+
+const WallpaperStateContext = createContext<WallpaperStateContextType | undefined>(undefined);
+const WallpaperActionsContext = createContext<WallpaperActionsContextType | undefined>(undefined);
 
 const IDB_KEY = "prime_wallpaper_state_v6_live";
 
@@ -301,27 +313,61 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
         []
     );
 
+    // Stable actions object — never changes, so ActionsContext consumers never re-render
+    const actions = useMemo<WallpaperActionsContextType>(() => ({
+        setWallpaper,
+        setLiveWallpaperPattern,
+        setLiveWallpaperColorTheme,
+        updateWallpaperFilters,
+        updateWallpaperCrop,
+    }), [setWallpaper, setLiveWallpaperPattern, setLiveWallpaperColorTheme, updateWallpaperFilters, updateWallpaperCrop]);
+
+    const stateValue = useMemo<WallpaperStateContextType>(() => ({
+        wallpaper,
+        isLoaded,
+    }), [wallpaper, isLoaded]);
+
     return (
-        <WallpaperContext.Provider
-            value={{
-                wallpaper,
-                setWallpaper,
-                setLiveWallpaperPattern,
-                setLiveWallpaperColorTheme,
-                updateWallpaperFilters,
-                updateWallpaperCrop,
-                isLoaded,
-            }}
-        >
-            {children}
-        </WallpaperContext.Provider>
+        <WallpaperStateContext.Provider value={stateValue}>
+            <WallpaperActionsContext.Provider value={actions}>
+                {children}
+            </WallpaperActionsContext.Provider>
+        </WallpaperStateContext.Provider>
     );
 }
 
-export function useWallpaper() {
-    const context = useContext(WallpaperContext);
-    if (context === undefined) {
+/**
+ * Combined hook — backward compatible. Returns both state and actions.
+ * Use useWallpaperActions() if you only need setters (avoids re-renders on state changes).
+ */
+export function useWallpaper(): WallpaperContextType {
+    const state = useContext(WallpaperStateContext);
+    const actions = useContext(WallpaperActionsContext);
+    if (state === undefined || actions === undefined) {
         throw new Error("useWallpaper must be used within a WallpaperProvider");
     }
-    return context;
+    return { ...state, ...actions };
+}
+
+/**
+ * Actions-only hook — components that only call setters (buttons, controls)
+ * subscribe here to avoid re-rendering when wallpaper state changes.
+ */
+export function useWallpaperActions(): WallpaperActionsContextType {
+    const actions = useContext(WallpaperActionsContext);
+    if (actions === undefined) {
+        throw new Error("useWallpaperActions must be used within a WallpaperProvider");
+    }
+    return actions;
+}
+
+/**
+ * State-only hook — components that only read wallpaper state.
+ */
+export function useWallpaperState(): WallpaperStateContextType {
+    const state = useContext(WallpaperStateContext);
+    if (state === undefined) {
+        throw new Error("useWallpaperState must be used within a WallpaperProvider");
+    }
+    return state;
 }

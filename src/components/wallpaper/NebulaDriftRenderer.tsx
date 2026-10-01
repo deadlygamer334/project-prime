@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useId } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
+import { registerCallback, unregisterCallback } from "./canvasScheduler";
+import type { RenderContext } from "./LiveWallpaperRenderer";
 
 export interface NebulaDriftRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
+    dprCap?: number;
+    maxFps?: number;
+    context?: RenderContext;
 }
 
 interface BlobConfig {
@@ -37,33 +42,70 @@ const BLOBS: BlobConfig[] = [
     { baseX: 0.40, baseY: 0.40, driftSpeedX: 0.08, driftSpeedY: 0.05, ampX: 0.11, ampY: 0.13, phaseX: 2.2, phaseY: 3.8, rx: 0.38, ry: 0.32, rotSpeed: 0.05, colorIndex: 1, alphaScale: 0.40 },
 ];
 
+interface CachedStar {
+    x: number;
+    y: number;
+    radius: number;
+    twinkleSpeed: number;
+    twinklePhase: number;
+    colorIdx: number;
+}
+
 export function NebulaDriftRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
+    dprCap = 2,
+    maxFps = 30,
+    context = "panel",
 }: NebulaDriftRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const rafRef = useRef<number>(0);
     const tRef = useRef<number>(0);
-    const lastRef = useRef<number>(0);
+    const lastFrameRef = useRef<number>(0);
     const dprRef = useRef<number>(1);
     const isDark = theme === "dark";
-    const FPS = 30;
-    const INTERVAL = 1000 / FPS;
 
     const palette = passedPalette ?? getColorThemePalette("Violet");
     const paletteRef = useRef(palette);
     const isDarkRef = useRef(isDark);
+    const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const starsRef = useRef<CachedStar[]>([]);
+    const starsCountRef = useRef<number>(0);
+    const isVisibleRef = useRef(true);
+    const schedulerId = useId();
 
     useEffect(() => {
         paletteRef.current = palette;
         isDarkRef.current = isDark;
     }, [palette, isDark]);
+
+    // Pre-compute star positions (Root Cause 4)
+    const rebuildStars = useCallback((W: number, H: number, dpr: number) => {
+        let seed = W * 45123 + H * 17921;
+        const rand = () => {
+            seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
+            return seed / 0xFFFFFFFF;
+        };
+        const count = Math.floor((W * H) / 4800);
+        const stars: CachedStar[] = new Array(count);
+        for (let i = 0; i < count; i++) {
+            stars[i] = {
+                x: rand(),
+                y: rand(),
+                radius: (rand() * 1.1 + 0.3) * dpr,
+                twinkleSpeed: 0.8 + rand() * 0.5,
+                twinklePhase: rand() * 6.28,
+                colorIdx: i % 3,
+            };
+        }
+        starsRef.current = stars;
+        starsCountRef.current = count;
+    }, []);
 
     const draw = useCallback((canvas: HTMLCanvasElement, t: number) => {
         const ctx = canvas.getContext("2d");
@@ -76,10 +118,14 @@ export function NebulaDriftRenderer({
 
         ctx.clearRect(0, 0, W, H);
 
-        // Base fill
+        // Base fill using offscreen canvas
         ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
-        ctx.fillRect(0, 0, W, H);
+        if (bgCanvasRef.current) {
+            ctx.drawImage(bgCanvasRef.current, 0, 0, W, H);
+        } else {
+            ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
+            ctx.fillRect(0, 0, W, H);
+        }
 
         // Galaxy Core Blobs
         ctx.save();
@@ -90,6 +136,7 @@ export function NebulaDriftRenderer({
         ctx.rotate(t * 0.012);
         ctx.translate(-cx, -cy);
 
+        // Keep screen blending — essential for galaxy-core brightness effect (Root Cause 5)
         ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
 
         BLOBS.forEach((blob) => {
@@ -120,24 +167,18 @@ export function NebulaDriftRenderer({
 
         ctx.restore(); // restore global rotation
 
-        // Star Layer
+        // Star Layer — read from pre-computed cache
         ctx.globalCompositeOperation = "source-over";
         if (currentIsDark) {
-            let seed = W * 45123 + H * 17921;
-            const rand = () => {
-                seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
-                return seed / 0xFFFFFFFF;
-            };
-            const count = Math.floor((W * H) / 4800);
+            const stars = starsRef.current;
+            const count = starsCountRef.current;
             for (let i = 0; i < count; i++) {
-                const sx = rand() * W;
-                const sy = rand() * H;
-                const sr = (rand() * 1.1 + 0.3) * dprRef.current;
-                const tw = 0.4 + 0.6 * Math.sin(t * (0.8 + rand() * 0.5) + rand() * 6.28);
+                const star = stars[i];
+                const tw = 0.4 + 0.6 * Math.sin(t * star.twinkleSpeed + star.twinklePhase);
                 ctx.globalAlpha = tw * 0.32;
-                ctx.fillStyle = toRgba(currentPalette[i % 3], 0.95);
+                ctx.fillStyle = toRgba(currentPalette[star.colorIdx], 0.95);
                 ctx.beginPath();
-                ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+                ctx.arc(star.x * W, star.y * H, star.radius, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.globalAlpha = 1;
@@ -155,7 +196,7 @@ export function NebulaDriftRenderer({
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
         dprRef.current = dpr;
 
         const resize = () => {
@@ -183,6 +224,20 @@ export function NebulaDriftRenderer({
             canvas.style.width = `${width}px`;
             canvas.style.height = `${height}px`;
 
+            // Rebuild star cache on resize
+            rebuildStars(canvas.width, canvas.height, dpr);
+
+            // Rebuild offscreen background canvas
+            const bg = document.createElement("canvas");
+            bg.width = 1;
+            bg.height = 1;
+            const bgCtx = bg.getContext("2d");
+            if (bgCtx) {
+                bgCtx.fillStyle = getCanvasBaseBackground(isDarkRef.current);
+                bgCtx.fillRect(0, 0, 1, 1);
+            }
+            bgCanvasRef.current = bg;
+
             if (reducedMotion) draw(canvas, 0);
         };
 
@@ -193,32 +248,54 @@ export function NebulaDriftRenderer({
         resize();
 
         if (reducedMotion) {
-            return () => {
-                if (rafRef.current) cancelAnimationFrame(rafRef.current);
-                ro.disconnect();
-            };
+            return () => { ro.disconnect(); };
         }
 
-        const animate = (ts: number) => {
-            const elapsed = ts - lastRef.current;
+        const INTERVAL = 1000 / maxFps;
+        const animateCallback = (ts: number) => {
+            if (!isVisibleRef.current) return;
+            const elapsed = ts - lastFrameRef.current;
             if (elapsed >= INTERVAL) {
                 tRef.current += elapsed / 1000;
-                lastRef.current = ts - (elapsed % INTERVAL);
+                lastFrameRef.current = ts - (elapsed % INTERVAL);
                 draw(canvas, tRef.current);
             }
-            rafRef.current = requestAnimationFrame(animate);
         };
 
-        rafRef.current = requestAnimationFrame(animate);
+        registerCallback(schedulerId, animateCallback);
+
         return () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            unregisterCallback(schedulerId);
             ro.disconnect();
         };
-    }, [draw, reducedMotion, INTERVAL]);
+    }, [draw, reducedMotion, dprCap, maxFps, schedulerId, rebuildStars]);
+
+    // IntersectionObserver pause for gallery previews
+    useEffect(() => {
+        if (context !== "gallery-preview" || reducedMotion) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+            { threshold: 0 }
+        );
+        observer.observe(canvas);
+        return () => observer.disconnect();
+    }, [context, reducedMotion]);
 
     // Redraw static frame on palette/theme change when in reduced motion
     useEffect(() => {
         if (reducedMotion && canvasRef.current) {
+            const bg = document.createElement("canvas");
+            bg.width = 1;
+            bg.height = 1;
+            const bgCtx = bg.getContext("2d");
+            if (bgCtx) {
+                bgCtx.fillStyle = getCanvasBaseBackground(isDark);
+                bgCtx.fillRect(0, 0, 1, 1);
+            }
+            bgCanvasRef.current = bg;
             draw(canvasRef.current, tRef.current);
         }
     }, [palette, isDark, reducedMotion, draw]);
