@@ -56,6 +56,7 @@ export function AuroraWallpaperRenderer({ filters, borderRadius = "0" }: Props) 
     const rafRef    = useRef<number>(0);
     const tRef      = useRef<number>(0);
     const lastRef   = useRef<number>(0);
+    const dprRef    = useRef<number>(1);
     const isDark    = theme === "dark";
     const FPS       = 30;
     const INTERVAL  = 1000 / FPS;
@@ -77,8 +78,17 @@ export function AuroraWallpaperRenderer({ filters, borderRadius = "0" }: Props) 
 
         ctx.clearRect(0, 0, W, H);
 
-        // Aurora bands — screen blending for natural light overlap
-        ctx.globalCompositeOperation = "screen";
+        // Paint a base background so aurora has something to blend into.
+        // Without this, light mode panels (bg-white) wash screen-blended
+        // colors to pure white making the aurora invisible.
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = isDark ? "#08090d" : "#e8eaff";
+        ctx.fillRect(0, 0, W, H);
+
+        // Aurora bands:
+        // dark mode  → "screen" adds light (classic aurora glow on dark sky)
+        // light mode → "source-over" layers soft pastels over tinted base
+        ctx.globalCompositeOperation = isDark ? "screen" : "source-over";
 
         BANDS.forEach(([bx, by, sx, sy, ax, ay, px, py, rx, ry, ci]) => {
             const x = (bx + Math.sin(t * sx + px) * ax) * W;
@@ -119,7 +129,7 @@ export function AuroraWallpaperRenderer({ filters, borderRadius = "0" }: Props) 
             for (let i = 0; i < count; i++) {
                 const sx = rand() * W;
                 const sy = rand() * H * 0.45;
-                const sr = rand() * 0.9 + 0.2;
+                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
                 const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
                 ctx.globalAlpha = tw * 0.28;
                 ctx.fillStyle = "white";
@@ -149,6 +159,7 @@ export function AuroraWallpaperRenderer({ filters, borderRadius = "0" }: Props) 
         if (!canvas) return;
 
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        dprRef.current = dpr;
 
         const resize = () => {
             const parent = canvas.parentElement;
@@ -161,9 +172,6 @@ export function AuroraWallpaperRenderer({ filters, borderRadius = "0" }: Props) 
             // Reset CSS size explicitly
             canvas.style.width  = `${width}px`;
             canvas.style.height = `${height}px`;
-            // Scale context for DPR
-            const ctx = canvas.getContext("2d");
-            if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             if (reducedMotion) draw(canvas, 0);
         };
 
