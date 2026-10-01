@@ -4,7 +4,11 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Check, Search, Settings2, X } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import wallpapersDataRaw from "@/../data/wallpapers.json";
-import { WallpaperState, useWallpaper, AURORA_WALLPAPER } from "@/lib/WallpaperContext";
+import {
+    WallpaperState, useWallpaper,
+    AURORA_WALLPAPER, AURORA_OCEAN, AURORA_FOREST,
+    AURORA_SOLAR, AURORA_ROSE, AURORA_ARCTIC
+} from "@/lib/WallpaperContext";
 import { WallpaperEditor } from "./WallpaperEditor";
 import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
 
@@ -93,72 +97,94 @@ export function WallpaperGallery() {
                               text-muted-foreground mb-3">
                     Live Backgrounds
                 </p>
-                <div className="flex gap-3">
+                <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+                    {[
+                        {
+                            wallpaper: AURORA_WALLPAPER,
+                            label: "Northern Lights",
+                            desc: "Violet · Pink · Green",
+                        },
+                        {
+                            wallpaper: AURORA_OCEAN,
+                            label: "Ocean Aurora",
+                            desc: "Blue · Cyan · Teal",
+                        },
+                        {
+                            wallpaper: AURORA_FOREST,
+                            label: "Forest Spirits",
+                            desc: "Emerald · Green · Lime",
+                        },
+                        {
+                            wallpaper: AURORA_SOLAR,
+                            label: "Solar Wind",
+                            desc: "Orange · Amber · Red",
+                        },
+                        {
+                            wallpaper: AURORA_ROSE,
+                            label: "Rose Nebula",
+                            desc: "Rose · Pink · Purple",
+                        },
+                        {
+                            wallpaper: AURORA_ARCTIC,
+                            label: "Arctic Ice",
+                            desc: "Ice Blue · Silver",
+                        },
+                    ].map(({ wallpaper: variant, label, desc }) => {
+                        const isActive = currentWallpaper?.id === variant.id;
+                        return (
+                            <button
+                                key={variant.id}
+                                type="button"
+                                onClick={() =>
+                                    isActive
+                                        ? setWallpaper(null)
+                                        : setWallpaper(variant)
+                                }
+                                className={`
+                                    relative w-44 shrink-0 overflow-hidden rounded-2xl
+                                    border-2 transition-all duration-200
+                                    hover:scale-[1.03] active:scale-[0.98]
+                                    focus:outline-none focus:ring-2 focus:ring-primary/50
+                                    ${isActive
+                                        ? "border-primary shadow-[0_0_18px_rgba(167,139,250,0.30)]"
+                                        : "border-border hover:border-primary/40"}
+                                `}
+                                style={{ aspectRatio: "16/9" }}
+                                title={`${label} — Live Background`}
+                            >
+                                {/* Live canvas preview using the variant's fixed palette */}
+                                <div className="absolute inset-0">
+                                    <AuroraWallpaperRenderer
+                                        borderRadius="0"
+                                        paletteKey={variant.id}
+                                    />
+                                </div>
 
-                    {/* Northern Lights card */}
-                    <button
-                        type="button"
-                        onClick={() =>
-                            currentWallpaper?.type === "dynamic-aurora"
-                                ? setWallpaper(null)
-                                : setWallpaper(AURORA_WALLPAPER)
-                        }
-                        className={`
-                            relative w-44 shrink-0 overflow-hidden rounded-2xl
-                            border-2 transition-all duration-250
-                            hover:scale-[1.03] active:scale-[0.98]
-                            focus:outline-none focus:ring-2 focus:ring-primary/50
-                            ${currentWallpaper?.type === "dynamic-aurora"
-                                ? "border-primary shadow-[0_0_18px_rgba(167,139,250,0.30)]"
-                                : "border-border hover:border-primary/40"}
-                        `}
-                        style={{ aspectRatio: "16/9" }}
-                        title="Northern Lights — Live Background"
-                    >
-                        {/* Live canvas preview */}
-                        <div className="absolute inset-0">
-                            <AuroraWallpaperRenderer borderRadius="0.875rem" />
-                        </div>
+                                {/* Label overlay */}
+                                <div className="absolute inset-x-0 bottom-0 p-2.5
+                                                bg-gradient-to-t from-black/80
+                                                via-black/30 to-transparent">
+                                    <p className="text-white text-[11px] font-black
+                                                  tracking-wide leading-none">
+                                        {label}
+                                    </p>
+                                    <p className="text-white/55 text-[9px] mt-0.5
+                                                  font-medium leading-none">
+                                        {desc}
+                                    </p>
+                                </div>
 
-                        {/* Bottom label */}
-                        <div className="absolute inset-x-0 bottom-0 p-2.5
-                                        bg-gradient-to-t from-black/75
-                                        via-black/25 to-transparent">
-                            <p className="text-white text-[11px] font-black
-                                          tracking-wide leading-none">
-                                Northern Lights
-                            </p>
-                            <p className="text-white/55 text-[9px] mt-0.5
-                                          font-medium">
-                                Live · Theme-aware
-                            </p>
-                        </div>
-
-                        {/* Active checkmark */}
-                        {currentWallpaper?.type === "dynamic-aurora" && (
-                            <div className="absolute top-2 right-2 bg-primary
-                                            text-primary-foreground p-1
-                                            rounded-full shadow-lg">
-                                <Check className="w-3 h-3" />
-                            </div>
-                        )}
-                    </button>
-
-                    {/* "More soon" placeholder */}
-                    <div
-                        className="shrink-0 rounded-2xl border-2 border-dashed
-                                   border-border flex flex-col items-center
-                                   justify-center gap-1.5 opacity-35
-                                   pointer-events-none"
-                        style={{ width: "7rem", aspectRatio: "16/9" }}
-                    >
-                        <span className="text-base text-foreground">✦</span>
-                        <p className="text-[8px] font-black text-muted-foreground
-                                      uppercase tracking-widest">
-                            More soon
-                        </p>
-                    </div>
-
+                                {/* Active checkmark */}
+                                {isActive && (
+                                    <div className="absolute top-2 right-2
+                                                    bg-primary text-primary-foreground
+                                                    p-1 rounded-full shadow-lg">
+                                        <Check className="w-3 h-3" />
+                                    </div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
             {/* ── / Live Backgrounds ─────────────────── */}

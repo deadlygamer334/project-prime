@@ -8,35 +8,59 @@ import type { WallpaperFilters } from "@/lib/WallpaperContext";
 interface Props {
     filters?: WallpaperFilters;
     borderRadius?: string;
+    /** When set, uses a fixed palette from FIXED_PALETTES instead of
+     *  the theme-based palette. Pass the wallpaper id (e.g. "aurora-ocean"). */
+    paletteKey?: string;
 }
 
 // Per-theme aurora palettes — colors match the SettingsContext vibeColors
 // orb1/orb2/orb3 for each vibe, at higher opacity for canvas rendering
 const PALETTES: Record<string, { dark: string[]; light: string[] }> = {
     midnight: {
-        dark:  ["rgba(139,92,246,0.50)", "rgba(236,72,153,0.35)", "rgba(34,197,94,0.28)"],
-        light: ["rgba(139,92,246,0.22)", "rgba(236,72,153,0.15)", "rgba(34,197,94,0.12)"],
+        dark:  ["rgba(139,92,246,0.80)", "rgba(236,72,153,0.65)", "rgba(34,197,94,0.55)"],
+        light: ["rgba(139,92,246,0.35)", "rgba(236,72,153,0.25)", "rgba(34,197,94,0.20)"],
     },
     oceanic: {
-        dark:  ["rgba(59,130,246,0.50)", "rgba(6,182,212,0.40)", "rgba(45,212,191,0.30)"],
-        light: ["rgba(59,130,246,0.22)", "rgba(6,182,212,0.18)", "rgba(45,212,191,0.12)"],
+        dark:  ["rgba(59,130,246,0.80)", "rgba(6,182,212,0.70)", "rgba(45,212,191,0.58)"],
+        light: ["rgba(59,130,246,0.35)", "rgba(6,182,212,0.28)", "rgba(45,212,191,0.22)"],
     },
     evergreen: {
-        dark:  ["rgba(16,185,129,0.50)", "rgba(34,197,94,0.38)", "rgba(132,204,22,0.25)"],
-        light: ["rgba(16,185,129,0.22)", "rgba(34,197,94,0.18)", "rgba(132,204,22,0.12)"],
+        dark:  ["rgba(16,185,129,0.80)", "rgba(34,197,94,0.68)", "rgba(132,204,22,0.55)"],
+        light: ["rgba(16,185,129,0.35)", "rgba(34,197,94,0.28)", "rgba(132,204,22,0.20)"],
     },
     solar: {
-        dark:  ["rgba(249,115,22,0.48)", "rgba(234,179,8,0.40)", "rgba(239,68,68,0.28)"],
-        light: ["rgba(249,115,22,0.22)", "rgba(234,179,8,0.18)", "rgba(239,68,68,0.12)"],
+        dark:  ["rgba(249,115,22,0.78)", "rgba(234,179,8,0.70)", "rgba(239,68,68,0.58)"],
+        light: ["rgba(249,115,22,0.35)", "rgba(234,179,8,0.28)", "rgba(239,68,68,0.22)"],
     },
     rose: {
-        dark:  ["rgba(244,63,94,0.48)", "rgba(219,39,119,0.40)", "rgba(147,51,234,0.28)"],
-        light: ["rgba(244,63,94,0.22)", "rgba(219,39,119,0.18)", "rgba(147,51,234,0.12)"],
+        dark:  ["rgba(244,63,94,0.78)", "rgba(219,39,119,0.68)", "rgba(147,51,234,0.58)"],
+        light: ["rgba(244,63,94,0.35)", "rgba(219,39,119,0.28)", "rgba(147,51,234,0.22)"],
     },
     minimal: {
-        dark:  ["rgba(180,180,200,0.35)", "rgba(140,140,170,0.25)", "rgba(100,100,140,0.18)"],
-        light: ["rgba(100,100,140,0.14)", "rgba(120,120,160,0.10)", "rgba(80,80,120,0.08)"],
+        dark:  ["rgba(180,180,210,0.60)", "rgba(140,140,180,0.50)", "rgba(100,100,150,0.38)"],
+        light: ["rgba(120,120,160,0.28)", "rgba(100,100,140,0.22)", "rgba(80,80,120,0.16)"],
     },
+};
+
+const FIXED_PALETTES: Record<string, string[]> = {
+    "aurora-midnight": [
+        "rgba(139,92,246,0.85)", "rgba(236,72,153,0.70)", "rgba(34,197,94,0.58)"
+    ],
+    "aurora-ocean": [
+        "rgba(59,130,246,0.85)", "rgba(6,182,212,0.75)", "rgba(45,212,191,0.62)"
+    ],
+    "aurora-forest": [
+        "rgba(16,185,129,0.85)", "rgba(34,197,94,0.72)", "rgba(132,204,22,0.58)"
+    ],
+    "aurora-solar": [
+        "rgba(249,115,22,0.82)", "rgba(234,179,8,0.72)", "rgba(239,68,68,0.60)"
+    ],
+    "aurora-rose": [
+        "rgba(244,63,94,0.82)", "rgba(219,39,119,0.70)", "rgba(147,51,234,0.60)"
+    ],
+    "aurora-arctic": [
+        "rgba(147,197,253,0.75)", "rgba(196,207,235,0.65)", "rgba(226,232,240,0.52)"
+    ],
 };
 
 // 5 aurora curtain bands — each has independent motion parameters
@@ -49,7 +73,11 @@ const BANDS = [
     [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
 ];
 
-export function AuroraWallpaperRenderer({ filters, borderRadius = "0" }: Props) {
+export function AuroraWallpaperRenderer({
+    filters,
+    borderRadius = "0",
+    paletteKey,
+}: Props) {
     const { theme } = useTheme();
     const { themeVibe, reducedMotion } = useSettings();
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -62,9 +90,13 @@ export function AuroraWallpaperRenderer({ filters, borderRadius = "0" }: Props) 
     const INTERVAL  = 1000 / FPS;
 
     const getPalette = useCallback(() => {
+        // Fixed palette (gallery variant) overrides theme palette
+        if (paletteKey && paletteKey in FIXED_PALETTES) {
+            return FIXED_PALETTES[paletteKey];
+        }
         const key = themeVibe in PALETTES ? themeVibe : "midnight";
         return isDark ? PALETTES[key].dark : PALETTES[key].light;
-    }, [themeVibe, isDark]);
+    }, [paletteKey, themeVibe, isDark]);
 
     const draw = useCallback((canvas: HTMLCanvasElement, t: number) => {
         const ctx = canvas.getContext("2d");

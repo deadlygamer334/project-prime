@@ -35,16 +35,61 @@ export const useFocusProgress = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [user, setUser] = useState<User | null>(() => auth.currentUser);
 
-    // Auth Listener
+    // Auth Listener + Guest Migration
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
             if (!currentUser) {
-                setRecentSessions([]);
+                try {
+                    const saved = localStorage.getItem("guestFocusSessions");
+                    if (saved) {
+                        setRecentSessions(JSON.parse(saved));
+                    } else {
+                        setRecentSessions([]);
+                    }
+                    const savedMins = localStorage.getItem("guestTotalMinutes");
+                    setTotalMinutes(savedMins ? Number(savedMins) || 0 : 0);
+                } catch (e) {
+                    console.error("Failed to load guest sessions:", e);
+                }
                 setHistorySessions([]);
                 setLastLoadedDoc(null);
                 lastRecentDocRef.current = null;
                 setIsLoaded(true);
+            } else {
+                // If the user has guest sessions recorded before logging in, migrate them
+                try {
+                    const guestSaved = localStorage.getItem("guestFocusSessions");
+                    if (guestSaved) {
+                        const guestSessions: FocusSession[] = JSON.parse(guestSaved);
+                        if (guestSessions.length > 0) {
+                            const batch = writeBatch(db);
+                            const userRef = doc(db, "users", currentUser.uid);
+                            let guestTotal = 0;
+                            guestSessions.forEach((s) => {
+                                const sRef = doc(db, "users", currentUser.uid, "focusSessions", s.id);
+                                batch.set(sRef, {
+                                    type: s.type,
+                                    duration: s.duration,
+                                    timestamp: s.timestamp,
+                                    ...(s.subject ? { subject: s.subject } : {})
+                                });
+                                if (s.type === "focus") guestTotal += s.duration;
+                            });
+                            if (guestTotal > 0) {
+                                batch.set(userRef, {
+                                    stats: { totalFocusMinutes: increment(guestTotal) },
+                                    weeklyFocusMinutes: increment(guestTotal)
+                                }, { merge: true });
+                            }
+                            await batch.commit();
+                            localStorage.removeItem("guestFocusSessions");
+                            localStorage.removeItem("guestTotalMinutes");
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error migrating guest sessions to account:", err);
+                }
             }
         });
         return () => unsubscribe();
@@ -178,8 +223,13 @@ export const useFocusProgress = () => {
     }, [user, loadingHistory, lastLoadedDoc]);
 
     const addSession = useCallback(async (type: "focus" | "break", duration: number, subject?: string) => {
-        if (!user) return;
         if (type === "break") return; // Do not log break sessions
+
+        // PREVENTION: Skip 1-second (or less) sessions
+        if (duration < (1.5 / 60)) {
+            console.log("Skipping 1-second focus session log.");
+            return;
+        }
 
         const newSession: any = {
             type,
@@ -188,21 +238,31 @@ export const useFocusProgress = () => {
         };
         if (subject) newSession.subject = subject;
 
-        // PREVENTION: Skip 1-second (or less) sessions
-        if (duration < (1.5 / 60)) {
-            console.log("Skipping 1-second focus session log.");
-            return;
-        }
-
-
         // Optimistic
         const tempId = crypto.randomUUID();
         const optimisticSession = { ...newSession, id: tempId };
         setRecentSessions(prev => [optimisticSession, ...prev]);
         if (type === "focus") {
-            setTotalMinutes(prev => prev + duration);
-            // Trigger achievement check
-            NotificationEngine.getInstance().checkAchievements(totalMinutes + duration);
+            setTotalMinutes(prev => {
+                const updated = prev + duration;
+                NotificationEngine.getInstance().checkAchievements(updated);
+                return updated;
+            });
+        }
+
+        // Handle Guest Mode (unauthenticated)
+        if (!user) {
+            try {
+                const guestSaved = localStorage.getItem("guestFocusSessions");
+                const currentGuestSessions = guestSaved ? JSON.parse(guestSaved) : [];
+                const updated = [optimisticSession, ...currentGuestSessions].slice(0, 100);
+                localStorage.setItem("guestFocusSessions", JSON.stringify(updated));
+                const currentMins = Number(localStorage.getItem("guestTotalMinutes")) || 0;
+                localStorage.setItem("guestTotalMinutes", (currentMins + duration).toString());
+            } catch (err) {
+                console.error("Failed to persist guest session to localStorage:", err);
+            }
+            return;
         }
 
         try {
@@ -238,7 +298,6 @@ export const useFocusProgress = () => {
                     // User doc doesn't exist, create with initial values
                     const currentWeekStart = getWeekStartUTC();
 
-                    // console.log(`Updating user stats: User doc not found, initializing. weekStartDate: ${currentWeekStart.toISOString()}, weeklyFocusMinutes: ${duration}`);
                     batch.set(userRef, {
                         stats: { totalFocusMinutes: increment(duration) },
                         weekStartDate: currentWeekStart.toISOString(),
@@ -247,28 +306,40 @@ export const useFocusProgress = () => {
                 }
             }
 
-            // console.log("Committing focus session batch update...");
             await batch.commit();
-            // console.log("Focus session batch committed successfully.");
         } catch (e) {
             console.error("Error adding session:", e);
         }
     }, [user]);
 
     const deleteSession = useCallback(async (session: FocusSession) => {
-        if (!user) return;
-
-        // Date-based guard: Only decrement weeklyFocusMinutes if the session is from the current week
-        const currentWeekStart = getWeekStartUTC();
-        const sessionDate = new Date(session.timestamp);
-        const isCurrentWeek = sessionDate.getTime() >= currentWeekStart.getTime();
-
         // Optimistic Update
         setRecentSessions(prev => prev.filter(s => s.id !== session.id));
         setHistorySessions(prev => prev.filter(s => s.id !== session.id));
         if (session.type === "focus") {
             setTotalMinutes(prev => Math.max(0, prev - session.duration));
         }
+
+        if (!user) {
+            try {
+                const guestSaved = localStorage.getItem("guestFocusSessions");
+                if (guestSaved) {
+                    const parsed: FocusSession[] = JSON.parse(guestSaved);
+                    const filtered = parsed.filter(s => s.id !== session.id);
+                    localStorage.setItem("guestFocusSessions", JSON.stringify(filtered));
+                }
+                const currentMins = Number(localStorage.getItem("guestTotalMinutes")) || 0;
+                localStorage.setItem("guestTotalMinutes", Math.max(0, currentMins - session.duration).toString());
+            } catch (e) {
+                console.error("Failed to update guest storage on delete:", e);
+            }
+            return;
+        }
+
+        // Date-based guard: Only decrement weeklyFocusMinutes if the session is from the current week
+        const currentWeekStart = getWeekStartUTC();
+        const sessionDate = new Date(session.timestamp);
+        const isCurrentWeek = sessionDate.getTime() >= currentWeekStart.getTime();
 
         try {
             const batch = writeBatch(db);
@@ -297,17 +368,20 @@ export const useFocusProgress = () => {
     }, [user, db]);
 
     const clearSessions = useCallback(async () => {
-        if (!user) return;
-
         // Optimistic
         const backupRecent = [...recentSessions];
         setRecentSessions([]);
         setHistorySessions([]);
+        setTotalMinutes(0);
+
+        if (!user) {
+            localStorage.removeItem("guestFocusSessions");
+            localStorage.removeItem("guestTotalMinutes");
+            return;
+        }
 
         try {
             const batch = writeBatch(db);
-            // Only can delete what we know about ideally.
-            // For now, delete recent + history loaded.
             sessions.forEach(s => {
                 batch.delete(doc(db, "users", user.uid, "focusSessions", s.id));
             });
@@ -319,32 +393,21 @@ export const useFocusProgress = () => {
     }, [user, sessions, recentSessions]);
 
     const getSessionsInRange = useCallback(async (startDate: Date, endDate: Date) => {
-        if (!user) return [];
+        if (!user) {
+            return recentSessions.filter(s => {
+                const t = new Date(s.timestamp).getTime();
+                return t >= startDate.getTime() && t <= endDate.getTime();
+            });
+        }
 
         try {
             const sessionsRef = collection(db, "users", user.uid, "focusSessions");
-            // Query for sessions within the date range
-            // Note: Firestore stores strings, so we compare ISO strings
             const q = query(
                 sessionsRef,
                 orderBy("timestamp", "desc"),
-                // We'll filter client-side for precise date matching if needed, 
-                // but proper Firestore range queries would be:
-                // where("timestamp", ">=", startDate.toISOString()),
-                // where("timestamp", "<=", endDate.toISOString())
-                // However, compound queries with different fields might need index.
-                // Let's rely on client-side filtering if the dataset isn't huge, 
-                // OR use a simple single-field query if possible.
-                // Since we order by timestamp, we can use startAt/endAt if we had the docs,
-                // but here 'where' is better.
-                // Let's try to fetch all and filter for now to avoid index creation if possible,
-                // OR just use the 'recentSessions' if the range is small?
-                // NO, for "Year" view we need more.
-                // Let's use a limit for safety.
                 limit(1000)
             );
 
-            // optimized: just fetch recent 1000 and filter.
             const snapshot = await getDocs(q);
             const fetchedSessions = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -360,7 +423,7 @@ export const useFocusProgress = () => {
             console.error("Error fetching sessions in range:", e);
             return [];
         }
-    }, [user]);
+    }, [user, recentSessions]);
 
     const addSessionTransaction = useCallback(async (
         transaction: any,

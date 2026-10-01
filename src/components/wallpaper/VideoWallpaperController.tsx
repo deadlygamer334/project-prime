@@ -3,12 +3,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useWallpaper } from "@/lib/WallpaperContext";
 import { useSettings } from "@/lib/SettingsContext";
-import { useFocusTimer } from "@/hooks/useFocusTimer";
+interface VideoWallpaperControllerProps {
+    timerState?: "idle" | "focus" | "break";
+}
 
-export function VideoWallpaperController() {
+export function VideoWallpaperController({ timerState = "idle" }: VideoWallpaperControllerProps) {
     const { wallpaper, isLoaded } = useWallpaper();
     const { reducedMotion, isZenMode, autoDimWallpaper } = useSettings();
-    const { mode, isActive } = useFocusTimer();
+    const isActive = timerState !== "idle";
+    const isFocusActive = timerState === "focus";
 
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -121,7 +124,6 @@ export function VideoWallpaperController() {
 
     const filters = wallpaper.timerFilters;
     const crop = wallpaper.timerCrop;
-    const isFocusActive = mode === "FOCUS" && isActive;
 
     const baseBrightness = (filters.brightness ?? 1) * 100;
     const contrast = (filters.contrast ?? 1) * 100;

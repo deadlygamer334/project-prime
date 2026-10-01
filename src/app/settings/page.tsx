@@ -97,43 +97,90 @@ export default function SettingsPage() {
         {
             id: "aurora",
             label: "Aurora",
-            preview: `radial-gradient(circle at 20% 30%, var(--color-orb-purple) 0%, transparent 55%), radial-gradient(circle at 80% 20%, var(--color-orb-pink) 0%, transparent 50%), radial-gradient(circle at 50% 80%, var(--color-orb-green) 0%, transparent 55%)`
+            preview: `
+                radial-gradient(circle at 20% 30%,
+                    var(--preview-orb-1) 0%, transparent 52%),
+                radial-gradient(circle at 78% 20%,
+                    var(--preview-orb-2) 0%, transparent 48%),
+                radial-gradient(circle at 50% 78%,
+                    var(--preview-orb-3) 0%, transparent 52%)
+            `.replace(/\s+/g, " ").trim(),
         },
         {
             id: "radial",
             label: "Radial",
-            preview: `radial-gradient(circle at 50% 50%, var(--color-orb-purple) 0%, transparent 70%)`
+            preview: `radial-gradient(circle at 50% 50%,
+                var(--preview-orb-1) 0%, transparent 65%)`,
         },
         {
             id: "bloom",
             label: "Bloom",
-            preview: `radial-gradient(ellipse 120% 60% at 50% -10%, var(--color-orb-purple) 0%, transparent 75%)`
+            preview: `radial-gradient(ellipse 120% 65% at 50% -5%,
+                var(--preview-orb-1) 0%, transparent 70%)`,
         },
         {
             id: "diagonal",
             label: "Diagonal",
-            preview: `radial-gradient(circle at 0% 0%, var(--color-orb-purple) 0%, transparent 60%), radial-gradient(circle at 100% 100%, var(--color-orb-pink) 0%, transparent 60%)`
+            preview: `
+                radial-gradient(circle at 0% 0%,
+                    var(--preview-orb-1) 0%, transparent 52%),
+                radial-gradient(circle at 100% 100%,
+                    var(--preview-orb-2) 0%, transparent 52%)
+            `.replace(/\s+/g, " ").trim(),
         },
         {
             id: "edge",
             label: "Edge",
-            preview: `radial-gradient(ellipse 80% 25% at 50% 0%, var(--color-orb-purple) 0%, transparent 100%), radial-gradient(ellipse 80% 25% at 50% 100%, var(--color-orb-purple) 0%, transparent 100%), radial-gradient(ellipse 25% 80% at 0% 50%, var(--color-orb-pink) 0%, transparent 100%), radial-gradient(ellipse 25% 80% at 100% 50%, var(--color-orb-pink) 0%, transparent 100%)`
+            preview: `
+                radial-gradient(ellipse 80% 30% at 50% 0%,
+                    var(--preview-orb-1) 0%, transparent 100%),
+                radial-gradient(ellipse 80% 30% at 50% 100%,
+                    var(--preview-orb-1) 0%, transparent 100%),
+                radial-gradient(ellipse 28% 80% at 0% 50%,
+                    var(--preview-orb-2) 0%, transparent 100%),
+                radial-gradient(ellipse 28% 80% at 100% 50%,
+                    var(--preview-orb-2) 0%, transparent 100%)
+            `.replace(/\s+/g, " ").trim(),
         },
         {
             id: "mesh",
             label: "Mesh",
-            preview: `radial-gradient(at 0% 0%, var(--color-orb-purple) 0, transparent 60%), radial-gradient(at 50% 0%, var(--color-orb-pink) 0, transparent 60%), radial-gradient(at 100% 0%, var(--color-orb-green) 0, transparent 60%)`
+            preview: `
+                radial-gradient(at 0% 0%,
+                    var(--preview-orb-1) 0, transparent 55%),
+                radial-gradient(at 50% 0%,
+                    var(--preview-orb-2) 0, transparent 55%),
+                radial-gradient(at 100% 0%,
+                    var(--preview-orb-3) 0, transparent 55%)
+            `.replace(/\s+/g, " ").trim(),
         },
         {
             id: "particles",
             label: "Particles",
-            preview: `radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)`
+            preview: `
+                radial-gradient(circle at 50% 50%,
+                    var(--preview-orb-1) 0%, transparent 70%),
+                repeating-radial-gradient(
+                    circle at 50% 50%,
+                    transparent 0px,
+                    transparent 14px,
+                    rgba(255,255,255,0.18) 14px,
+                    rgba(255,255,255,0.18) 15px
+                )
+            `.replace(/\s+/g, " ").trim(),
         },
         {
             id: "midnight",
             label: "Midnight",
-            preview: `radial-gradient(ellipse at 50% 100%, var(--color-orb-purple) 0%, transparent 60%)`
-        }
+            preview: `
+                radial-gradient(ellipse 90% 55% at 50% 110%,
+                    var(--preview-orb-1) 0%, transparent 68%),
+                radial-gradient(ellipse 55% 40% at 5% 98%,
+                    var(--preview-orb-2) 0%, transparent 62%),
+                radial-gradient(ellipse 55% 40% at 95% 95%,
+                    var(--preview-orb-3) 0%, transparent 62%)
+            `.replace(/\s+/g, " ").trim(),
+        },
     ];
 
     const SECTIONS = [

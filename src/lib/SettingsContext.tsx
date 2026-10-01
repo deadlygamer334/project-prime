@@ -449,6 +449,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             el.style.setProperty("--color-orb-purple", vibe.orb1);
             el.style.setProperty("--color-orb-pink", vibe.orb2);
             el.style.setProperty("--color-orb-green", vibe.orb3);
+            // High-opacity versions for UI previews
+            el.style.setProperty("--preview-orb-1", vibe.orb1.replace(/[\d.]+\)$/, "0.82)"));
+            el.style.setProperty("--preview-orb-2", vibe.orb2.replace(/[\d.]+\)$/, "0.72)"));
+            el.style.setProperty("--preview-orb-3", vibe.orb3.replace(/[\d.]+\)$/, "0.60)"));
             el.style.setProperty("--ring", vibe.primary);
             // @ts-ignore
             el.style.setProperty("--color-button", vibe.button);

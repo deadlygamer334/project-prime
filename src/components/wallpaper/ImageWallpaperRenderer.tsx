@@ -3,11 +3,14 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useWallpaper } from "@/lib/WallpaperContext";
 import { useSettings } from "@/lib/SettingsContext";
-import { useFocusTimer } from "@/hooks/useFocusTimer";
+interface ImageWallpaperRendererProps {
+    timerState?: "idle" | "focus" | "break";
+}
 
-export function ImageWallpaperRenderer() {
+export function ImageWallpaperRenderer({ timerState = "idle" }: ImageWallpaperRendererProps) {
     const { wallpaper, isLoaded } = useWallpaper();
-    const { mode, isActive } = useFocusTimer();
+    const isActive = timerState !== "idle";
+    const isFocusActive = timerState === "focus";
     const { autoDimWallpaper } = useSettings();
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -31,7 +34,6 @@ export function ImageWallpaperRenderer() {
     const filters = wallpaper.timerFilters;
     const crop = wallpaper.timerCrop;
     const { src } = wallpaper;
-    const isFocusActive = mode === "FOCUS" && isActive;
 
     const baseBrightness = (filters.brightness ?? 1) * 100;
     const contrast = (filters.contrast ?? 1) * 100;

@@ -969,6 +969,7 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                 <ZenWallpaperRenderer
                                     wallpaper={currentWallpaper}
                                     brightness={brightness}
+                                    timerState={!isActive ? "idle" : mode === "FOCUS" ? "focus" : "break"}
                                 />
                             )}
 

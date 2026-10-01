@@ -43,22 +43,82 @@ export interface WallpaperState {
     crop?: WallpaperCrop;
 }
 
+// The original theme-aware aurora (changes with theme vibe)
 export const AURORA_WALLPAPER: WallpaperState = {
-    id: "dynamic-aurora-v1",
+    id: "aurora-midnight",
     type: "dynamic-aurora",
     src: "dynamic://aurora",
     timerFilters: {
         blur: 0, brightness: 1, contrast: 1,
-        grayscale: 0, hueRotate: 0, invert: 0,
-        saturation: 1, sepia: 0
+        grayscale: 0, hueRotate: 0, invert: 0, saturation: 1, sepia: 0
     },
     timerCrop: { x: 0, y: 0, scale: 1, rotate: 0 },
     zenFilters: {
-        blur: 0, brightness: 0.8, contrast: 1,
-        grayscale: 0, hueRotate: 0, invert: 0,
-        saturation: 1, sepia: 0
+        blur: 0, brightness: 0.85, contrast: 1,
+        grayscale: 0, hueRotate: 0, invert: 0, saturation: 1, sepia: 0
     },
     zenCrop: { x: 0, y: 0, scale: 1, rotate: 0 },
+};
+
+// Fixed-palette variants — independent of theme
+export const AURORA_OCEAN: WallpaperState = {
+    id: "aurora-ocean",
+    type: "dynamic-aurora",
+    src: "dynamic://aurora",
+    timerFilters: { blur:0, brightness:1, contrast:1, grayscale:0,
+                   hueRotate:0, invert:0, saturation:1, sepia:0 },
+    timerCrop: { x:0, y:0, scale:1, rotate:0 },
+    zenFilters: { blur:0, brightness:0.85, contrast:1, grayscale:0,
+                 hueRotate:0, invert:0, saturation:1, sepia:0 },
+    zenCrop: { x:0, y:0, scale:1, rotate:0 },
+};
+
+export const AURORA_FOREST: WallpaperState = {
+    id: "aurora-forest",
+    type: "dynamic-aurora",
+    src: "dynamic://aurora",
+    timerFilters: { blur:0, brightness:1, contrast:1, grayscale:0,
+                   hueRotate:0, invert:0, saturation:1, sepia:0 },
+    timerCrop: { x:0, y:0, scale:1, rotate:0 },
+    zenFilters: { blur:0, brightness:0.85, contrast:1, grayscale:0,
+                 hueRotate:0, invert:0, saturation:1, sepia:0 },
+    zenCrop: { x:0, y:0, scale:1, rotate:0 },
+};
+
+export const AURORA_SOLAR: WallpaperState = {
+    id: "aurora-solar",
+    type: "dynamic-aurora",
+    src: "dynamic://aurora",
+    timerFilters: { blur:0, brightness:1, contrast:1, grayscale:0,
+                   hueRotate:0, invert:0, saturation:1, sepia:0 },
+    timerCrop: { x:0, y:0, scale:1, rotate:0 },
+    zenFilters: { blur:0, brightness:0.85, contrast:1, grayscale:0,
+                 hueRotate:0, invert:0, saturation:1, sepia:0 },
+    zenCrop: { x:0, y:0, scale:1, rotate:0 },
+};
+
+export const AURORA_ROSE: WallpaperState = {
+    id: "aurora-rose",
+    type: "dynamic-aurora",
+    src: "dynamic://aurora",
+    timerFilters: { blur:0, brightness:1, contrast:1, grayscale:0,
+                   hueRotate:0, invert:0, saturation:1, sepia:0 },
+    timerCrop: { x:0, y:0, scale:1, rotate:0 },
+    zenFilters: { blur:0, brightness:0.85, contrast:1, grayscale:0,
+                 hueRotate:0, invert:0, saturation:1, sepia:0 },
+    zenCrop: { x:0, y:0, scale:1, rotate:0 },
+};
+
+export const AURORA_ARCTIC: WallpaperState = {
+    id: "aurora-arctic",
+    type: "dynamic-aurora",
+    src: "dynamic://aurora",
+    timerFilters: { blur:0, brightness:1, contrast:1, grayscale:0,
+                   hueRotate:0, invert:0, saturation:1, sepia:0 },
+    timerCrop: { x:0, y:0, scale:1, rotate:0 },
+    zenFilters: { blur:0, brightness:0.85, contrast:1, grayscale:0,
+                 hueRotate:0, invert:0, saturation:1, sepia:0 },
+    zenCrop: { x:0, y:0, scale:1, rotate:0 },
 };
 
 interface WallpaperContextType {

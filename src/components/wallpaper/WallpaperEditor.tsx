@@ -302,6 +302,7 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                                 <AuroraWallpaperRenderer
                                     filters={localFilters}
                                     borderRadius="1rem"
+                                    paletteKey={initialWallpaper.id}
                                 />
                             </div>
                         ) : initialWallpaper.type === "video" ? (

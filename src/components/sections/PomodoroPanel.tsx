@@ -53,12 +53,13 @@ export default function PomodoroPanel() {
       )}
 
       {/* Scoped Wallpapers */}
-      <VideoWallpaperController />
-      <ImageWallpaperRenderer />
+      <VideoWallpaperController timerState={timerState} />
+      <ImageWallpaperRenderer timerState={timerState} />
       {isAurora && (
         <AuroraWallpaperRenderer
           filters={wallpaper?.timerFilters}
           borderRadius="1.5rem"
+          paletteKey={wallpaper?.id}
         />
       )}
 

@@ -2,17 +2,17 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { WallpaperState } from "@/lib/WallpaperContext";
-import { useFocusTimer } from "@/hooks/useFocusTimer";
 import { useSettings } from "@/lib/SettingsContext";
 import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
 
 interface ZenWallpaperRendererProps {
     wallpaper: WallpaperState;
     brightness?: number;
+    timerState?: "idle" | "focus" | "break";
 }
 
-export function ZenWallpaperRenderer({ wallpaper, brightness = 1 }: ZenWallpaperRendererProps) {
-    const { mode, isActive } = useFocusTimer();
+export function ZenWallpaperRenderer({ wallpaper, brightness = 1, timerState = "idle" }: ZenWallpaperRendererProps) {
+    const isFocusActive = timerState === "focus";
     const { autoDimWallpaper, reducedMotion } = useSettings();
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -34,16 +34,26 @@ export function ZenWallpaperRenderer({ wallpaper, brightness = 1 }: ZenWallpaper
 
     if (wallpaper.type === "dynamic-aurora") {
         return (
-            <AuroraWallpaperRenderer
-                filters={wallpaper.zenFilters}
-                borderRadius="0"
-            />
+            <div
+                style={{
+                    position: "fixed",
+                    inset: 0,
+                    zIndex: 0,
+                    overflow: "hidden",
+                    pointerEvents: "none",
+                }}
+            >
+                <AuroraWallpaperRenderer
+                    filters={wallpaper.zenFilters}
+                    borderRadius="0"
+                    paletteKey={wallpaper.id}
+                />
+            </div>
         );
     }
 
     const filters = wallpaper.zenFilters;
     const crop = wallpaper.zenCrop;
-    const isFocusActive = mode === "FOCUS" && isActive;
 
     const baseBrightness = (filters.brightness ?? 1) * 100;
     const contrast = (filters.contrast ?? 1) * 100;
