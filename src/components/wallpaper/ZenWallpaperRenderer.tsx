@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { WallpaperState } from "@/lib/WallpaperContext";
+import { WallpaperState, isLiveWallpaper } from "@/lib/WallpaperContext";
 import { useSettings } from "@/lib/SettingsContext";
-import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
+import { LiveWallpaperRenderer } from "./LiveWallpaperRenderer";
 
 interface ZenWallpaperRendererProps {
     wallpaper: WallpaperState;
@@ -13,7 +13,7 @@ interface ZenWallpaperRendererProps {
 
 export function ZenWallpaperRenderer({ wallpaper, brightness = 1, timerState = "idle" }: ZenWallpaperRendererProps) {
     const isFocusActive = timerState === "focus";
-    const { autoDimWallpaper, reducedMotion } = useSettings();
+    const { autoDimWallpaper } = useSettings();
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -32,21 +32,26 @@ export function ZenWallpaperRenderer({ wallpaper, brightness = 1, timerState = "
         return () => observer.disconnect();
     }, []);
 
-    if (wallpaper.type === "dynamic-aurora") {
+    // Live canvas wallpapers (Aurora, Rings, Nebula, Lava, Warp, Mesh, Rain)
+    if (isLiveWallpaper(wallpaper)) {
         return (
             <div
+                data-zen-canvas-container="true"
                 style={{
                     position: "fixed",
                     inset: 0,
+                    width: "100vw",
+                    height: "100vh",
                     zIndex: 0,
                     overflow: "hidden",
                     pointerEvents: "none",
                 }}
             >
-                <AuroraWallpaperRenderer
+                <LiveWallpaperRenderer
+                    pattern={wallpaper.livePattern || "aurora"}
+                    colorTheme={wallpaper.colorTheme || "Violet"}
                     filters={wallpaper.zenFilters}
                     borderRadius="0"
-                    paletteKey={wallpaper.id}
                 />
             </div>
         );
@@ -156,3 +161,4 @@ export function ZenWallpaperRenderer({ wallpaper, brightness = 1, timerState = "
         </div>
     );
 }
+export default ZenWallpaperRenderer;

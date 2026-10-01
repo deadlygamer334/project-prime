@@ -10,7 +10,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import {
     Layout, Music, PartyPopper, Clock, Shield, Download, LogOut,
     Lock, ArrowRight, X, CheckCircle2, AlertCircle, Loader2, Bell,
-    Image as ImageIcon, Trash2, Check, Keyboard, Command
+    Image as ImageIcon, Trash2, Check, Keyboard, Command, Sparkles
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { auth, db, googleProvider } from "@/lib/firebase";
@@ -20,7 +20,9 @@ import useSoundEffects from "@/hooks/useSoundEffects";
 import { useHabitContext } from "@/lib/HabitContext";
 import VibeGallery from "@/components/sections/VibeGallery";
 import { WallpaperManagerBtn } from "@/components/wallpaper/WallpaperManagerModal";
-import { useWallpaper } from "@/lib/WallpaperContext";
+import { useWallpaper, isLiveWallpaper } from "@/lib/WallpaperContext";
+import { getPatternLabel } from "@/lib/wallpaperThemes";
+import { LiveWallpaperRenderer } from "@/components/wallpaper/LiveWallpaperRenderer";
 
 export default function SettingsPage() {
     const { showToast, showConfirm } = useNotification();
@@ -342,74 +344,134 @@ export default function SettingsPage() {
                         )}
 
                         {activeSection === "background" && (
-                            <SettingsCard
-                                icon={ImageIcon}
-                                title="Background"
-                                desc="Global atmosphere and wallpapers">
-                                <SectionLabel className="mb-3">
-                                    Background Style
-                                </SectionLabel>
-                                <div className="grid grid-cols-4 gap-2 mb-6">
-                                    {ALL_BG_STYLES.map(style => (
-                                        <button
-                                            key={style.id}
-                                            onClick={() => settings.updateSetting(
-                                                "backgroundStyle", style.id)}
-                                            className={`relative h-[72px] rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] ${
-                                                settings.backgroundStyle === style.id
-                                                    ? "border-primary shadow-[0_0_12px_rgba(167,139,250,0.25)]"
-                                                    : "border-border hover:border-primary/40"
-                                            }`}
-                                        >
-                                            <div
-                                                className="absolute inset-0 opacity-75"
-                                                style={{ background: style.preview }} />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                                            <div className="absolute bottom-0 left-0 right-0 p-2">
-                                                <p className="text-white text-[11px] font-bold leading-none drop-shadow">
-                                                    {style.label}
-                                                </p>
-                                            </div>
-                                            {settings.backgroundStyle === style.id && (
-                                                <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                            <div className="flex flex-col gap-6">
+                                {/* SECTION 1 — Website Background */}
+                                <SettingsCard
+                                    icon={Sparkles}
+                                    title="Website Background"
+                                    desc="Appears across all pages behind the main content"
+                                >
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                                        {ALL_BG_STYLES.map(style => (
+                                            <button
+                                                key={style.id}
+                                                onClick={() => settings.updateSetting(
+                                                    "backgroundStyle", style.id)}
+                                                className={`relative h-[72px] rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] ${
+                                                    settings.backgroundStyle === style.id
+                                                        ? "border-primary shadow-[0_0_12px_rgba(167,139,250,0.25)]"
+                                                        : "border-border hover:border-primary/40"
+                                                }`}
+                                            >
+                                                <div
+                                                    className="absolute inset-0 opacity-75"
+                                                    style={{ background: style.preview }} />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                                                <div className="absolute bottom-0 left-0 right-0 p-2">
+                                                    <p className="text-white text-[11px] font-bold leading-none drop-shadow">
+                                                        {style.label}
+                                                    </p>
                                                 </div>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                                {/* Immersive wallpaper section */}
-                                <div className="border-t border-border pt-5">
-                                    <SectionLabel className="mb-3">
-                                        Immersive Wallpaper
-                                    </SectionLabel>
-                                    <p className="text-xs text-muted-foreground mb-4">
-                                        Custom wallpapers display behind your Pomodoro timer and in Zen Mode.
-                                    </p>
-                                    <div className="flex flex-col gap-3">
+                                                {settings.backgroundStyle === style.id && (
+                                                    <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                                        <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </SettingsCard>
+
+                                {/* SECTION 2 — Focus & Zen Wallpaper */}
+                                <SettingsCard
+                                    icon={ImageIcon}
+                                    title="Focus & Zen Wallpaper"
+                                    desc="Displays behind your Pomodoro timer and fills the screen in Zen Mode"
+                                >
+                                    <div className="flex flex-col gap-4">
                                         <WallpaperManagerBtn
-                                            className="h-11 w-full !rounded-xl !bg-primary !text-primary-foreground !font-bold hover:opacity-90 transition-opacity">
+                                            className="h-11 w-full !rounded-xl !bg-primary !text-primary-foreground !font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                        >
+                                            <ImageIcon className="w-4 h-4" />
                                             Browse Wallpapers
                                         </WallpaperManagerBtn>
-                                        {wallpaper && (
-                                            <button
-                                                onClick={() => setWallpaper(null)}
-                                                className="h-10 w-full rounded-xl border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                                Remove Wallpaper
-                                            </button>
-                                        )}
+
+                                        {/* Currently active wallpaper preview & info */}
+                                        <div className="p-3.5 rounded-2xl border border-border bg-muted/20 flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-3.5 min-w-0">
+                                                {wallpaper ? (
+                                                    isLiveWallpaper(wallpaper) ? (
+                                                        <div className="w-16 h-10 rounded-xl overflow-hidden relative shrink-0 border border-border shadow-sm">
+                                                            <LiveWallpaperRenderer
+                                                                pattern={wallpaper.livePattern || "aurora"}
+                                                                colorTheme={wallpaper.colorTheme || "Violet"}
+                                                                borderRadius="0"
+                                                            />
+                                                        </div>
+                                                    ) : wallpaper.type === "video" ? (
+                                                        <div className="w-16 h-10 rounded-xl overflow-hidden relative shrink-0 border border-border shadow-sm bg-black/10">
+                                                            {wallpaper.thumbnail ? (
+                                                                <img src={wallpaper.thumbnail} alt="" className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold">Video</div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-16 h-10 rounded-xl overflow-hidden relative shrink-0 border border-border shadow-sm bg-black/10">
+                                                            <img src={wallpaper.thumbnail || wallpaper.src} alt="" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    )
+                                                ) : (
+                                                    <div className="w-16 h-10 rounded-xl border border-dashed border-border flex items-center justify-center shrink-0 text-muted-foreground/40">
+                                                        <ImageIcon className="w-5 h-5 opacity-40" />
+                                                    </div>
+                                                )}
+
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-foreground truncate">
+                                                        {wallpaper ? (
+                                                            isLiveWallpaper(wallpaper)
+                                                                ? `${getPatternLabel(wallpaper.livePattern || "aurora")} · ${wallpaper.colorTheme || "Violet"}`
+                                                                : wallpaper.type === "video"
+                                                                ? `Video Wallpaper #${wallpaper.id}`
+                                                                : `Image Wallpaper #${wallpaper.id}`
+                                                        ) : (
+                                                            <span className="text-muted-foreground font-normal">No wallpaper set</span>
+                                                        )}
+                                                    </p>
+                                                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                        {wallpaper
+                                                            ? (isLiveWallpaper(wallpaper) ? "Live Canvas Wallpaper" : "Custom Media Wallpaper")
+                                                            : "Default Pomodoro theme backdrop"}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {wallpaper && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setWallpaper(null)}
+                                                    className="shrink-0 px-3 py-1.5 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors text-xs font-bold flex items-center gap-1.5"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+
                                         <FormRow
                                             label="Auto-Dim Wallpaper"
-                                            desc="Darken during Focus sessions">
+                                            desc="Darken during focus sessions"
+                                        >
                                             <Toggle
                                                 value={settings.autoDimWallpaper}
                                                 onChange={v => settings.updateSetting(
-                                                    "autoDimWallpaper", v)} />
+                                                    "autoDimWallpaper", v)}
+                                            />
                                         </FormRow>
                                     </div>
-                                </div>
-                            </SettingsCard>
+                                </SettingsCard>
+                            </div>
                         )}
 
                         {activeSection === "timer" && (

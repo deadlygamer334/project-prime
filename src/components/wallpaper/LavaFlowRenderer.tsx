@@ -6,31 +6,51 @@ import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
 
-export interface AuroraWallpaperRendererProps {
+export interface LavaFlowRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
-    /** Backward compatibility */
-    paletteKey?: string;
 }
 
-// 5 aurora curtain bands — each has independent motion parameters
-const BANDS = [
-    // baseX, baseY, speedX, speedY, ampX, ampY, phaseX, phaseY, rx, ry, colorIdx
-    [0.50, 0.32, 0.14, 0.10, 0.18, 0.07, 0.00, 0.00, 0.85, 0.42, 0],
-    [0.28, 0.28, 0.20, 0.14, 0.14, 0.06, 1.20, 2.10, 0.60, 0.32, 1],
-    [0.75, 0.22, 0.26, 0.18, 0.12, 0.06, 2.40, 0.80, 0.48, 0.26, 2],
-    [0.50, 0.48, 0.09, 0.07, 0.08, 0.04, 3.60, 1.50, 0.95, 0.55, 0],
-    [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
+interface LavaBlob {
+    baseX: number;
+    baseY: number;
+    fx1: number;
+    fy1: number;
+    fx2: number;
+    fy2: number;
+    px1: number;
+    py1: number;
+    px2: number;
+    py2: number;
+    ampX: number;
+    ampY: number;
+    radiusRatio: number;
+    colorType: "primary" | "secondary" | "accent";
+}
+
+const LAVA_BLOBS: LavaBlob[] = [
+    // Largest blobs (Primary)
+    { baseX: 0.45, baseY: 0.45, fx1: 0.18, fy1: 0.14, fx2: 0.08, fy2: 0.11, px1: 0.0, py1: 0.0, px2: 1.2, py2: 0.5, ampX: 0.22, ampY: 0.20, radiusRatio: 0.38, colorType: "primary" },
+    { baseX: 0.58, baseY: 0.52, fx1: 0.15, fy1: 0.19, fx2: 0.10, fy2: 0.07, px1: 2.1, py1: 1.4, px2: 0.3, py2: 2.2, ampX: 0.20, ampY: 0.22, radiusRatio: 0.34, colorType: "primary" },
+
+    // Medium blobs (Secondary)
+    { baseX: 0.32, baseY: 0.60, fx1: 0.22, fy1: 0.16, fx2: 0.12, fy2: 0.09, px1: 3.5, py1: 2.8, px2: 1.8, py2: 0.9, ampX: 0.25, ampY: 0.18, radiusRatio: 0.28, colorType: "secondary" },
+    { baseX: 0.65, baseY: 0.36, fx1: 0.17, fy1: 0.24, fx2: 0.09, fy2: 0.14, px1: 1.1, py1: 4.1, px2: 2.7, py2: 1.6, ampX: 0.23, ampY: 0.24, radiusRatio: 0.26, colorType: "secondary" },
+    { baseX: 0.50, baseY: 0.30, fx1: 0.20, fy1: 0.15, fx2: 0.11, fy2: 0.12, px1: 4.8, py1: 0.7, px2: 3.2, py2: 2.9, ampX: 0.18, ampY: 0.19, radiusRatio: 0.24, colorType: "secondary" },
+
+    // Small blobs (Accent)
+    { baseX: 0.40, baseY: 0.50, fx1: 0.26, fy1: 0.21, fx2: 0.14, fy2: 0.17, px1: 0.9, py1: 3.2, px2: 4.1, py2: 1.1, ampX: 0.28, ampY: 0.26, radiusRatio: 0.18, colorType: "accent" },
+    { baseX: 0.60, baseY: 0.48, fx1: 0.23, fy1: 0.27, fx2: 0.15, fy2: 0.13, px1: 2.6, py1: 1.9, px2: 0.8, py2: 3.7, ampX: 0.26, ampY: 0.25, radiusRatio: 0.16, colorType: "accent" },
 ];
 
-export function AuroraWallpaperRenderer({
+export function LavaFlowRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
-}: AuroraWallpaperRendererProps) {
+}: LavaFlowRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
@@ -59,85 +79,52 @@ export function AuroraWallpaperRenderer({
 
         const W = canvas.width;
         const H = canvas.height;
+        const minDim = Math.min(W, H);
         const currentPalette = paletteRef.current;
         const currentIsDark = isDarkRef.current;
 
         ctx.clearRect(0, 0, W, H);
 
-        // Paint a base background
+        // Base background fill
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
         ctx.fillRect(0, 0, W, H);
 
-        // Aurora bands:
-        // dark mode  → "screen" adds light glow
-        // light mode → "source-over" layers soft pastels
+        // Screen blend in dark mode gives luminous metaball-style merges
         ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
 
-        BANDS.forEach(([bx, by, sx, sy, ax, ay, px, py, rx, ry, ci]) => {
-            const x = (bx + Math.sin(t * sx + px) * ax) * W;
-            const y = (by + Math.sin(t * sy + py) * ay) * H;
-            const rxi = rx * W;
-            const ryi = ry * H;
-            const rawColor = currentPalette[ci as number] || currentPalette[0];
-            const bandColor = toRgba(rawColor, currentIsDark ? 0.75 : 0.35);
+        LAVA_BLOBS.forEach((blob) => {
+            const x = (blob.baseX + Math.sin(t * blob.fx1 + blob.px1) * blob.ampX + Math.cos(t * blob.fx2 + blob.px2) * (blob.ampX * 0.4)) * W;
+            const y = (blob.baseY + Math.cos(t * blob.fy1 + blob.py1) * blob.ampY + Math.sin(t * blob.fy2 + blob.py2) * (blob.ampY * 0.4)) * H;
+            const radius = blob.radiusRatio * minDim * 1.35;
 
-            ctx.save();
-            ctx.scale(1, ryi / rxi);
-            const grad = ctx.createRadialGradient(
-                x, y * (rxi / ryi), 0,
-                x, y * (rxi / ryi), rxi
-            );
+            let colorStr: string;
+            if (blob.colorType === "primary") colorStr = currentPalette[0];
+            else if (blob.colorType === "secondary") colorStr = currentPalette[1];
+            else colorStr = currentPalette[2];
 
-            grad.addColorStop(0, bandColor);
-            grad.addColorStop(0.4, toRgba(rawColor, currentIsDark ? 0.32 : 0.16));
-            grad.addColorStop(1, toRgba(rawColor, 0));
+            const coreAlpha = currentIsDark ? 0.85 : 0.45;
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            grad.addColorStop(0, toRgba(colorStr, coreAlpha));
+            grad.addColorStop(0.35, toRgba(colorStr, coreAlpha * 0.7));
+            grad.addColorStop(0.7, toRgba(colorStr, coreAlpha * 0.25));
+            grad.addColorStop(1, toRgba(colorStr, 0));
 
             ctx.fillStyle = grad;
             ctx.beginPath();
-            ctx.arc(x, y * (rxi / ryi), rxi, 0, Math.PI * 2);
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
         });
 
+        // Ambient center vignette
         ctx.globalCompositeOperation = "source-over";
-
-        // Stars — upper 45%, dark mode only, seeded deterministically
-        if (currentIsDark) {
-            let seed = W * 31337 + H * 1337;
-            const rand = () => {
-                seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
-                return seed / 0xFFFFFFFF;
-            };
-            const count = Math.floor((W * H) / 5500);
-            for (let i = 0; i < count; i++) {
-                const sx = rand() * W;
-                const sy = rand() * H * 0.45;
-                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
-                const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
-                ctx.globalAlpha = tw * 0.28;
-                ctx.fillStyle = toRgba(currentPalette[2], 0.9); // accent tinted stars
-                ctx.beginPath();
-                ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-        }
-
-        // Ground vignette — fades bottom to near-opaque bg color
-        const groundGrad = ctx.createLinearGradient(0, H * 0.70, 0, H);
-        if (currentIsDark) {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(true), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(true), 0.88));
-        } else {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(false), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(false), 0.82));
-        }
-        ctx.fillStyle = groundGrad;
+        const vigGrad = ctx.createRadialGradient(W * 0.5, H * 0.5, minDim * 0.35, W * 0.5, H * 0.5, Math.max(W, H) * 0.75);
+        vigGrad.addColorStop(0, toRgba(getCanvasBaseBackground(currentIsDark), 0));
+        vigGrad.addColorStop(1, toRgba(getCanvasBaseBackground(currentIsDark), currentIsDark ? 0.72 : 0.48));
+        ctx.fillStyle = vigGrad;
         ctx.fillRect(0, 0, W, H);
     }, []);
 
-    // Sync canvas size to its CSS container using ResizeObserver with safety fallback
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -210,7 +197,6 @@ export function AuroraWallpaperRenderer({
         }
     }, [palette, isDark, reducedMotion, draw]);
 
-    // Build CSS filter string
     const filterStr = filters
         ? [
               `brightness(${(filters.brightness ?? 1) * 100}%)`,
@@ -243,4 +229,4 @@ export function AuroraWallpaperRenderer({
     );
 }
 
-export default AuroraWallpaperRenderer;
+export default LavaFlowRenderer;

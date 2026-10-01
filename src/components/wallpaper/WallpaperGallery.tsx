@@ -5,14 +5,16 @@ import { Check, Search, Settings2, X } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import wallpapersDataRaw from "@/../data/wallpapers.json";
 import {
-    WallpaperState, useWallpaper,
-    AURORA_WALLPAPER, AURORA_OCEAN, AURORA_FOREST,
-    AURORA_SOLAR, AURORA_ROSE, AURORA_ARCTIC
+    WallpaperState,
+    useWallpaper,
+    isLiveWallpaper,
 } from "@/lib/WallpaperContext";
+import { LIVE_PATTERNS, COLOR_THEME_LIST } from "@/lib/wallpaperThemes";
 import { WallpaperEditor } from "./WallpaperEditor";
-import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
+import { LiveWallpaperRenderer } from "./LiveWallpaperRenderer";
 
-const fallbackImage = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZiIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+RXJyb3I8L3RleHQ+PC9zdmc+";
+const fallbackImage =
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZiIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+RXJyb3I8L3RleHQ+PC9zdmc+";
 
 const BATCH_SIZE = 40;
 
@@ -21,15 +23,36 @@ interface NumberedWallpaper extends WallpaperState {
 }
 
 export function WallpaperGallery() {
-    const { wallpaper: currentWallpaper, setWallpaper } = useWallpaper();
+    const {
+        wallpaper: currentWallpaper,
+        setWallpaper,
+        setLiveWallpaperPattern,
+        setLiveWallpaperColorTheme,
+    } = useWallpaper();
+
     const [filter, setFilter] = useState<"all" | "image" | "video">("all");
     const [searchQuery, setSearchQuery] = useState("");
     const [isEditing, setIsEditing] = useState(false);
     const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+    const [galleryColorTheme, setGalleryColorTheme] = useState<string>(
+        currentWallpaper?.colorTheme || "Violet"
+    );
+
     const { ref, inView } = useInView({
         rootMargin: "400px",
         triggerOnce: false,
     });
+
+    const isCurrentLive = isLiveWallpaper(currentWallpaper);
+    const activePatternId = isCurrentLive ? (currentWallpaper?.livePattern || "aurora") : null;
+    const effectiveColorTheme = currentWallpaper?.colorTheme || galleryColorTheme || "Violet";
+
+    // Keep galleryColorTheme synced if current live wallpaper has a colorTheme
+    useEffect(() => {
+        if (currentWallpaper?.colorTheme) {
+            setGalleryColorTheme(currentWallpaper.colorTheme);
+        }
+    }, [currentWallpaper?.colorTheme]);
 
     // Reset pagination when filter or search changes
     useEffect(() => {
@@ -45,14 +68,15 @@ export function WallpaperGallery() {
             preview: w.preview,
             poster: w.poster,
             thumbnail: w.thumb,
-            number: index + 1
+            number: index + 1,
         })) as NumberedWallpaper[];
     }, []);
 
     const filtered = useMemo(() => {
-        const baseFiltered = wallpapers.filter(w => {
+        const baseFiltered = wallpapers.filter((w) => {
             const matchesType = filter === "all" || w.type === filter;
-            const matchesSearch = searchQuery.trim() === "" ||
+            const matchesSearch =
+                searchQuery.trim() === "" ||
                 w.number.toString() === searchQuery.trim() ||
                 w.id.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesType && matchesSearch;
@@ -61,7 +85,7 @@ export function WallpaperGallery() {
         if (!currentWallpaper) return baseFiltered;
 
         // Move current wallpaper to top if it's in the filtered list
-        const currentIndex = baseFiltered.findIndex(w => w.id === currentWallpaper.id);
+        const currentIndex = baseFiltered.findIndex((w) => w.id === currentWallpaper.id);
         if (currentIndex > -1) {
             const result = [...baseFiltered];
             const [current] = result.splice(currentIndex, 1);
@@ -76,11 +100,12 @@ export function WallpaperGallery() {
 
     useEffect(() => {
         if (inView && visibleCount < filtered.length) {
-            setVisibleCount(prev => Math.min(prev + BATCH_SIZE, filtered.length));
+            setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, filtered.length));
         }
     }, [inView, filtered.length, visibleCount]);
 
-    if (isEditing && currentWallpaper) {
+    // If editor was opened for a live wallpaper somehow, prevent it
+    if (isEditing && currentWallpaper && !isLiveWallpaper(currentWallpaper)) {
         return (
             <WallpaperEditor
                 wallpaper={currentWallpaper}
@@ -92,99 +117,115 @@ export function WallpaperGallery() {
     return (
         <div className="flex flex-col w-full h-full">
             {/* ── Live Backgrounds ─────────────────── */}
-            <div className="mb-5 shrink-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em]
-                              text-muted-foreground mb-3">
-                    Live Backgrounds
-                </p>
-                <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
-                    {[
-                        {
-                            wallpaper: AURORA_WALLPAPER,
-                            label: "Northern Lights",
-                            desc: "Violet · Pink · Green",
-                        },
-                        {
-                            wallpaper: AURORA_OCEAN,
-                            label: "Ocean Aurora",
-                            desc: "Blue · Cyan · Teal",
-                        },
-                        {
-                            wallpaper: AURORA_FOREST,
-                            label: "Forest Spirits",
-                            desc: "Emerald · Green · Lime",
-                        },
-                        {
-                            wallpaper: AURORA_SOLAR,
-                            label: "Solar Wind",
-                            desc: "Orange · Amber · Red",
-                        },
-                        {
-                            wallpaper: AURORA_ROSE,
-                            label: "Rose Nebula",
-                            desc: "Rose · Pink · Purple",
-                        },
-                        {
-                            wallpaper: AURORA_ARCTIC,
-                            label: "Arctic Ice",
-                            desc: "Ice Blue · Silver",
-                        },
-                    ].map(({ wallpaper: variant, label, desc }) => {
-                        const isActive = currentWallpaper?.id === variant.id;
+            <div className="mb-6 shrink-0 bg-muted/20 border border-border/60 rounded-3xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground">
+                        Live Backgrounds
+                    </p>
+                    {isCurrentLive && (
+                        <button
+                            type="button"
+                            onClick={() => setWallpaper(null)}
+                            className="text-[10px] font-bold text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                            Clear Wallpaper
+                        </button>
+                    )}
+                </div>
+
+                {/* ROW 1: Pattern selection cards */}
+                <div className="flex gap-3 overflow-x-auto pb-3 pt-1 hide-scrollbar">
+                    {LIVE_PATTERNS.map((p) => {
+                        const isActive = isCurrentLive && activePatternId === p.id;
                         return (
                             <button
-                                key={variant.id}
+                                key={p.id}
                                 type="button"
-                                onClick={() =>
-                                    isActive
-                                        ? setWallpaper(null)
-                                        : setWallpaper(variant)
-                                }
+                                onClick={() => {
+                                    if (isActive) {
+                                        setWallpaper(null);
+                                    } else {
+                                        setLiveWallpaperPattern(p.id);
+                                    }
+                                }}
                                 className={`
-                                    relative w-44 shrink-0 overflow-hidden rounded-2xl
-                                    border-2 transition-all duration-200
+                                    relative w-[180px] shrink-0 overflow-hidden rounded-2xl
+                                    border-2 transition-all duration-200 aspect-video
                                     hover:scale-[1.03] active:scale-[0.98]
-                                    focus:outline-none focus:ring-2 focus:ring-primary/50
+                                    focus:outline-none focus:ring-2 focus:ring-primary/50 text-left
                                     ${isActive
-                                        ? "border-primary shadow-[0_0_18px_rgba(167,139,250,0.30)]"
+                                        ? "border-primary shadow-[0_0_18px_rgba(167,139,250,0.35)] ring-1 ring-primary"
                                         : "border-border hover:border-primary/40"}
                                 `}
-                                style={{ aspectRatio: "16/9" }}
-                                title={`${label} — Live Background`}
+                                title={`${p.label} — Live Background`}
                             >
-                                {/* Live canvas preview using the variant's fixed palette */}
-                                <div className="absolute inset-0">
-                                    <AuroraWallpaperRenderer
+                                {/* Live mini-preview using current effective color theme */}
+                                <div className="absolute inset-0 pointer-events-none">
+                                    <LiveWallpaperRenderer
+                                        pattern={p.id}
+                                        colorTheme={effectiveColorTheme}
                                         borderRadius="0"
-                                        paletteKey={variant.id}
                                     />
                                 </div>
 
                                 {/* Label overlay */}
-                                <div className="absolute inset-x-0 bottom-0 p-2.5
-                                                bg-gradient-to-t from-black/80
-                                                via-black/30 to-transparent">
-                                    <p className="text-white text-[11px] font-black
-                                                  tracking-wide leading-none">
-                                        {label}
+                                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none">
+                                    <p className="text-white text-[11px] font-black tracking-wide leading-tight">
+                                        {p.label}
                                     </p>
-                                    <p className="text-white/55 text-[9px] mt-0.5
-                                                  font-medium leading-none">
-                                        {desc}
+                                    <p className="text-white/60 text-[9px] mt-0.5 font-medium leading-none truncate">
+                                        {p.desc}
                                     </p>
                                 </div>
 
                                 {/* Active checkmark */}
                                 {isActive && (
-                                    <div className="absolute top-2 right-2
-                                                    bg-primary text-primary-foreground
-                                                    p-1 rounded-full shadow-lg">
+                                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground p-1 rounded-full shadow-lg">
                                         <Check className="w-3 h-3" />
                                     </div>
                                 )}
                             </button>
                         );
                     })}
+                </div>
+
+                {/* ROW 2: Color theme selection swatches */}
+                <div className="mt-2 pt-3 border-t border-border/50 flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar">
+                        {COLOR_THEME_LIST.map((th) => {
+                            const isSelectedTheme = effectiveColorTheme.toLowerCase() === th.name.toLowerCase();
+                            return (
+                                <button
+                                    key={th.name}
+                                    type="button"
+                                    onClick={() => {
+                                        setGalleryColorTheme(th.name);
+                                        setLiveWallpaperColorTheme(th.name);
+                                    }}
+                                    className={`
+                                        flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold
+                                        transition-all duration-150 shrink-0
+                                        ${isSelectedTheme
+                                            ? "border-primary ring-2 ring-primary/40 bg-primary/10 text-foreground scale-105"
+                                            : "border-border bg-card/60 text-muted-foreground hover:text-foreground hover:border-primary/30"}
+                                    `}
+                                    title={`Color theme: ${th.name}`}
+                                >
+                                    <span
+                                        className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${th.primary} 0%, ${th.secondary} 100%)`,
+                                        }}
+                                    />
+                                    <span>{th.label}</span>
+                                    {isSelectedTheme && <Check className="w-3 h-3 text-primary ml-0.5" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-medium pl-0.5">
+                        Color applies to the selected live background
+                    </p>
                 </div>
             </div>
             {/* ── / Live Backgrounds ─────────────────── */}
@@ -193,11 +234,15 @@ export function WallpaperGallery() {
             <div className="flex flex-wrap items-center gap-4 mb-6">
                 {/* Filter Toolbar */}
                 <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-full w-max">
-                    {(["all", "image", "video"] as const).map(t => (
+                    {(["all", "image", "video"] as const).map((t) => (
                         <button
                             key={t}
                             onClick={() => setFilter(t)}
-                            className={`px-6 py-1.5 rounded-full text-sm font-bold capitalize transition-all ${filter === t ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground/60 hover:text-foreground'}`}
+                            className={`px-6 py-1.5 rounded-full text-sm font-bold capitalize transition-all ${
+                                filter === t
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "text-foreground/60 hover:text-foreground"
+                            }`}
                         >
                             {t}
                         </button>
@@ -234,12 +279,17 @@ export function WallpaperGallery() {
                 {visibleWallpapers.map((w) => {
                     const isSelected = currentWallpaper?.id === w.id;
                     return (
-                        <div key={w.id} className="w-full aspect-video min-h-[100px] relative rounded-xl overflow-hidden shadow-sm group border-2 bg-black/5 dark:bg-white/5 transition-all hover:scale-105"
-                            style={{ borderColor: isSelected ? 'hsl(var(--primary))' : 'transparent' }}>
+                        <div
+                            key={w.id}
+                            className="w-full aspect-video min-h-[100px] relative rounded-xl overflow-hidden shadow-sm group border-2 bg-black/5 dark:bg-white/5 transition-all hover:scale-105"
+                            style={{
+                                borderColor: isSelected ? "hsl(var(--primary))" : "transparent",
+                            }}
+                        >
                             <div
                                 onClick={() => setWallpaper(w)}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
+                                    if (e.key === "Enter" || e.key === " ") {
                                         e.preventDefault();
                                         setWallpaper(w);
                                     }
@@ -252,7 +302,9 @@ export function WallpaperGallery() {
                                     src={w.thumbnail}
                                     alt={`Wallpaper ${w.number}`}
                                     loading="lazy"
-                                    onError={(e) => { e.currentTarget.src = fallbackImage; }}
+                                    onError={(e) => {
+                                        e.currentTarget.src = fallbackImage;
+                                    }}
                                     className="w-full h-full object-cover pointer-events-none transition-opacity duration-300"
                                 />
 
@@ -275,24 +327,27 @@ export function WallpaperGallery() {
                                         <div className="bg-primary text-primary-foreground p-2 rounded-full shadow-lg">
                                             <Check className="w-5 h-5" />
                                         </div>
-                                        <div
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setIsEditing(true);
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
+                                        {/* "Adjust" button is ONLY shown for image and video wallpapers */}
+                                        {(w.type === "image" || w.type === "video") && (
+                                            <div
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={(e) => {
                                                     e.stopPropagation();
-                                                    e.preventDefault();
                                                     setIsEditing(true);
-                                                }
-                                            }}
-                                            className="pointer-events-auto flex items-center gap-1.5 bg-black/50 hover:bg-black/70 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors shadow-sm cursor-pointer"
-                                        >
-                                            <Settings2 className="w-3.5 h-3.5" /> Adjust
-                                        </div>
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" || e.key === " ") {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setIsEditing(true);
+                                                    }
+                                                }}
+                                                className="pointer-events-auto flex items-center gap-1.5 bg-black/50 hover:bg-black/70 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors shadow-sm cursor-pointer"
+                                            >
+                                                <Settings2 className="w-3.5 h-3.5" /> Adjust
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -303,7 +358,7 @@ export function WallpaperGallery() {
                 {/* Infinite Scroll Trigger */}
                 {visibleCount < filtered.length && (
                     <div ref={ref} className="col-span-full h-20 flex items-center justify-center opacity-50">
-                        <div className="w-6 h-6 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin"></div>
+                        <div className="w-6 h-6 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
                     </div>
                 )}
 
@@ -318,3 +373,5 @@ export function WallpaperGallery() {
         </div>
     );
 }
+
+export default WallpaperGallery;

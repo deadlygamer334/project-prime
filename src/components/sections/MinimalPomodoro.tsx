@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { ChevronUp, ChevronDown, Play, Pause, RotateCcw, Maximize2, Minimize2, PictureInPicture2, Square } from "lucide-react";
+import { ChevronUp, ChevronDown, Play, Pause, RotateCcw, Maximize2, Minimize2, PictureInPicture2, Square, ZoomIn, ZoomOut } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSettings } from "@/lib/SettingsContext";
@@ -231,6 +231,12 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
     useEffect(() => {
         if (isFullScreen && mounted) {
             document.documentElement.style.setProperty("--zen-brightness", brightness.toString());
+            const originalHtmlOverflow = document.documentElement.style.overflow;
+            document.documentElement.style.overflow = "hidden";
+            return () => {
+                document.documentElement.style.removeProperty("--zen-brightness");
+                document.documentElement.style.overflow = originalHtmlOverflow;
+            };
         } else {
             document.documentElement.style.removeProperty("--zen-brightness");
         }
@@ -1240,13 +1246,9 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                                                : "text-black/30 hover:text-black/70 hover:bg-black/10"
                                                            }`}
                                                 title="Decrease size"
+                                                aria-label="Decrease size"
                                             >
-                                                {/* Minimise icon — two inward arrows */}
-                                                <svg width="14" height="14" viewBox="0 0 14 14"
-                                                     fill="none" stroke="currentColor"
-                                                     strokeWidth="1.6" strokeLinecap="round">
-                                                    <path d="M9 1h4v4M5 13H1V9M14 5l-4 4M5 9l-4 4"/>
-                                                </svg>
+                                                <ZoomOut size={14} strokeWidth={1.8} />
                                             </button>
                                             <button
                                                 onClick={(e) => {
@@ -1260,13 +1262,9 @@ function MinimalPomodoro({ onComplete, addSessionTransaction, onTimerStateChange
                                                                : "text-black/30 hover:text-black/70 hover:bg-black/10"
                                                            }`}
                                                 title="Increase size"
+                                                aria-label="Increase size"
                                             >
-                                                {/* Maximise icon — two outward arrows */}
-                                                <svg width="14" height="14" viewBox="0 0 14 14"
-                                                     fill="none" stroke="currentColor"
-                                                     strokeWidth="1.6" strokeLinecap="round">
-                                                    <path d="M1 9H5V13M9 1V5H13M1 13l4-4M9 5l4-4"/>
-                                                </svg>
+                                                <ZoomIn size={14} strokeWidth={1.8} />
                                             </button>
                                         </div>
 

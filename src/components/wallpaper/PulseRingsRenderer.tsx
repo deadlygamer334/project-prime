@@ -6,31 +6,36 @@ import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
 
-export interface AuroraWallpaperRendererProps {
+export interface PulseRingsRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
-    /** Backward compatibility */
-    paletteKey?: string;
 }
 
-// 5 aurora curtain bands — each has independent motion parameters
-const BANDS = [
-    // baseX, baseY, speedX, speedY, ampX, ampY, phaseX, phaseY, rx, ry, colorIdx
-    [0.50, 0.32, 0.14, 0.10, 0.18, 0.07, 0.00, 0.00, 0.85, 0.42, 0],
-    [0.28, 0.28, 0.20, 0.14, 0.14, 0.06, 1.20, 2.10, 0.60, 0.32, 1],
-    [0.75, 0.22, 0.26, 0.18, 0.12, 0.06, 2.40, 0.80, 0.48, 0.26, 2],
-    [0.50, 0.48, 0.09, 0.07, 0.08, 0.04, 3.60, 1.50, 0.95, 0.55, 0],
-    [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
+interface OriginConfig {
+    baseX: number;
+    baseY: number;
+    driftSpeedX: number;
+    driftSpeedY: number;
+    driftAmpX: number;
+    driftAmpY: number;
+    phase: number;
+    ringCount: number;
+}
+
+const ORIGINS: OriginConfig[] = [
+    { baseX: 0.36, baseY: 0.44, driftSpeedX: 0.15, driftSpeedY: 0.12, driftAmpX: 0.05, driftAmpY: 0.04, phase: 0.0, ringCount: 5 },
+    { baseX: 0.68, baseY: 0.58, driftSpeedX: 0.13, driftSpeedY: 0.17, driftAmpX: 0.06, driftAmpY: 0.05, phase: 0.45, ringCount: 5 },
+    { baseX: 0.52, baseY: 0.28, driftSpeedX: 0.11, driftSpeedY: 0.14, driftAmpX: 0.04, driftAmpY: 0.04, phase: 0.8, ringCount: 4 },
 ];
 
-export function AuroraWallpaperRenderer({
+export function PulseRingsRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
-}: AuroraWallpaperRendererProps) {
+}: PulseRingsRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
@@ -64,80 +69,83 @@ export function AuroraWallpaperRenderer({
 
         ctx.clearRect(0, 0, W, H);
 
-        // Paint a base background
+        // Base fill
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
         ctx.fillRect(0, 0, W, H);
 
-        // Aurora bands:
-        // dark mode  → "screen" adds light glow
-        // light mode → "source-over" layers soft pastels
+        // Dark mode: screen for vibrant halos; Light mode: source-over
         ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
 
-        BANDS.forEach(([bx, by, sx, sy, ax, ay, px, py, rx, ry, ci]) => {
-            const x = (bx + Math.sin(t * sx + px) * ax) * W;
-            const y = (by + Math.sin(t * sy + py) * ay) * H;
-            const rxi = rx * W;
-            const ryi = ry * H;
-            const rawColor = currentPalette[ci as number] || currentPalette[0];
-            const bandColor = toRgba(rawColor, currentIsDark ? 0.75 : 0.35);
+        const maxRadius = Math.max(W, H) * 0.70;
+        const ringPeriod = 12; // seconds for one ring to expand fully
 
-            ctx.save();
-            ctx.scale(1, ryi / rxi);
-            const grad = ctx.createRadialGradient(
-                x, y * (rxi / ryi), 0,
-                x, y * (rxi / ryi), rxi
-            );
+        ORIGINS.forEach((orig, oIndex) => {
+            const ox = (orig.baseX + Math.sin(t * orig.driftSpeedX + orig.phase) * orig.driftAmpX) * W;
+            const oy = (orig.baseY + Math.cos(t * orig.driftSpeedY + orig.phase * 1.5) * orig.driftAmpY) * H;
 
-            grad.addColorStop(0, bandColor);
-            grad.addColorStop(0.4, toRgba(rawColor, currentIsDark ? 0.32 : 0.16));
-            grad.addColorStop(1, toRgba(rawColor, 0));
-
-            ctx.fillStyle = grad;
+            // Subtle center glow
+            const centerColor = toRgba(currentPalette[oIndex % 3], currentIsDark ? 0.25 : 0.12);
+            const centerGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, W * 0.15);
+            centerGrad.addColorStop(0, centerColor);
+            centerGrad.addColorStop(1, toRgba(currentPalette[oIndex % 3], 0));
+            ctx.fillStyle = centerGrad;
             ctx.beginPath();
-            ctx.arc(x, y * (rxi / ryi), rxi, 0, Math.PI * 2);
+            ctx.arc(ox, oy, W * 0.15, 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
+
+            // Concentric rings
+            for (let r = 0; r < orig.ringCount; r++) {
+                const ringOffset = (r / orig.ringCount) + (orig.phase * 0.3);
+                const progress = ((t / ringPeriod) + ringOffset) % 1.0;
+                const currentRadius = progress * maxRadius;
+
+                // Opacity curve: 0 at center -> max at 0.35 -> 0 at 1.0
+                let alphaMultiplier: number;
+                if (progress < 0.35) {
+                    alphaMultiplier = progress / 0.35;
+                } else {
+                    alphaMultiplier = 1 - (progress - 0.35) / 0.65;
+                }
+                const maxAlpha = currentIsDark ? 0.65 : 0.35;
+                const alpha = Math.max(0, Math.min(1, alphaMultiplier * maxAlpha));
+
+                if (alpha <= 0.01 || currentRadius <= 2) continue;
+
+                // Alternating primary and secondary color
+                const colorHex = (r + oIndex) % 2 === 0 ? currentPalette[0] : currentPalette[1];
+                const strokeWidth = (4 + progress * 24) * dprRef.current;
+
+                // Glowing halo ring with soft gradient stroke
+                ctx.save();
+                ctx.lineWidth = strokeWidth;
+
+                // Draw soft ring
+                ctx.strokeStyle = toRgba(colorHex, alpha);
+                ctx.beginPath();
+                ctx.arc(ox, oy, currentRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inner glow halo
+                ctx.lineWidth = strokeWidth * 0.4;
+                ctx.strokeStyle = toRgba(currentPalette[2], alpha * 0.5);
+                ctx.beginPath();
+                ctx.arc(ox, oy, Math.max(1, currentRadius - strokeWidth * 0.3), 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.restore();
+            }
         });
 
+        // Ambient vignette
         ctx.globalCompositeOperation = "source-over";
-
-        // Stars — upper 45%, dark mode only, seeded deterministically
-        if (currentIsDark) {
-            let seed = W * 31337 + H * 1337;
-            const rand = () => {
-                seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
-                return seed / 0xFFFFFFFF;
-            };
-            const count = Math.floor((W * H) / 5500);
-            for (let i = 0; i < count; i++) {
-                const sx = rand() * W;
-                const sy = rand() * H * 0.45;
-                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
-                const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
-                ctx.globalAlpha = tw * 0.28;
-                ctx.fillStyle = toRgba(currentPalette[2], 0.9); // accent tinted stars
-                ctx.beginPath();
-                ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-        }
-
-        // Ground vignette — fades bottom to near-opaque bg color
-        const groundGrad = ctx.createLinearGradient(0, H * 0.70, 0, H);
-        if (currentIsDark) {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(true), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(true), 0.88));
-        } else {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(false), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(false), 0.82));
-        }
-        ctx.fillStyle = groundGrad;
+        const vigGrad = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.3, W * 0.5, H * 0.5, W * 0.75);
+        vigGrad.addColorStop(0, toRgba(getCanvasBaseBackground(currentIsDark), 0));
+        vigGrad.addColorStop(1, toRgba(getCanvasBaseBackground(currentIsDark), currentIsDark ? 0.65 : 0.45));
+        ctx.fillStyle = vigGrad;
         ctx.fillRect(0, 0, W, H);
     }, []);
 
-    // Sync canvas size to its CSS container using ResizeObserver with safety fallback
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -210,7 +218,6 @@ export function AuroraWallpaperRenderer({
         }
     }, [palette, isDark, reducedMotion, draw]);
 
-    // Build CSS filter string
     const filterStr = filters
         ? [
               `brightness(${(filters.brightness ?? 1) * 100}%)`,
@@ -243,4 +250,4 @@ export function AuroraWallpaperRenderer({
     );
 }
 
-export default AuroraWallpaperRenderer;
+export default PulseRingsRenderer;

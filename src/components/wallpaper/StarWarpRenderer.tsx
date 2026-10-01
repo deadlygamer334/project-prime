@@ -6,31 +6,29 @@ import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
 
-export interface AuroraWallpaperRendererProps {
+export interface StarWarpRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
-    /** Backward compatibility */
-    paletteKey?: string;
 }
 
-// 5 aurora curtain bands — each has independent motion parameters
-const BANDS = [
-    // baseX, baseY, speedX, speedY, ampX, ampY, phaseX, phaseY, rx, ry, colorIdx
-    [0.50, 0.32, 0.14, 0.10, 0.18, 0.07, 0.00, 0.00, 0.85, 0.42, 0],
-    [0.28, 0.28, 0.20, 0.14, 0.14, 0.06, 1.20, 2.10, 0.60, 0.32, 1],
-    [0.75, 0.22, 0.26, 0.18, 0.12, 0.06, 2.40, 0.80, 0.48, 0.26, 2],
-    [0.50, 0.48, 0.09, 0.07, 0.08, 0.04, 3.60, 1.50, 0.95, 0.55, 0],
-    [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
-];
+interface StarParticle {
+    angle: number;
+    depth: number;
+    speed: number;
+    colorType: 0 | 1;
+    seed: number;
+}
 
-export function AuroraWallpaperRenderer({
+const STAR_COUNT = 200;
+
+export function StarWarpRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
-}: AuroraWallpaperRendererProps) {
+}: StarWarpRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
@@ -40,6 +38,7 @@ export function AuroraWallpaperRenderer({
     const tRef = useRef<number>(0);
     const lastRef = useRef<number>(0);
     const dprRef = useRef<number>(1);
+    const starsRef = useRef<StarParticle[]>([]);
     const isDark = theme === "dark";
     const FPS = 30;
     const INTERVAL = 1000 / FPS;
@@ -53,91 +52,109 @@ export function AuroraWallpaperRenderer({
         isDarkRef.current = isDark;
     }, [palette, isDark]);
 
-    const draw = useCallback((canvas: HTMLCanvasElement, t: number) => {
+    // Initialize stars with deterministic random spread
+    useEffect(() => {
+        let seed = 42819;
+        const rand = () => {
+            seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
+            return seed / 0xffffffff;
+        };
+
+        const stars: StarParticle[] = [];
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+                angle: rand() * Math.PI * 2,
+                depth: rand() * 0.98 + 0.02,
+                speed: 0.018 + rand() * 0.012, // 35 to 55 seconds to travel full length
+                colorType: rand() > 0.5 ? 1 : 0,
+                seed: rand(),
+            });
+        }
+        starsRef.current = stars;
+    }, []);
+
+    const draw = useCallback((canvas: HTMLCanvasElement, deltaSec: number) => {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
         const W = canvas.width;
         const H = canvas.height;
+        const cx = W * 0.5;
+        const cy = H * 0.5;
+        const maxDist = Math.sqrt(cx * cx + cy * cy) * 1.05;
         const currentPalette = paletteRef.current;
         const currentIsDark = isDarkRef.current;
 
         ctx.clearRect(0, 0, W, H);
 
-        // Paint a base background
+        // Base fill
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
         ctx.fillRect(0, 0, W, H);
 
-        // Aurora bands:
-        // dark mode  → "screen" adds light glow
-        // light mode → "source-over" layers soft pastels
-        ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
-
-        BANDS.forEach(([bx, by, sx, sy, ax, ay, px, py, rx, ry, ci]) => {
-            const x = (bx + Math.sin(t * sx + px) * ax) * W;
-            const y = (by + Math.sin(t * sy + py) * ay) * H;
-            const rxi = rx * W;
-            const ryi = ry * H;
-            const rawColor = currentPalette[ci as number] || currentPalette[0];
-            const bandColor = toRgba(rawColor, currentIsDark ? 0.75 : 0.35);
-
-            ctx.save();
-            ctx.scale(1, ryi / rxi);
-            const grad = ctx.createRadialGradient(
-                x, y * (rxi / ryi), 0,
-                x, y * (rxi / ryi), rxi
-            );
-
-            grad.addColorStop(0, bandColor);
-            grad.addColorStop(0.4, toRgba(rawColor, currentIsDark ? 0.32 : 0.16));
-            grad.addColorStop(1, toRgba(rawColor, 0));
-
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(x, y * (rxi / ryi), rxi, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        });
-
-        ctx.globalCompositeOperation = "source-over";
-
-        // Stars — upper 45%, dark mode only, seeded deterministically
-        if (currentIsDark) {
-            let seed = W * 31337 + H * 1337;
-            const rand = () => {
-                seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
-                return seed / 0xFFFFFFFF;
-            };
-            const count = Math.floor((W * H) / 5500);
-            for (let i = 0; i < count; i++) {
-                const sx = rand() * W;
-                const sy = rand() * H * 0.45;
-                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
-                const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
-                ctx.globalAlpha = tw * 0.28;
-                ctx.fillStyle = toRgba(currentPalette[2], 0.9); // accent tinted stars
-                ctx.beginPath();
-                ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-        }
-
-        // Ground vignette — fades bottom to near-opaque bg color
-        const groundGrad = ctx.createLinearGradient(0, H * 0.70, 0, H);
-        if (currentIsDark) {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(true), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(true), 0.88));
-        } else {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(false), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(false), 0.82));
-        }
-        ctx.fillStyle = groundGrad;
+        // Center deep-space radial gradient glow using primary color at 8% opacity
+        const centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxDist * 0.6);
+        centerGlow.addColorStop(0, toRgba(currentPalette[0], currentIsDark ? 0.12 : 0.06));
+        centerGlow.addColorStop(0.5, toRgba(currentPalette[1], currentIsDark ? 0.05 : 0.02));
+        centerGlow.addColorStop(1, toRgba(currentPalette[0], 0));
+        ctx.fillStyle = centerGlow;
         ctx.fillRect(0, 0, W, H);
-    }, []);
 
-    // Sync canvas size to its CSS container using ResizeObserver with safety fallback
+        // Stars rendering with additive blending in dark mode
+        ctx.globalCompositeOperation = currentIsDark ? "lighter" : "source-over";
+
+        const stars = starsRef.current;
+        for (let i = 0; i < stars.length; i++) {
+            const star = stars[i];
+
+            if (!reducedMotion) {
+                star.depth += star.speed * deltaSec;
+                if (star.depth >= 1.0) {
+                    star.depth = 0.01 + (star.seed * 0.04);
+                    star.angle = (star.angle + 0.618) % (Math.PI * 2);
+                }
+            }
+
+            // Exponential perspective depth mapping
+            const dist = Math.pow(star.depth, 1.85) * maxDist;
+            const sx = cx + Math.cos(star.angle) * dist;
+            const sy = cy + Math.sin(star.angle) * dist;
+
+            // Size: small near center, larger near edge
+            const size = (0.5 + Math.pow(star.depth, 1.6) * 3.2) * dprRef.current;
+
+            // Color & Alpha:
+            // near center: accent color at low opacity
+            // mid/far: mix of primary and secondary, brighter towards edge
+            let colorStr: string;
+            let alpha: number;
+
+            if (star.depth < 0.25) {
+                colorStr = currentPalette[2];
+                alpha = currentIsDark ? (star.depth * 1.2 + 0.12) : (star.depth * 0.6 + 0.08);
+            } else {
+                colorStr = star.colorType === 0 ? currentPalette[0] : currentPalette[1];
+                const edgeFade = star.depth > 0.88 ? (1.0 - star.depth) / 0.12 : 1.0;
+                alpha = (currentIsDark ? 0.85 : 0.45) * Math.min(1, star.depth * 1.1) * edgeFade;
+            }
+
+            if (alpha <= 0.01) continue;
+
+            ctx.fillStyle = toRgba(colorStr, alpha);
+            ctx.beginPath();
+            ctx.arc(sx, sy, Math.max(0.5, size), 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Ambient edge vignette
+        ctx.globalCompositeOperation = "source-over";
+        const vigGrad = ctx.createRadialGradient(cx, cy, maxDist * 0.35, cx, cy, maxDist);
+        vigGrad.addColorStop(0, toRgba(getCanvasBaseBackground(currentIsDark), 0));
+        vigGrad.addColorStop(1, toRgba(getCanvasBaseBackground(currentIsDark), currentIsDark ? 0.70 : 0.40));
+        ctx.fillStyle = vigGrad;
+        ctx.fillRect(0, 0, W, H);
+    }, [reducedMotion]);
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -189,9 +206,10 @@ export function AuroraWallpaperRenderer({
         const animate = (ts: number) => {
             const elapsed = ts - lastRef.current;
             if (elapsed >= INTERVAL) {
-                tRef.current += elapsed / 1000;
+                const deltaSec = elapsed / 1000;
+                tRef.current += deltaSec;
                 lastRef.current = ts - (elapsed % INTERVAL);
-                draw(canvas, tRef.current);
+                draw(canvas, deltaSec);
             }
             rafRef.current = requestAnimationFrame(animate);
         };
@@ -206,11 +224,10 @@ export function AuroraWallpaperRenderer({
     // Redraw static frame on palette/theme change when in reduced motion
     useEffect(() => {
         if (reducedMotion && canvasRef.current) {
-            draw(canvasRef.current, tRef.current);
+            draw(canvasRef.current, 0);
         }
     }, [palette, isDark, reducedMotion, draw]);
 
-    // Build CSS filter string
     const filterStr = filters
         ? [
               `brightness(${(filters.brightness ?? 1) * 100}%)`,
@@ -243,4 +260,4 @@ export function AuroraWallpaperRenderer({
     );
 }
 
-export default AuroraWallpaperRenderer;
+export default StarWarpRenderer;

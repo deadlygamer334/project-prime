@@ -6,31 +6,23 @@ import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
 
-export interface AuroraWallpaperRendererProps {
+export interface MeshWaveRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
-    /** Backward compatibility */
-    paletteKey?: string;
 }
 
-// 5 aurora curtain bands — each has independent motion parameters
-const BANDS = [
-    // baseX, baseY, speedX, speedY, ampX, ampY, phaseX, phaseY, rx, ry, colorIdx
-    [0.50, 0.32, 0.14, 0.10, 0.18, 0.07, 0.00, 0.00, 0.85, 0.42, 0],
-    [0.28, 0.28, 0.20, 0.14, 0.14, 0.06, 1.20, 2.10, 0.60, 0.32, 1],
-    [0.75, 0.22, 0.26, 0.18, 0.12, 0.06, 2.40, 0.80, 0.48, 0.26, 2],
-    [0.50, 0.48, 0.09, 0.07, 0.08, 0.04, 3.60, 1.50, 0.95, 0.55, 0],
-    [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
-];
+const COLS = 13;
+const ROWS = 9;
+const WAVE_PERIOD = 10; // seconds for full wave traversal
 
-export function AuroraWallpaperRenderer({
+export function MeshWaveRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
-}: AuroraWallpaperRendererProps) {
+}: MeshWaveRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
@@ -64,80 +56,119 @@ export function AuroraWallpaperRenderer({
 
         ctx.clearRect(0, 0, W, H);
 
-        // Paint a base background
+        // Base fill
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
         ctx.fillRect(0, 0, W, H);
 
-        // Aurora bands:
-        // dark mode  → "screen" adds light glow
-        // light mode → "source-over" layers soft pastels
-        ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
+        // Grid layout calculation
+        const padX = W * 0.08;
+        const padY = H * 0.12;
+        const gridW = W - padX * 2;
+        const gridH = H - padY * 2;
 
-        BANDS.forEach(([bx, by, sx, sy, ax, ay, px, py, rx, ry, ci]) => {
-            const x = (bx + Math.sin(t * sx + px) * ax) * W;
-            const y = (by + Math.sin(t * sy + py) * ay) * H;
-            const rxi = rx * W;
-            const ryi = ry * H;
-            const rawColor = currentPalette[ci as number] || currentPalette[0];
-            const bandColor = toRgba(rawColor, currentIsDark ? 0.75 : 0.35);
+        const nodes: { x: number; y: number; waveNorm: number }[][] = [];
+        const ampY = H * 0.055;
+        const ampX = W * 0.015;
+        const speed = (2 * Math.PI) / WAVE_PERIOD;
 
-            ctx.save();
-            ctx.scale(1, ryi / rxi);
-            const grad = ctx.createRadialGradient(
-                x, y * (rxi / ryi), 0,
-                x, y * (rxi / ryi), rxi
-            );
+        for (let r = 0; r < ROWS; r++) {
+            const rowNodes: { x: number; y: number; waveNorm: number }[] = [];
+            const basePosY = padY + (r / (ROWS - 1)) * gridH;
 
-            grad.addColorStop(0, bandColor);
-            grad.addColorStop(0.4, toRgba(rawColor, currentIsDark ? 0.32 : 0.16));
-            grad.addColorStop(1, toRgba(rawColor, 0));
+            for (let c = 0; c < COLS; c++) {
+                const basePosX = padX + (c / (COLS - 1)) * gridW;
+                const phase = (c * 0.42 + r * 0.38) - t * speed;
+                const sinVal = Math.sin(phase);
+                const cosVal = Math.cos(phase * 0.85);
 
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(x, y * (rxi / ryi), rxi, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        });
+                const offsetY = sinVal * ampY;
+                const offsetX = cosVal * ampX;
+                const waveNorm = (sinVal + 1) / 2; // 0 to 1
 
-        ctx.globalCompositeOperation = "source-over";
-
-        // Stars — upper 45%, dark mode only, seeded deterministically
-        if (currentIsDark) {
-            let seed = W * 31337 + H * 1337;
-            const rand = () => {
-                seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
-                return seed / 0xFFFFFFFF;
-            };
-            const count = Math.floor((W * H) / 5500);
-            for (let i = 0; i < count; i++) {
-                const sx = rand() * W;
-                const sy = rand() * H * 0.45;
-                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
-                const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
-                ctx.globalAlpha = tw * 0.28;
-                ctx.fillStyle = toRgba(currentPalette[2], 0.9); // accent tinted stars
-                ctx.beginPath();
-                ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-                ctx.fill();
+                rowNodes.push({
+                    x: basePosX + offsetX,
+                    y: basePosY + offsetY,
+                    waveNorm,
+                });
             }
-            ctx.globalAlpha = 1;
+            nodes.push(rowNodes);
         }
 
-        // Ground vignette — fades bottom to near-opaque bg color
-        const groundGrad = ctx.createLinearGradient(0, H * 0.70, 0, H);
-        if (currentIsDark) {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(true), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(true), 0.88));
-        } else {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(false), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(false), 0.82));
+        // Draw mesh lines
+        ctx.lineWidth = 1.2 * dprRef.current;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const curr = nodes[r][c];
+
+                // Horizontal line to (c + 1, r)
+                if (c < COLS - 1) {
+                    const right = nodes[r][c + 1];
+                    const avgNorm = (curr.waveNorm + right.waveNorm) * 0.5;
+                    const lineAlpha = (currentIsDark ? 0.15 : 0.10) + avgNorm * (currentIsDark ? 0.35 : 0.25);
+                    ctx.strokeStyle = toRgba(currentPalette[1], lineAlpha);
+                    ctx.beginPath();
+                    ctx.moveTo(curr.x, curr.y);
+                    ctx.lineTo(right.x, right.y);
+                    ctx.stroke();
+                }
+
+                // Vertical line to (c, r + 1)
+                if (r < ROWS - 1) {
+                    const down = nodes[r + 1][c];
+                    const avgNorm = (curr.waveNorm + down.waveNorm) * 0.5;
+                    const lineAlpha = (currentIsDark ? 0.15 : 0.10) + avgNorm * (currentIsDark ? 0.35 : 0.25);
+                    ctx.strokeStyle = toRgba(currentPalette[1], lineAlpha);
+                    ctx.beginPath();
+                    ctx.moveTo(curr.x, curr.y);
+                    ctx.lineTo(down.x, down.y);
+                    ctx.stroke();
+                }
+            }
         }
-        ctx.fillStyle = groundGrad;
+
+        // Draw nodes
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const node = nodes[r][c];
+                const isPeak = node.waveNorm > 0.80;
+
+                // Peak flash with accent color, otherwise primary color
+                let nodeColor: string;
+                if (isPeak) {
+                    const peakRatio = (node.waveNorm - 0.80) / 0.20;
+                    nodeColor = peakRatio > 0.5 ? currentPalette[2] : currentPalette[0];
+                } else {
+                    nodeColor = currentPalette[0];
+                }
+
+                const nodeAlpha = (currentIsDark ? 0.35 : 0.25) + node.waveNorm * (currentIsDark ? 0.65 : 0.50);
+                const radius = (1.8 + node.waveNorm * 2.6) * dprRef.current;
+
+                ctx.fillStyle = toRgba(nodeColor, nodeAlpha);
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Peak glow halo
+                if (isPeak && currentIsDark) {
+                    ctx.fillStyle = toRgba(currentPalette[2], (node.waveNorm - 0.80) * 0.4);
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, radius * 2.2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Ambient vignette
+        ctx.globalCompositeOperation = "source-over";
+        const vigGrad = ctx.createRadialGradient(W * 0.5, H * 0.5, Math.min(W, H) * 0.3, W * 0.5, H * 0.5, Math.max(W, H) * 0.72);
+        vigGrad.addColorStop(0, toRgba(getCanvasBaseBackground(currentIsDark), 0));
+        vigGrad.addColorStop(1, toRgba(getCanvasBaseBackground(currentIsDark), currentIsDark ? 0.75 : 0.45));
+        ctx.fillStyle = vigGrad;
         ctx.fillRect(0, 0, W, H);
     }, []);
 
-    // Sync canvas size to its CSS container using ResizeObserver with safety fallback
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -210,7 +241,6 @@ export function AuroraWallpaperRenderer({
         }
     }, [palette, isDark, reducedMotion, draw]);
 
-    // Build CSS filter string
     const filterStr = filters
         ? [
               `brightness(${(filters.brightness ?? 1) * 100}%)`,
@@ -243,4 +273,4 @@ export function AuroraWallpaperRenderer({
     );
 }
 
-export default AuroraWallpaperRenderer;
+export default MeshWaveRenderer;

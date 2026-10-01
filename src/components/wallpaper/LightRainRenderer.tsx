@@ -6,31 +6,41 @@ import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
 
-export interface AuroraWallpaperRendererProps {
+export interface LightRainRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
-    /** Backward compatibility */
-    paletteKey?: string;
 }
 
-// 5 aurora curtain bands — each has independent motion parameters
-const BANDS = [
-    // baseX, baseY, speedX, speedY, ampX, ampY, phaseX, phaseY, rx, ry, colorIdx
-    [0.50, 0.32, 0.14, 0.10, 0.18, 0.07, 0.00, 0.00, 0.85, 0.42, 0],
-    [0.28, 0.28, 0.20, 0.14, 0.14, 0.06, 1.20, 2.10, 0.60, 0.32, 1],
-    [0.75, 0.22, 0.26, 0.18, 0.12, 0.06, 2.40, 0.80, 0.48, 0.26, 2],
-    [0.50, 0.48, 0.09, 0.07, 0.08, 0.04, 3.60, 1.50, 0.95, 0.55, 0],
-    [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
+interface ColumnConfig {
+    index: number;
+    posRel: number;
+    widthRel: number;
+    period: number;
+    offset: number;
+    colorType: 0 | 1 | 2; // 0: primary, 1: secondary, 2: accent
+}
+
+const COLUMNS: ColumnConfig[] = [
+    { index: 0, posRel: 0.04, widthRel: 0.12, period: 9.2,  offset: 0.0,  colorType: 0 },
+    { index: 1, posRel: 0.14, widthRel: 0.10, period: 11.5, offset: 3.1,  colorType: 1 },
+    { index: 2, posRel: 0.23, widthRel: 0.13, period: 8.7,  offset: 6.4,  colorType: 2 }, // accent
+    { index: 3, posRel: 0.34, widthRel: 0.11, period: 12.1, offset: 1.8,  colorType: 0 },
+    { index: 4, posRel: 0.45, widthRel: 0.14, period: 10.3, offset: 7.2,  colorType: 1 },
+    { index: 5, posRel: 0.55, widthRel: 0.11, period: 9.8,  offset: 4.5,  colorType: 0 },
+    { index: 6, posRel: 0.65, widthRel: 0.13, period: 11.1, offset: 2.3,  colorType: 2 }, // accent
+    { index: 7, posRel: 0.75, widthRel: 0.10, period: 8.9,  offset: 8.0,  colorType: 1 },
+    { index: 8, posRel: 0.84, widthRel: 0.12, period: 10.7, offset: 5.1,  colorType: 0 },
+    { index: 9, posRel: 0.94, widthRel: 0.11, period: 12.4, offset: 0.9,  colorType: 1 },
 ];
 
-export function AuroraWallpaperRenderer({
+export function LightRainRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
-}: AuroraWallpaperRendererProps) {
+}: LightRainRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
@@ -64,80 +74,93 @@ export function AuroraWallpaperRenderer({
 
         ctx.clearRect(0, 0, W, H);
 
-        // Paint a base background
+        // Base fill
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
         ctx.fillRect(0, 0, W, H);
 
-        // Aurora bands:
-        // dark mode  → "screen" adds light glow
-        // light mode → "source-over" layers soft pastels
-        ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
+        // Always source-over blending for soft overlapping curtain bands
+        ctx.globalCompositeOperation = "source-over";
 
-        BANDS.forEach(([bx, by, sx, sy, ax, ay, px, py, rx, ry, ci]) => {
-            const x = (bx + Math.sin(t * sx + px) * ax) * W;
-            const y = (by + Math.sin(t * sy + py) * ay) * H;
-            const rxi = rx * W;
-            const ryi = ry * H;
-            const rawColor = currentPalette[ci as number] || currentPalette[0];
-            const bandColor = toRgba(rawColor, currentIsDark ? 0.75 : 0.35);
+        COLUMNS.forEach((col) => {
+            const cycleTime = (t + col.offset) % col.period;
+            const progress = cycleTime / col.period;
 
+            // Lifecycle envelope:
+            // 0.00 -> 0.20 : wait (0 alpha)
+            // 0.20 -> 0.45 : fade in (2-3s)
+            // 0.45 -> 0.65 : hold at peak
+            // 0.65 -> 1.00 : fade out (3-4s)
+            let envelope = 0;
+            if (progress >= 0.20 && progress < 0.45) {
+                envelope = (progress - 0.20) / 0.25;
+            } else if (progress >= 0.45 && progress < 0.65) {
+                envelope = 1.0;
+            } else if (progress >= 0.65) {
+                envelope = 1.0 - (progress - 0.65) / 0.35;
+            }
+
+            if (envelope <= 0.01) return;
+
+            const colX = col.posRel * W;
+            const colWidth = col.widthRel * W;
+            const halfW = colWidth * 0.5;
+            const colorStr = currentPalette[col.colorType];
+
+            const maxAlpha = (currentIsDark ? 0.45 : 0.22) * envelope;
+
+            // Vertical linear gradient from top to bottom
+            const vertGrad = ctx.createLinearGradient(0, 0, 0, H);
+            vertGrad.addColorStop(0, toRgba(colorStr, maxAlpha * 0.2));
+            vertGrad.addColorStop(0.20, toRgba(colorStr, maxAlpha * 0.8));
+            vertGrad.addColorStop(0.45, toRgba(colorStr, maxAlpha));
+            vertGrad.addColorStop(0.75, toRgba(colorStr, maxAlpha * 0.4));
+            vertGrad.addColorStop(1, toRgba(colorStr, 0));
+
+            // Draw column with horizontal soft falloff
             ctx.save();
-            ctx.scale(1, ryi / rxi);
-            const grad = ctx.createRadialGradient(
-                x, y * (rxi / ryi), 0,
-                x, y * (rxi / ryi), rxi
+            ctx.fillStyle = vertGrad;
+
+            // Use horizontal gradient to feather left and right edges smoothly
+            const colGrad = ctx.createRadialGradient(
+                colX, H * 0.4, 0,
+                colX, H * 0.4, halfW
             );
+            colGrad.addColorStop(0, toRgba(colorStr, maxAlpha));
+            colGrad.addColorStop(0.5, toRgba(colorStr, maxAlpha * 0.6));
+            colGrad.addColorStop(1, toRgba(colorStr, 0));
 
-            grad.addColorStop(0, bandColor);
-            grad.addColorStop(0.4, toRgba(rawColor, currentIsDark ? 0.32 : 0.16));
-            grad.addColorStop(1, toRgba(rawColor, 0));
-
-            ctx.fillStyle = grad;
+            // Scaled ellipse for soft beam shape
+            ctx.save();
+            ctx.scale(1, H / colWidth);
             ctx.beginPath();
-            ctx.arc(x, y * (rxi / ryi), rxi, 0, Math.PI * 2);
+            ctx.arc(colX, (H * 0.35) * (colWidth / H), halfW * 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = colGrad;
             ctx.fill();
+            ctx.restore();
+
+            // Overlay vertical column strip with soft edges
+            const stripGrad = ctx.createLinearGradient(colX - halfW, 0, colX + halfW, 0);
+            stripGrad.addColorStop(0, toRgba(colorStr, 0));
+            stripGrad.addColorStop(0.2, toRgba(colorStr, maxAlpha * 0.5));
+            stripGrad.addColorStop(0.5, toRgba(colorStr, maxAlpha));
+            stripGrad.addColorStop(0.8, toRgba(colorStr, maxAlpha * 0.5));
+            stripGrad.addColorStop(1, toRgba(colorStr, 0));
+
+            ctx.fillStyle = stripGrad;
+            ctx.fillRect(colX - halfW, 0, colWidth, H * 0.85);
+
             ctx.restore();
         });
 
-        ctx.globalCompositeOperation = "source-over";
-
-        // Stars — upper 45%, dark mode only, seeded deterministically
-        if (currentIsDark) {
-            let seed = W * 31337 + H * 1337;
-            const rand = () => {
-                seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
-                return seed / 0xFFFFFFFF;
-            };
-            const count = Math.floor((W * H) / 5500);
-            for (let i = 0; i < count; i++) {
-                const sx = rand() * W;
-                const sy = rand() * H * 0.45;
-                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
-                const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
-                ctx.globalAlpha = tw * 0.28;
-                ctx.fillStyle = toRgba(currentPalette[2], 0.9); // accent tinted stars
-                ctx.beginPath();
-                ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-        }
-
-        // Ground vignette — fades bottom to near-opaque bg color
-        const groundGrad = ctx.createLinearGradient(0, H * 0.70, 0, H);
-        if (currentIsDark) {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(true), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(true), 0.88));
-        } else {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(false), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(false), 0.82));
-        }
-        ctx.fillStyle = groundGrad;
+        // Ambient ground vignette
+        const vigGrad = ctx.createLinearGradient(0, H * 0.65, 0, H);
+        vigGrad.addColorStop(0, toRgba(getCanvasBaseBackground(currentIsDark), 0));
+        vigGrad.addColorStop(1, toRgba(getCanvasBaseBackground(currentIsDark), currentIsDark ? 0.70 : 0.45));
+        ctx.fillStyle = vigGrad;
         ctx.fillRect(0, 0, W, H);
     }, []);
 
-    // Sync canvas size to its CSS container using ResizeObserver with safety fallback
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -210,7 +233,6 @@ export function AuroraWallpaperRenderer({
         }
     }, [palette, isDark, reducedMotion, draw]);
 
-    // Build CSS filter string
     const filterStr = filters
         ? [
               `brightness(${(filters.brightness ?? 1) * 100}%)`,
@@ -243,4 +265,4 @@ export function AuroraWallpaperRenderer({
     );
 }
 
-export default AuroraWallpaperRenderer;
+export default LightRainRenderer;

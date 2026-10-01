@@ -758,6 +758,8 @@ footer,
   pointer-events: none !important;
 }
 
+html.zen-mode,
+body.zen-mode,
 .zen-mode {
   overflow: hidden !important;
 }

@@ -6,31 +6,43 @@ import { useSettings } from "@/lib/SettingsContext";
 import type { WallpaperFilters } from "@/lib/WallpaperContext";
 import { getColorThemePalette, toRgba, getCanvasBaseBackground } from "@/lib/wallpaperThemes";
 
-export interface AuroraWallpaperRendererProps {
+export interface NebulaDriftRendererProps {
     palette?: [string, string, string];
     filters?: WallpaperFilters;
     borderRadius?: string;
     reducedMotion?: boolean;
-    /** Backward compatibility */
-    paletteKey?: string;
 }
 
-// 5 aurora curtain bands — each has independent motion parameters
-const BANDS = [
-    // baseX, baseY, speedX, speedY, ampX, ampY, phaseX, phaseY, rx, ry, colorIdx
-    [0.50, 0.32, 0.14, 0.10, 0.18, 0.07, 0.00, 0.00, 0.85, 0.42, 0],
-    [0.28, 0.28, 0.20, 0.14, 0.14, 0.06, 1.20, 2.10, 0.60, 0.32, 1],
-    [0.75, 0.22, 0.26, 0.18, 0.12, 0.06, 2.40, 0.80, 0.48, 0.26, 2],
-    [0.50, 0.48, 0.09, 0.07, 0.08, 0.04, 3.60, 1.50, 0.95, 0.55, 0],
-    [0.68, 0.35, 0.22, 0.16, 0.10, 0.05, 0.70, 3.00, 0.38, 0.22, 1],
+interface BlobConfig {
+    baseX: number;
+    baseY: number;
+    driftSpeedX: number;
+    driftSpeedY: number;
+    ampX: number;
+    ampY: number;
+    phaseX: number;
+    phaseY: number;
+    rx: number;
+    ry: number;
+    rotSpeed: number;
+    colorIndex: number;
+    alphaScale: number;
+}
+
+const BLOBS: BlobConfig[] = [
+    { baseX: 0.48, baseY: 0.48, driftSpeedX: 0.08, driftSpeedY: 0.06, ampX: 0.12, ampY: 0.09, phaseX: 0.0, phaseY: 0.0, rx: 0.48, ry: 0.38, rotSpeed: 0.04, colorIndex: 0, alphaScale: 0.75 },
+    { baseX: 0.55, baseY: 0.44, driftSpeedX: 0.07, driftSpeedY: 0.09, ampX: 0.14, ampY: 0.10, phaseX: 1.8, phaseY: 1.2, rx: 0.44, ry: 0.42, rotSpeed: -0.05, colorIndex: 1, alphaScale: 0.70 },
+    { baseX: 0.45, baseY: 0.56, driftSpeedX: 0.09, driftSpeedY: 0.07, ampX: 0.10, ampY: 0.12, phaseX: 3.1, phaseY: 2.5, rx: 0.40, ry: 0.34, rotSpeed: 0.06, colorIndex: 2, alphaScale: 0.65 },
+    { baseX: 0.58, baseY: 0.52, driftSpeedX: 0.06, driftSpeedY: 0.08, ampX: 0.15, ampY: 0.11, phaseX: 4.4, phaseY: 0.8, rx: 0.36, ry: 0.30, rotSpeed: -0.03, colorIndex: 0, alphaScale: 0.45 },
+    { baseX: 0.40, baseY: 0.40, driftSpeedX: 0.08, driftSpeedY: 0.05, ampX: 0.11, ampY: 0.13, phaseX: 2.2, phaseY: 3.8, rx: 0.38, ry: 0.32, rotSpeed: 0.05, colorIndex: 1, alphaScale: 0.40 },
 ];
 
-export function AuroraWallpaperRenderer({
+export function NebulaDriftRenderer({
     palette: passedPalette,
     filters,
     borderRadius = "0",
     reducedMotion: propReducedMotion,
-}: AuroraWallpaperRendererProps) {
+}: NebulaDriftRendererProps) {
     const { theme } = useTheme();
     const { reducedMotion: settingReducedMotion } = useSettings();
     const reducedMotion = propReducedMotion ?? settingReducedMotion;
@@ -64,59 +76,66 @@ export function AuroraWallpaperRenderer({
 
         ctx.clearRect(0, 0, W, H);
 
-        // Paint a base background
+        // Base fill
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = getCanvasBaseBackground(currentIsDark);
         ctx.fillRect(0, 0, W, H);
 
-        // Aurora bands:
-        // dark mode  → "screen" adds light glow
-        // light mode → "source-over" layers soft pastels
+        // Galaxy Core Blobs
+        ctx.save();
+        // Slow global rotation around canvas center
+        const cx = W * 0.5;
+        const cy = H * 0.5;
+        ctx.translate(cx, cy);
+        ctx.rotate(t * 0.012);
+        ctx.translate(-cx, -cy);
+
         ctx.globalCompositeOperation = currentIsDark ? "screen" : "source-over";
 
-        BANDS.forEach(([bx, by, sx, sy, ax, ay, px, py, rx, ry, ci]) => {
-            const x = (bx + Math.sin(t * sx + px) * ax) * W;
-            const y = (by + Math.sin(t * sy + py) * ay) * H;
-            const rxi = rx * W;
-            const ryi = ry * H;
-            const rawColor = currentPalette[ci as number] || currentPalette[0];
-            const bandColor = toRgba(rawColor, currentIsDark ? 0.75 : 0.35);
+        BLOBS.forEach((blob) => {
+            const bx = (blob.baseX + Math.sin(t * blob.driftSpeedX + blob.phaseX) * blob.ampX) * W;
+            const by = (blob.baseY + Math.cos(t * blob.driftSpeedY + blob.phaseY) * blob.ampY) * H;
+            const rxi = blob.rx * W;
+            const ryi = blob.ry * H;
+            const color = currentPalette[blob.colorIndex % 3];
+            const maxAlpha = (currentIsDark ? 0.70 : 0.35) * blob.alphaScale;
 
             ctx.save();
+            ctx.translate(bx, by);
+            ctx.rotate(t * blob.rotSpeed);
             ctx.scale(1, ryi / rxi);
-            const grad = ctx.createRadialGradient(
-                x, y * (rxi / ryi), 0,
-                x, y * (rxi / ryi), rxi
-            );
 
-            grad.addColorStop(0, bandColor);
-            grad.addColorStop(0.4, toRgba(rawColor, currentIsDark ? 0.32 : 0.16));
-            grad.addColorStop(1, toRgba(rawColor, 0));
+            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rxi);
+            grad.addColorStop(0, toRgba(color, maxAlpha));
+            grad.addColorStop(0.45, toRgba(color, maxAlpha * 0.4));
+            grad.addColorStop(1, toRgba(color, 0));
 
             ctx.fillStyle = grad;
             ctx.beginPath();
-            ctx.arc(x, y * (rxi / ryi), rxi, 0, Math.PI * 2);
+            ctx.arc(0, 0, rxi, 0, Math.PI * 2);
             ctx.fill();
+
             ctx.restore();
         });
 
-        ctx.globalCompositeOperation = "source-over";
+        ctx.restore(); // restore global rotation
 
-        // Stars — upper 45%, dark mode only, seeded deterministically
+        // Star Layer
+        ctx.globalCompositeOperation = "source-over";
         if (currentIsDark) {
-            let seed = W * 31337 + H * 1337;
+            let seed = W * 45123 + H * 17921;
             const rand = () => {
                 seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
                 return seed / 0xFFFFFFFF;
             };
-            const count = Math.floor((W * H) / 5500);
+            const count = Math.floor((W * H) / 4800);
             for (let i = 0; i < count; i++) {
                 const sx = rand() * W;
-                const sy = rand() * H * 0.45;
-                const sr = (rand() * 0.9 + 0.2) * dprRef.current;
-                const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + rand()) + rand() * 6.28);
-                ctx.globalAlpha = tw * 0.28;
-                ctx.fillStyle = toRgba(currentPalette[2], 0.9); // accent tinted stars
+                const sy = rand() * H;
+                const sr = (rand() * 1.1 + 0.3) * dprRef.current;
+                const tw = 0.4 + 0.6 * Math.sin(t * (0.8 + rand() * 0.5) + rand() * 6.28);
+                ctx.globalAlpha = tw * 0.32;
+                ctx.fillStyle = toRgba(currentPalette[i % 3], 0.95);
                 ctx.beginPath();
                 ctx.arc(sx, sy, sr, 0, Math.PI * 2);
                 ctx.fill();
@@ -124,20 +143,14 @@ export function AuroraWallpaperRenderer({
             ctx.globalAlpha = 1;
         }
 
-        // Ground vignette — fades bottom to near-opaque bg color
-        const groundGrad = ctx.createLinearGradient(0, H * 0.70, 0, H);
-        if (currentIsDark) {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(true), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(true), 0.88));
-        } else {
-            groundGrad.addColorStop(0, toRgba(getCanvasBaseBackground(false), 0));
-            groundGrad.addColorStop(1, toRgba(getCanvasBaseBackground(false), 0.82));
-        }
-        ctx.fillStyle = groundGrad;
+        // Soft outer ambient vignette
+        const vigGrad = ctx.createRadialGradient(W * 0.5, H * 0.5, Math.min(W, H) * 0.35, W * 0.5, H * 0.5, Math.max(W, H) * 0.72);
+        vigGrad.addColorStop(0, toRgba(getCanvasBaseBackground(currentIsDark), 0));
+        vigGrad.addColorStop(1, toRgba(getCanvasBaseBackground(currentIsDark), currentIsDark ? 0.75 : 0.45));
+        ctx.fillStyle = vigGrad;
         ctx.fillRect(0, 0, W, H);
     }, []);
 
-    // Sync canvas size to its CSS container using ResizeObserver with safety fallback
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -210,7 +223,6 @@ export function AuroraWallpaperRenderer({
         }
     }, [palette, isDark, reducedMotion, draw]);
 
-    // Build CSS filter string
     const filterStr = filters
         ? [
               `brightness(${(filters.brightness ?? 1) * 100}%)`,
@@ -243,4 +255,4 @@ export function AuroraWallpaperRenderer({
     );
 }
 
-export default AuroraWallpaperRenderer;
+export default NebulaDriftRenderer;

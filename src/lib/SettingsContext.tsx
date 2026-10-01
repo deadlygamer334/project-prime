@@ -587,6 +587,16 @@ export function ZenModeClassHandler() {
 
         if (isZenMode) {
             document.documentElement.classList.add("zen-mode");
+            const prevHtmlOverflow = document.documentElement.style.overflow;
+            const prevBodyOverflow = document.body.style.overflow;
+            document.documentElement.style.overflow = "hidden";
+            document.body.style.overflow = "hidden";
+
+            return () => {
+                document.documentElement.classList.remove("zen-mode");
+                document.documentElement.style.overflow = prevHtmlOverflow;
+                document.body.style.overflow = prevBodyOverflow;
+            };
         } else {
             document.documentElement.classList.remove("zen-mode");
         }

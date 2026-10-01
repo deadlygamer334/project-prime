@@ -9,8 +9,8 @@ import MinimalPomodoro from "./MinimalPomodoro";
 import QuoteBlock from "./QuoteBlock";
 import { VideoWallpaperController } from "@/components/wallpaper/VideoWallpaperController";
 import { ImageWallpaperRenderer } from "@/components/wallpaper/ImageWallpaperRenderer";
-import { AuroraWallpaperRenderer } from "@/components/wallpaper/AuroraWallpaperRenderer";
-import { useWallpaper } from "@/lib/WallpaperContext";
+import { LiveWallpaperRenderer } from "@/components/wallpaper/LiveWallpaperRenderer";
+import { useWallpaper, isLiveWallpaper } from "@/lib/WallpaperContext";
 
 import { TimerMode, Subject } from "@/hooks/useFocusTimer";
 
@@ -20,7 +20,7 @@ export default function PomodoroPanel() {
   const { addSession, addSessionTransaction } = useFocusProgress();
   const settings = useSettings();
   const { wallpaper } = useWallpaper();
-  const isAurora = wallpaper?.type === "dynamic-aurora";
+  const isLive = isLiveWallpaper(wallpaper);
   const [timerState, setTimerState] = useState<"idle" | "focus" | "break">("idle");
   const [showFlash, setShowFlash] = useState(false);
 
@@ -55,11 +55,12 @@ export default function PomodoroPanel() {
       {/* Scoped Wallpapers */}
       <VideoWallpaperController timerState={timerState} />
       <ImageWallpaperRenderer timerState={timerState} />
-      {isAurora && (
-        <AuroraWallpaperRenderer
+      {isLive && (
+        <LiveWallpaperRenderer
+          pattern={wallpaper?.livePattern || "aurora"}
+          colorTheme={wallpaper?.colorTheme || "Violet"}
           filters={wallpaper?.timerFilters}
           borderRadius="1.5rem"
-          paletteKey={wallpaper?.id}
         />
       )}
 

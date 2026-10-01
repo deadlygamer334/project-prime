@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { WallpaperState, WallpaperFilters, WallpaperCrop, useWallpaper } from "@/lib/WallpaperContext";
-import { SlidersHorizontal, Settings2, RotateCcw, Image as ImageIcon, Video, BoxSelect, Maximize, MousePointer2 } from "lucide-react";
+import { WallpaperState, WallpaperFilters, WallpaperCrop, useWallpaper, isLiveWallpaper } from "@/lib/WallpaperContext";
+import { SlidersHorizontal, Settings2, RotateCcw, Image as ImageIcon, Video, BoxSelect, Maximize, MousePointer2, Sparkles } from "lucide-react";
 import { useSettings } from "@/lib/SettingsContext";
-import { AuroraWallpaperRenderer } from "./AuroraWallpaperRenderer";
 
 interface WallpaperEditorProps {
     wallpaper: WallpaperState;
@@ -12,6 +11,33 @@ interface WallpaperEditorProps {
 }
 
 export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: WallpaperEditorProps) {
+    const isLive = isLiveWallpaper(initialWallpaper);
+
+    if (isLive) {
+        return (
+            <div className="fixed inset-0 z-[1000] bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                        <Sparkles className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-foreground">Live Wallpaper Customization</h3>
+                        <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                            Live wallpapers don&apos;t have adjustable filters — use the color themes in the gallery to customize yours.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="mt-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-md hover:opacity-90 transition-opacity"
+                    >
+                        Back to Gallery
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     const { updateWallpaperFilters, updateWallpaperCrop, setWallpaper } = useWallpaper();
     const { isZenMode } = useSettings();
     const [activeTab, setActiveTab] = useState<"crop" | "filters">("filters");
@@ -297,15 +323,7 @@ export function WallpaperEditor({ wallpaper: initialWallpaper, onClose }: Wallpa
                             height: renderedDimensions.height,
                         }}
                     >
-                        {initialWallpaper.type === "dynamic-aurora" ? (
-                            <div className="absolute inset-0 w-full h-full overflow-hidden rounded-2xl">
-                                <AuroraWallpaperRenderer
-                                    filters={localFilters}
-                                    borderRadius="1rem"
-                                    paletteKey={initialWallpaper.id}
-                                />
-                            </div>
-                        ) : initialWallpaper.type === "video" ? (
+                        {initialWallpaper.type === "video" ? (
                             <video
                                 ref={mediaRef as any}
                                 src={initialWallpaper.preview || initialWallpaper.src}
